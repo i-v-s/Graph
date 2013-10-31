@@ -20,6 +20,7 @@ var Navi =
     OnMouseWheel: function(evt)
     {
         var e = /*window.event ||*/ evt; // old IE support
+        e.preventDefault();
         var delta = e.wheelDelta || -e.detail;
         var OScale = Main.Scale;
         if(delta == 0) return;
