@@ -149,13 +149,13 @@ var CLine =
         Main.PopMouseMove();
         Main.PopRedraw();
         Main.Redraw();
+    },
+    'Создать': function()
+    {
+        //var BLine = document.getElementById("BLine");
+        Main.SetMouseMove(CLine.OnMouseMove);
+        Main.SetMouseLeft(CLine.OnLeftDown, function(x, y){});
+        Main.SetMouseRight(CLine.OnRightDown, CLine.OnRightUp);
     }
 }
 
-function online()
-{
-    //var BLine = document.getElementById("BLine");
-    Main.SetMouseMove(CLine.OnMouseMove);
-    Main.SetMouseLeft(CLine.OnLeftDown, function(x, y){});
-    Main.SetMouseRight(CLine.OnRightDown, CLine.OnRightUp);
-}
