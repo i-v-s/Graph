@@ -14,8 +14,6 @@ var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
-    LastX: 0.0,
-    LastY: 0.0,
     NeedRedraw: false,
     MouseDown: null,
     OnRightDown: null,
@@ -147,6 +145,19 @@ var Main = {
         SelRect.h = y - SelRect.y;
         Main.NeedRedraw = true;
     },
+    GetMousePos: function(evt)
+    {
+        var box = canvas.getBoundingClientRect();
+        var body = document.body
+        var docElem = document.documentElement
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
+        var clientTop = docElem.clientTop || body.clientTop || 0
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0
+        var top  = box.top +  scrollTop - clientTop
+        var left = box.left + scrollLeft - clientLeft
+        return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
+    },
     Init: function()
     {
         Main.OnMouseMove = Main.OnFreeMove;
@@ -163,8 +174,9 @@ var Main = {
         {
             var b = evt.button;
             Main.MouseDown = b;
-            var x = (evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            var y = (evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
+            var mp = Main.GetMousePos(evt);
+            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
+            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
             switch(b)
             {
                 case 0: if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
@@ -174,8 +186,9 @@ var Main = {
         };
         canvas.onmouseup = function(evt)
         {
-            var x = (evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            var y = (evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
+            var mp = Main.GetMousePos(evt);
+            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
+            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
             switch(Main.MouseDown)
             {
                 case 0: if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
@@ -186,11 +199,11 @@ var Main = {
         };
         canvas.onmousemove = function(evt)
         {
-            evt.clientX
-            Main.LastX = (evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            Main.LastY = (evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;;
+            var mp = Main.GetMousePos(evt);
+            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
+            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
             if(Main.OnMouseMove)
-                Main.OnMouseMove(Main.LastX, Main.LastY);
+                Main.OnMouseMove(x, y);
             if(Main.NeedRedraw) {Main.NeedRedraw = false; Main.Redraw();}
         };
         canvas.onkeydown = function()

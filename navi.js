@@ -19,6 +19,7 @@ var Navi =
     },
     OnMouseWheel: function(evt)
     {
+        var mp = Main.GetMousePos(evt);
         var e = /*window.event ||*/ evt; // old IE support
         e.preventDefault();
         var delta = e.wheelDelta || -e.detail;
@@ -27,8 +28,8 @@ var Navi =
         if(delta > 0) Main.Scale *= 1.2;
         else Main.Scale /= 1.2;
         OScale -= Main.Scale;
-        Main.OffsetX += Main.LastX * OScale;
-        Main.OffsetY += Main.LastY * OScale;
+        Main.OffsetX += mp.x * OScale;
+        Main.OffsetY += mp.y * OScale;
         //ctx.strokeRect(Main.LastX, Main.LastY, 2, 2);
         ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
         //ctx.strokeRect(Main.LastX, Main.LastY, 2, 2);
