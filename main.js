@@ -163,12 +163,12 @@ var Main = {
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
         ctx = canvas.getContext('2d');
-        document.onmousemove = function(evt)
+        /*document.onmousemove = function(evt)
         {
             ctx.clearRect(10, 10, 170, 35);
             ctx.fillText("Page: " + evt.pageX + "," + evt.pageY, 10, 10);
             ctx.fillText("Canvas: " + canvas.offsetLeft + "," + canvas.offsetTop, 10, 25);
-        }
+        }*/
 
         canvas.onmousedown = function(evt)
         {
