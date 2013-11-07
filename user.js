@@ -6,12 +6,3 @@ Items.push(p1, p2, new Arc(p1, p2, 90));
 
 var R = new Rect(200, 200, 50, 50, "Text");
 R.Store(Items);
-
-window.onload = function() {
-    //var text = new FizzyText();
-    var gui = new dat.GUI();
-    //gui.add(text, 'message');
-    //gui.add(text, 'speed', -5, 5);
-    //gui.add(text, 'displayOutline');
-    gui.add(CLine, 'Создать');
-};

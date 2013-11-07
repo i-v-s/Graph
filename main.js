@@ -151,8 +151,6 @@ var Main = {
     {
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
-        canvas.height = 480;
-        canvas.width = 640;
         ctx = canvas.getContext('2d');
         canvas.onmousedown = function(evt)
         {
@@ -181,6 +179,7 @@ var Main = {
         };
         canvas.onmousemove = function(evt)
         {
+            evt.clientX
             Main.LastX = (evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
             Main.LastY = (evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;;
             if(Main.OnMouseMove)

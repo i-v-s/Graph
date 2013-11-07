@@ -11,7 +11,6 @@
 <button id="BArc" onclick="onarc()">Дуга</button>
 <button id="BDelete" onclick="Main.Delete()">Удалить</button>
 <br>
-<script src="dat.gui.min.js"></script>
 <script src="main.js"></script>
 <script src="navi.js"></script>
 <script src="grid.js"></script>
@@ -21,7 +20,7 @@
 <script src="arcs.js"></script>
 <script src="db.js"></script>
 <script src="user.js"></script>
-<canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
+<canvas id='canvas' width="800" height="600" oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <textarea id="Memo"></textarea>
 <script>Main.Init()</script>
 </body>
