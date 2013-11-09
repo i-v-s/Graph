@@ -1,15 +1,73 @@
+<!DOCTYPE html>
 <html>
-<meta charset="utf-8">
 <head>
-    <title>curveExample</title>
+	<meta charset="utf-8">
+	<title>Graph editor</title>
+	<link rel="stylesheet" href="demo.css" media="screen">
+	<link rel="stylesheet" href="/dijit/themes/claro/claro.css" media="screen">
 </head>
-<body>
-<button id="BPoint">Точка</button>
-<button id="BLine" onclick="online()">Линия</button>
-<button id="BArrow" onclick="onarrow()">Стрелка</button>
-<button id="BRect" onclick="onrect()">Блок</button>
-<button id="BArc" onclick="onarc()">Дуга</button>
-<button id="BDelete" onclick="Main.Delete()">Удалить</button>
+<body class="claro">
+	<div id="mainMenu" data-dojo-type="dijit/MenuBar">
+		<div id="file" data-dojo-type="dijit/PopupMenuBarItem">
+			<span>Файл</span><div id="fileMenu" data-dojo-type="dijit/Menu">
+                        <div id="new" data-dojo-type="dijit/MenuItem">Новый</div>
+                        <div id="saveloc" data-dojo-type="dijit/MenuItem">Сохранить в браузере</div>
+
+		</div></div>
+		<div id="edit" data-dojo-type="dijit/PopupMenuBarItem">
+			<span>Правка</span><div id="editMenu" data-dojo-type="dijit/Menu">
+			<div id="delete" data-dojo-type="dijit/MenuItem" onclick="Main.Delete()">Удалить</div>
+		</div></div>
+		<div id="create" data-dojo-type="dijit/PopupMenuBarItem">
+			<span>Создать</span><div id="createMenu" data-dojo-type="dijit/Menu">
+                        <div id="point" data-dojo-type="dijit/MenuItem">Точку</div>
+                        <div id="line" data-dojo-type="dijit/MenuItem">Линию</div>
+                        <div id="arc" data-dojo-type="dijit/MenuItem" onclick="onarc()">Дугу</div>
+			<div data-dojo-type="dijit/MenuSeparator"></div>
+			<div id="arrow" data-dojo-type="dijit/MenuItem" onclick="onarrow()">Стрелку</div>
+			<div id="block" data-dojo-type="dijit/MenuItem">Блок</div>
+			</div>
+		</div>
+		<div id="task" data-dojo-type="dijit/PopupMenuBarItem">
+			<span>Task</span>
+			<div id="taskMenu" data-dojo-type="dijit/Menu">
+				<div id="complete" data-dojo-type="dijit/MenuItem">Mark as Complete</div>
+				<div id="cancel" data-dojo-type="dijit/MenuItem">Cancel</div>
+				<div id="begin" data-dojo-type="dijit/MenuItem">Begin</div>
+			</div>
+		</div><!-- end of sub-menu -->
+	</div>
+	<script src="/dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
+
+	<script>
+        require([
+            "dojo/dom",
+            "dojo/parser",
+            "dijit/registry",
+            "dijit/WidgetSet", // for registry.byClass
+            "dijit/Menu",
+            "dijit/MenuItem", 
+            "dijit/MenuBar",
+            "dijit/MenuBarItem",
+            "dijit/MenuSeparator",
+            "dijit/PopupMenuBarItem",
+            "dojo/domReady!"
+        ], function(dom, parser, registry){
+			// a menu item selection handler
+			var onItemSelect = function(event){
+				dom.byId("lastSelected").innerHTML = this.get("label");
+			};
+
+			parser.parse();
+
+			var setClickHandler = function(item){
+				item.on("click", onItemSelect);
+			};
+
+			registry.byClass("dijit.MenuItem").forEach(setClickHandler);
+			registry.byClass("dijit.MenuBarItem").forEach(setClickHandler);
+		});
+	</script>
 <br>
 <script src="main.js"></script>
 <script src="navi.js"></script>
