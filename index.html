@@ -11,8 +11,9 @@
 		<div id="file" data-dojo-type="dijit/PopupMenuBarItem">
 			<span>Файл</span><div id="fileMenu" data-dojo-type="dijit/Menu">
                         <div id="new" data-dojo-type="dijit/MenuItem">Новый</div>
-                        <div id="saveloc" data-dojo-type="dijit/MenuItem">Сохранить в браузере</div>
-
+                        <div data-dojo-type="dijit/MenuSeparator"></div>
+                        <div id="saveloc" data-dojo-type="dijit/MenuItem" onclick="LocDB.Save('GraphDB','Scheme')">Сохранить в браузере</div>
+                        <div id="loadloc" data-dojo-type="dijit/MenuItem">Загрузить из браузера</div>
 		</div></div>
 		<div id="edit" data-dojo-type="dijit/PopupMenuBarItem">
 			<span>Правка</span><div id="editMenu" data-dojo-type="dijit/Menu">
