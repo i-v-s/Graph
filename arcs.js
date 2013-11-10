@@ -1,8 +1,9 @@
-function Arc(P1, P2, A)
+function Arc(p1, p2, A)
 {
-    this.p1 = P1;
-    this.p2 = P2;
+    this.p1 = typeof p1 == "number" ? Items[p1] : p1;
+    this.p2 = typeof p2 == "number" ? Items[p2] : p2;
     this.a = A * Math.PI / 360;
+    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 360 / Math.PI);}
     this.Update = function()
     {
         var dx = (this.p2.x - this.p1.x) * 0.5;

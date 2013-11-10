@@ -1,8 +1,8 @@
 
-function Point(p)
+function Point(x, y)
 {
-    this.x = p.x;
-    this.y = p.y;
+    this.x = x;
+    this.y = y;
     this.Serialize = function() {return this.x.toString() + "," + this.y;}
     this.Draw = function(Type)
     {
@@ -38,10 +38,10 @@ function Point(p)
     this.Moved = false;
 }
 
-function Line(l)
+function Line(p1, p2)
 {
-    this.p1 = typeof l.p1 == "number" ? Items[l.p1] : l.p1;
-    this.p2 = typeof l.p2 == "number" ? Items[l.p2] : l.p2;
+    this.p1 = typeof p1 == "number" ? Items[p1] : p1;
+    this.p2 = typeof p2 == "number" ? Items[p2] : p2;
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);}
     this.Draw = function(Type)
     {

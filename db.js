@@ -24,5 +24,25 @@ var LocDB =
                 tx.executeSql("INSERT INTO " + Table + " (class, data) values(?, ?)", [c, a], null, null);
             };
         })
+    },
+    Load: function(DB, Table)
+    {
+        var db = openDatabase(DB, "0.1", "A db of blockscheme.", 20000);
+        if(!db) {alert("Failed to connect to database."); return;}
+        db.transaction(function(tx)
+        {
+            tx.executeSql("SELECT * FROM " + Table, [], function(tx, result)
+            {
+                var l = result.rows.length;
+                Items.length = l;
+                for(var i = 0; i < l; i++)
+                {
+                    var row = result.rows.item(i);
+                    Items[i] = eval("new " + row['class'] + "(" + row['data'] + ")");
+                    //document.write('<b>' + ['label'] + '</b><br />');
+                }
+                Main.Redraw();
+            }, null);
+        })
     }
 }
