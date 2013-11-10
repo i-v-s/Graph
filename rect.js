@@ -1,4 +1,4 @@
-function Rect(x, y, w, h, Text)
+function Rect(r)//x, y, w, h, Text)
 {
     this.P = [new Point(x, y), new Point(x + w, y), new Point(x, y + h), new Point(x + w, y + h)];
     for(var x = 0; x < 4; x++) this.P[x].Owner = this;

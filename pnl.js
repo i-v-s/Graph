@@ -1,8 +1,9 @@
 
-function Point(x, y)
+function Point(p)
 {
-    this.x = x;
-    this.y = y;
+    this.x = p.x;
+    this.y = p.y;
+    this.Serialize = function() {return this.x.toString() + "," + this.y;}
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -37,10 +38,11 @@ function Point(x, y)
     this.Moved = false;
 }
 
-function Line(P1, P2)
+function Line(l)
 {
-    this.p1 = P1;
-    this.p2 = P2;
+    this.p1 = typeof l.p1 == "number" ? Items[l.p1] : l.p1;
+    this.p2 = typeof l.p2 == "number" ? Items[l.p2] : l.p2;
+    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);}
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");

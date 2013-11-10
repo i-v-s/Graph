@@ -1,8 +1,6 @@
-function Arrow(P1, P2)
+function Arrow(a)
 {
-    this.ps = [];
-    this.ps.push(P1);
-    this.ps.push(P2);
+    this.ps = a.ps;
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;
