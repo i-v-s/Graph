@@ -1,6 +1,18 @@
 function Arrow(a)
 {
-    this.ps = a.ps;
+    for(var x = 0, e = a.length; x < e; x++) if(typeof a[x] == "number") a[x] = Items[a[x]];
+    this.ps = a;
+    this.Serialize = function()
+    {
+        var r = "[";
+        for(var x = 0, e = this.ps.length; x < e;)
+        {
+            r += Items.indexOf(this.ps[x]);
+            if(++x < e) r += ",";
+        }
+        return r + "]";
+    }
+
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;
@@ -118,7 +130,7 @@ var CArrow =
         if(CArrow.Arr)
             CArrow.Arr.ps.push(CArrow.Pt);
         else
-            CArrow.Arr = new Arrow(point, CArrow.Pt);
+            CArrow.Arr = new Arrow([point, CArrow.Pt]);
 
         if(!CArrow.Drawing)
         {

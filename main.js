@@ -158,6 +158,11 @@ var Main = {
         var left = box.left + scrollLeft - clientLeft
         return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
     },
+    CreateMenu:function(menu, name, handler)
+    {
+
+
+    },
     Init: function()
     {
         Main.OnMouseMove = Main.OnFreeMove;

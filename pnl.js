@@ -152,7 +152,7 @@ var CLine =
         Main.PopRedraw();
         Main.Redraw();
     },
-    'Создать': function()
+    OnCreate: function()
     {
         //var BLine = document.getElementById("BLine");
         Main.SetMouseMove(CLine.OnMouseMove);
