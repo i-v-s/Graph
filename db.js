@@ -45,13 +45,23 @@ var LocDB =
             }, null);
         })
     },
+    OnSaveButton:function()
+    {
+        var s = document.getElementById("savename");
+        LocDB.Save("GraphDB", s.value);
+        hideSaveDialog();
+    },
     OnInit: function()
     {
         if(CMenu)
         {
             if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.file.locsave = {label:"Сохранить в браузере", onclick:function()
+            {
+                OnSaveButton = LocDB.OnSaveButton;
+                showSaveDialog();
+            }};
             CMenu.file.locload = {label:"Загрузить из браузера"};
-            CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
         }
     }
 }

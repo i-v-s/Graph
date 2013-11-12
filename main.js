@@ -75,8 +75,11 @@ var Main = {
     Delete: function()
     {
         var x, y;
-        for(x = 0, y = 0; x < Items.length; x++)
-            if(!Items[x].GetPSel()) Items[y++] = Items[x];
+        for(x = 0, y = 0, e = Items.length; x < e; x++)
+        {
+            var i = Items[x];
+            if((i.GetPSel && !i.GetPSel()) || !i.Sel) Items[y++] = i;
+        }
         Items.length = y;
         Main.Redraw();
     },
@@ -163,23 +166,11 @@ var Main = {
         var left = box.left + scrollLeft - clientLeft
         return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
     },
-    CreateMenu:function(menu, name, handler)
-    {
-
-
-    },
     Init: function()
     {
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
         ctx = canvas.getContext('2d');
-        /*document.onmousemove = function(evt)
-        {
-            ctx.clearRect(10, 10, 170, 35);
-            ctx.fillText("Page: " + evt.pageX + "," + evt.pageY, 10, 10);
-            ctx.fillText("Canvas: " + canvas.offsetLeft + "," + canvas.offsetTop, 10, 25);
-        }*/
-
         canvas.onmousedown = function(evt)
         {
             var b = evt.button;

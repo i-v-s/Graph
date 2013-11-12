@@ -8,19 +8,20 @@
 </head>
 <body class="claro">
     <div class="dijitHidden">
-        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="locsavedlg">
-            <select data-dojo-type="dijit/form/ComboBox" id="lsavename" name="fruit">
+        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="savedialog">
+            <select data-dojo-type="dijit/form/ComboBox" id="savename" name="fruit">
                 <option>A</option>
                 <option selected>Scheme</option>
                 <option>C</option>
             </select>
-            <button onclick="alert(registry.byId('lsavename').get('value'), hideDialog()">Сохранить</button>
-            <button onclick="hideDialog()">Отмена</button>
+            <button onclick="OnSaveButton()">Сохранить</button>
+            <button onclick="hideSaveDialog()">Отмена</button>
         </div>
     </div>
 	<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>
 	<script src="../dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
 	<script>
+        var OnSaveButton = function(){hideSaveDialog();};
         require([
             "dojo/dom",
             "dojo/parser",
@@ -28,34 +29,12 @@
             "dijit/WidgetSet", // for registry.byClass
             "dijit/Dialog",
             "dijit/form/ComboBox",
-            "dijit/Menu",
-            "dijit/MenuItem", 
-            "dijit/MenuBar",
-            "dijit/MenuBarItem",
-            "dijit/MenuSeparator",
-            "dijit/PopupMenuBarItem",
             "dojo/domReady!"
         ], function(dom, parser, registry){
-			// a menu item selection handler
-			var onItemSelect = function(event){
-				//dom.byId("lastSelected").innerHTML = this.get("label");
-			};
-            window.showDialog = function() {
-                registry.byId('locsavedlg').show();
-            }
-            // Hide the dialog
-            window.hideDialog = function() {
-                registry.byId("terms").hide();
-            }
+            window.showSaveDialog = function() {registry.byId('savedialog').show();}
+            window.hideSaveDialog = function() {registry.byId("savedialog").hide();}
 
 			parser.parse();
-
-			var setClickHandler = function(item){
-				item.on("click", onItemSelect);
-			};
-
-			//registry.byClass("dijit.MenuItem").forEach(setClickHandler);
-			//registry.byClass("dijit.MenuBarItem").forEach(setClickHandler);
 		});
 	</script>
 <br>
