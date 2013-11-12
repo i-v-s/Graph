@@ -22,7 +22,7 @@ var Main = {
     SMouseLeft: [],
     SMouseRight: [],
     SRedraw: [],
-    OnInit:[],
+    Modules:[],
     SetRedraw:function(Redraw){Main.SRedraw.push(Main.Redraw); Main.Redraw = Redraw;},
     PopRedraw:function(){Main.Redraw = Main.SRedraw.pop();},
     SetMouseMove:function(OnMouseMove){Main.SMouseMove.push(Main.OnMouseMove); Main.OnMouseMove = OnMouseMove;},
@@ -66,6 +66,11 @@ var Main = {
         //ctx.stroke();
         ctx.strokeStyle = "#8080FF";
         //if(SelRect) SelRect.Stroke();
+    },
+    DeleteAll: function()
+    {
+        Items.length = 0;
+        Main.Redraw();
     },
     Delete: function()
     {
@@ -216,8 +221,13 @@ var Main = {
             alert("kd");
 
         }
-        for(var x = 0; x < Main.OnInit.length; x++)
-            Main.OnInit[x](canvas, ctx);
+        if(CMenu)
+        {
+            CMenu.file.new = {label:"Новый", onclick:Main.DeleteAll};
+            CMenu.edit.delete = {label:"Удалить", onclick:Main.Delete};
+        }
+        for(var x = 0, e = Main.Modules.length; x < e; x++)
+            if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
         this.Redraw();
     }
 };

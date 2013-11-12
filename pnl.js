@@ -158,6 +158,16 @@ var CLine =
         Main.SetMouseMove(CLine.OnMouseMove);
         Main.SetMouseLeft(CLine.OnLeftDown, function(x, y){});
         Main.SetMouseRight(CLine.OnRightDown, CLine.OnRightUp);
+    },
+    OnInit:function()
+    {
+        if(CMenu)
+        {
+            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.create.line = {label:"Линию", onclick:CLine.OnCreate};
+            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
+        }
     }
 }
 
+Main.Modules.push(CLine);

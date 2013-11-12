@@ -7,41 +7,18 @@
 	<link rel="stylesheet" href="../dijit/themes/claro/claro.css" media="screen">
 </head>
 <body class="claro">
-
     <div class="dijitHidden">
-    <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="locsavedlg">
-        <select data-dojo-type="dijit/form/ComboBox" id="lsavename" name="fruit">
-            <option>A</option>
-            <option selected>Scheme</option>
-            <option>C</option>
-        </select>
-        <button onclick="alert(registry.byId('lsavename').get('value'), hideDialog()">Сохранить</button>
-        <button onclick="hideDialog()">Отмена</button>
+        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="locsavedlg">
+            <select data-dojo-type="dijit/form/ComboBox" id="lsavename" name="fruit">
+                <option>A</option>
+                <option selected>Scheme</option>
+                <option>C</option>
+            </select>
+            <button onclick="alert(registry.byId('lsavename').get('value'), hideDialog()">Сохранить</button>
+            <button onclick="hideDialog()">Отмена</button>
+        </div>
     </div>
-</div>
-	<div id="mainMenu" data-dojo-type="dijit/MenuBar">
-		<div id="file" data-dojo-type="dijit/PopupMenuBarItem">
-			<span>Файл</span><div id="fileMenu" data-dojo-type="dijit/Menu">
-                        <div id="new" data-dojo-type="dijit/MenuItem" onclick="Main.CreateMenu('file', 'test','test',null);">Новый</div>
-                        <div data-dojo-type="dijit/MenuSeparator"></div>
-                        <div id="saveloc" data-dojo-type="dijit/MenuItem" onclick="showDialog()">Сохранить в браузере</div>
-                        <div id="loadloc" data-dojo-type="dijit/MenuItem" onclick="LocDB.Load('GraphDB','Scheme')">Загрузить из браузера</div>
-		</div></div>
-		<div id="edit" data-dojo-type="dijit/PopupMenuBarItem">
-			<span>Правка</span><div id="editMenu" data-dojo-type="dijit/Menu">
-			<div id="delete" data-dojo-type="dijit/MenuItem" onclick="Main.Delete()">Удалить</div>
-		</div></div>
-		<div id="create" data-dojo-type="dijit/PopupMenuBarItem">
-			<span>Создать</span><div id="createMenu" data-dojo-type="dijit/Menu">
-                        <div id="point" data-dojo-type="dijit/MenuItem">Точку</div>
-                        <div id="line" data-dojo-type="dijit/MenuItem" onclick="CLine.OnCreate()">Линию</div>
-                        <div id="arc" data-dojo-type="dijit/MenuItem" onclick="onarc()">Дугу</div>
-			<div data-dojo-type="dijit/MenuSeparator"></div>
-			<div id="arrow" data-dojo-type="dijit/MenuItem" onclick="onarrow()">Стрелку</div>
-			<div id="block" data-dojo-type="dijit/MenuItem">Блок</div>
-			</div>
-		</div>
-	</div>
+	<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>
 	<script src="../dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
 	<script>
         require([
@@ -77,8 +54,8 @@
 				item.on("click", onItemSelect);
 			};
 
-			registry.byClass("dijit.MenuItem").forEach(setClickHandler);
-			registry.byClass("dijit.MenuBarItem").forEach(setClickHandler);
+			//registry.byClass("dijit.MenuItem").forEach(setClickHandler);
+			//registry.byClass("dijit.MenuBarItem").forEach(setClickHandler);
 		});
 	</script>
 <br>

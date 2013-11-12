@@ -155,13 +155,23 @@ var CArrow =
         Main.PopMouseMove();
         Main.PopRedraw();
         Main.Redraw();
+    },
+    OnCreate: function()
+    {
+        //var BLine = document.getElementById("BLine");
+        Main.SetMouseMove(CArrow.OnMouseMove);
+        Main.SetMouseLeft(CArrow.OnLeftDown, function(x, y){});
+        Main.SetMouseRight(CArrow.OnRightDown, CArrow.OnRightUp);
+    },
+    OnInit:function()
+    {
+        if(CMenu)
+        {
+            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.create.arrow = {label:"Стрелку", onclick:CArrow.OnCreate};
+            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
+        }
     }
 }
 
-function onarrow()
-{
-    //var BLine = document.getElementById("BLine");
-    Main.SetMouseMove(CArrow.OnMouseMove);
-    Main.SetMouseLeft(CArrow.OnLeftDown, function(x, y){});
-    Main.SetMouseRight(CArrow.OnRightDown, CArrow.OnRightUp);
-}
+Main.Modules.push(CArrow);

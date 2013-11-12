@@ -44,5 +44,15 @@ var LocDB =
                 Main.Redraw();
             }, null);
         })
+    },
+    OnInit: function()
+    {
+        if(CMenu)
+        {
+            if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.file.locload = {label:"Загрузить из браузера"};
+            CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
+        }
     }
 }
+Main.Modules.push(LocDB);

@@ -47,4 +47,4 @@ var Navi =
     }
 }
 
-Main.OnInit.push(Navi.OnInit);
+Main.Modules.push(Navi);

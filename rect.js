@@ -54,3 +54,68 @@ function Rect(r)//x, y, w, h, Text)
         return true;
     }
 }
+
+var CRect =
+{
+    PointAlign:true,
+    Bl:null,
+    Pt:null,
+    Redraw:function()
+    {
+        CRect.MainRedraw();
+        CRect.Bl.Draw(1);
+    },
+    OnLeftDown:function(x, y)
+    {
+        var point;
+        if(CRect.Pt)
+        {
+            if(CRect.PointAlign && MouseObject && MouseObject instanceof Point)
+            {
+                point = MouseObject;
+                CRect.Bl.p2 = point;
+            }
+            else
+            {
+                Items.push(CLine.Pt);
+                point = CLine.Pt;
+            }
+            Items.push(CLine.Ln);
+        }
+        else
+        {
+            if(CLine.PointAlign && MouseObject && MouseObject instanceof Point)
+                point = MouseObject;
+            else
+                Items.push(point = new Point(Main.MX, Main.MY));
+        }
+        CLine.Pt = new Point(Main.MX, Main.MY);
+        CLine.Bl = new Rect( point, CLine.Pt);
+
+        if(!CLine.Drawing)
+        {
+            CLine.Drawing = true;
+            CLine.MainRedraw = Main.Redraw;
+            Main.SetRedraw(CLine.Redraw);
+        }
+        Main.NeedRedraw = true;
+    },
+    OnCreate: function()
+    {
+        //var BLine = document.getElementById("BLine");
+        Main.SetMouseMove(CRect.OnMouseMove);
+        Main.SetMouseLeft(CRect.OnLeftDown, function(x, y){});
+        Main.SetMouseRight(CRect.OnRightDown, CRect.OnRightUp);
+    },
+    OnInit:function()
+    {
+        if(CMenu)
+        {
+            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.create.block = {label:"Блок", onclick:CRect.OnCreate};
+            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
+        }
+    }
+}
+
+Main.Modules.push(CRect);

@@ -121,13 +121,23 @@ var CArc =
         Main.PopMouseMove();
         Main.PopRedraw();
         Main.Redraw();
+    },
+    OnCreate: function()
+    {
+        //var BLine = document.getElementById("BLine");
+        Main.SetMouseMove(CArc.OnMouseMove);
+        Main.SetMouseLeft(CArc.OnLeftDown, function(x, y){});
+        Main.SetMouseRight(CArc.OnRightDown, CArc.OnRightUp);
+    },
+    OnInit:function()
+    {
+        if(CMenu)
+        {
+            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
+            CMenu.create.arc = {label:"Дугу", onclick:CArc.OnCreate};
+            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
+        }
     }
 }
 
-function onarc()
-{
-    //var BLine = document.getElementById("BLine");
-    Main.SetMouseMove(CArc.OnMouseMove);
-    Main.SetMouseLeft(CArc.OnLeftDown, function(x, y){});
-    Main.SetMouseRight(CArc.OnRightDown, CArc.OnRightUp);
-}
+Main.Modules.push(CArc);
