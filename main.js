@@ -24,9 +24,17 @@ var Main = {
     SRedraw: [],
     Modules:[],
     SetRedraw:function(Redraw){Main.SRedraw.push(Main.Redraw); Main.Redraw = Redraw;},
-    PopRedraw:function(){Main.Redraw = Main.SRedraw.pop();},
+    PopRedraw:function()
+    {
+        if(Main.SRedraw.length == 0) throw "Redraw stack overrun!";
+        Main.Redraw = Main.SRedraw.pop();
+    },
     SetMouseMove:function(OnMouseMove){Main.SMouseMove.push(Main.OnMouseMove); Main.OnMouseMove = OnMouseMove;},
-    PopMouseMove:function(){Main.OnMouseMove = Main.SMouseMove.pop();},
+    PopMouseMove:function()
+    {
+        if(Main.SMouseMove.length == 0) throw "MouseMove stack overrun!";
+        Main.OnMouseMove = Main.SMouseMove.pop();
+    },
     SetMouseLeft:function(OnDown, OnUp)
     {
         Main.SMouseLeft.push(new DownUp(Main.OnLeftDown, Main.OnLeftUp));
@@ -35,6 +43,7 @@ var Main = {
     },
     PopMouseLeft:function()
     {
+        if(Main.SMouseLeft.length == 0) throw "MouseLeft stack overrun!";
         var ud = Main.SMouseLeft.pop();
         Main.OnLeftDown = ud.d;
         Main.OnLeftUp = ud.u;
@@ -47,6 +56,7 @@ var Main = {
     },
     PopMouseRight:function()
     {
+        if(Main.SMouseRight.length == 0) throw "MouseRight stack overrun!";
         var ud = Main.SMouseRight.pop();
         Main.OnRightDown = ud.d;
         Main.OnRightUp = ud.u;
@@ -61,8 +71,9 @@ var Main = {
         for(var x = 0; x < Items.length; x++)
         {
             var f = Items[x];
-            f.Draw((f == MouseObject) ? 1 : 0);
+            if(f !== MouseObject) f.Draw(0);
         }
+        if(MouseObject) MouseObject.Draw(1);
         //ctx.stroke();
         ctx.strokeStyle = "#8080FF";
         //if(SelRect) SelRect.Stroke();
@@ -93,20 +104,20 @@ var Main = {
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
-        for(x = 0; x < Items.length; x++) if(Items[x].Hit(mx, my))
+        for(x = 0; x < Items.length; x++)
         {
-            mo = Items[x];
-            break;
+            mo = Items[x].Hit(mx, my);
+            if(mo) break;
         }
         if(MouseObject != mo){MouseObject = mo; Main.NeedRedraw = true;}
     },
     OnAlignedMove:function(mx, my) // Движение с привязкой к объектам
     {
         var mo = null;
-        for(x = 0; x < Items.length; x++) if(Items[x].Hit(mx, my))
+        for(x = 0; x < Items.length; x++)
         {
-            mo = Items[x];
-            break;
+            mo = Items[x].Hit(mx, my);
+            if(mo)break;
         }
         if(Main.EveryRedraw || MouseObject != mo){MouseObject = mo; Main.NeedRedraw = true;}
     },
@@ -143,8 +154,11 @@ var Main = {
             for(x = 0; x < Items.length; x++) Items[x].Sel = false;
             MouseObject.Sel = true;
         }
-        for(x = 0; x < Items.length; x++) if(Items[x].Sel) Items[x].MoveBy(dx, dy);
+        for(x = 0; x < Items.length; x++) if(Items[x].Sel) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
+        if(!MouseObject.Moved && MouseObject.MoveBy)
+            MouseObject.MoveBy(dx, dy);
         for(x = 0; x < Items.length; x++) Items[x].Moved = false;
+        MouseObject.Moved = false;
         Main.NeedRedraw = true;
     },
     OnSelMove: function(x, y) // Перемещение рамки выделения

@@ -4,5 +4,5 @@ Items = [Pts[0], Pts[1], Pts[2], new Line(Pts[0], Pts[1]), new Line(Pts[1], Pts[
 var p1 = new Point(200, 100), p2 = new Point(300, 150);
 Items.push(p1, p2, new Arc(p1, p2, 90));
 
-//var R = new Rect(200, 200, 50, 50, "Text");
-//R.Store(Items);
+var R = new Block({x:200, y:200, w:50, h:50, text:"Text"});
+Items.push(R);// R.Store(Items);

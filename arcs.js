@@ -31,10 +31,10 @@ function Arc(p1, p2, A)
         this.Update();
         var dx = x - this.cx;
         var dy = y - this.cy;
-        if(Math.abs(Math.sqrt(dx * dx + dy * dy) - this.R) > 3) return false;
+        if(Math.abs(Math.sqrt(dx * dx + dy * dy) - this.R) > 3) return null;
         var a = Math.atan2(dy, dx);
-        if(a > this.a1 || a < this.a2) return false;
-        return true;
+        if(a > this.a1 || a < this.a2) return null;
+        return this;
     };
     this.MoveBy = function(dx, dy)
     {

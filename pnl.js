@@ -4,6 +4,7 @@ function Point(x, y)
     this.x = x;
     this.y = y;
     this.Serialize = function() {return this.x.toString() + "," + this.y;}
+    this.pos = function() {return {x:this.x, y:this.y};}
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -30,8 +31,8 @@ function Point(x, y)
         {
             Main.MX = this.x;
             Main.MY = this.y;
-            return true;
-        } else return false;
+            return this;
+        } else return null;
     };
     this.GetPSel = function() {return this.Sel;}
     this.Sel = false;
@@ -47,8 +48,10 @@ function Line(p1, p2)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.beginPath();
-        ctx.moveTo(this.p1.x, this.p1.y);
-        ctx.lineTo(this.p2.x, this.p2.y);
+        var p = this.p1.pos();
+        ctx.moveTo(p.x, p.y);
+        p = this.p2.pos();
+        ctx.lineTo(p.x, p.y);
         ctx.stroke();
     };
     this.MoveBy = function(dx, dy)
@@ -62,15 +65,17 @@ function Line(p1, p2)
     };
     this.Hit = function(x, y)
     {
-        if(x > this.p1.x && x > this.p2.x) return false;
-        if(y > this.p1.y && y > this.p2.y) return false;
-        if(x < this.p1.x && x < this.p2.x) return false;
-        if(y < this.p1.y && y < this.p2.y) return false;
-        var dx = this.p2.x - this.p1.x, dy = this.p2.y - this.p1.y;
-        var m = (dx) * (y - this.p1.y) - (dy) * (x - this.p1.x);
+        var p1 = this.p1.pos();
+        var p2 = this.p2.pos();
+        if(x > p1.x && x > p2.x) return null;
+        if(y > p1.y && y > p2.y) return null;
+        if(x < p1.x && x < p2.x) return null;
+        if(y < p1.y && y < p2.y) return null;
+        var dx = p2.x - p1.x, dy = p2.y - p1.y;
+        var m = (dx) * (y - p1.y) - (dy) * (x - p1.x);
         var l = Math.sqrt(dx * dx + dy * dy);
         m /= l;
-        return Math.abs(m) < 5;
+        return Math.abs(m) < 5 ? this : null;
     };
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
     this.Sel = false;
@@ -108,7 +113,7 @@ var CLine =
         var point;
         if(CLine.Pt)
         {
-            if(CLine.PointAlign && MouseObject && MouseObject instanceof Point)
+            if(CLine.PointAlign && MouseObject && MouseObject.pos)
             {
                 point = MouseObject;
                 CLine.Ln.p2 = point;
@@ -122,7 +127,7 @@ var CLine =
         }
         else
         {
-            if(CLine.PointAlign && MouseObject && MouseObject instanceof Point)
+            if(CLine.PointAlign && MouseObject && MouseObject.pos)
                 point = MouseObject;
             else
                 Items.push(point = new Point(Main.MX, Main.MY));
@@ -140,8 +145,8 @@ var CLine =
     },
     OnRightDown:function(x, y)
     {
-        CLine.Pt = 0;
-        CLine.Ln = 0;
+        CLine.Pt = null;
+        CLine.Ln = null;
         CLine.Drawing = false;
         Main.PopMouseLeft();
     },
@@ -150,7 +155,7 @@ var CLine =
         Main.PopMouseRight()
         Main.PopMouseMove();
         Main.PopRedraw();
-        Main.Redraw();
+        Main.NeedRedraw = true;
     },
     OnCreate: function()
     {

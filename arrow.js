@@ -19,14 +19,20 @@ function Arrow(a)
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.beginPath();
         ctx.lineWidth = 2;
-        ctx.moveTo(this.ps[0].x, this.ps[0].y);
+        var p = this.ps[0].pos();
+        ctx.moveTo(p.x, p.y);
         var e = this.ps.length;
         for(var x = 1; x < e; x++)
-            ctx.lineTo(this.ps[x].x, this.ps[x].y);
-        var X = this.ps[e - 1].x;
-        var Y = this.ps[e - 1].y;
-        var dx = X - this.ps[e - 2].x;
-        var dy = Y - this.ps[e - 2].y;
+        {
+            p = this.ps[x].pos();
+            ctx.lineTo(p.x, p.y);
+        }
+        p = this.ps[e - 1].pos();
+        var X = p.x;
+        var Y = p.y;
+        p = this.ps[e - 2].pos();
+        var dx = X - p.x;
+        var dy = Y - p.y;
         var l = Math.sqrt(dx * dx + dy * dy) / 3;
         if(l > 0)
         {
@@ -51,19 +57,22 @@ function Arrow(a)
     this.Hit = function(x, y)
     {
         var pr = 3;
+        var p1 = this.ps[0].pos();
         for(var t = 0, e = this.ps.length - 1; t < e; t++)
         {
-            if(x - pr > this.ps[t].x && x - pr > this.ps[t + 1].x) continue;
-            if(y - pr > this.ps[t].y && y - pr > this.ps[t + 1].y) continue;
-            if(x + pr < this.ps[t].x && x + pr < this.ps[t + 1].x) continue;
-            if(y + pr < this.ps[t].y && y + pr < this.ps[t + 1].y) continue;
-            var dx = this.ps[t + 1].x - this.ps[t].x, dy = this.ps[t + 1].y - this.ps[t].y;
-            var m = (dx) * (y - this.ps[t].y) - (dy) * (x - this.ps[t].x);
+            var p = p1;
+            var p1 = this.ps[t + 1].pos();
+            if(x - pr > p.x && x - pr > p1.x) continue;
+            if(y - pr > p.y && y - pr > p1.y) continue;
+            if(x + pr < p.x && x + pr < p1.x) continue;
+            if(y + pr < p.y && y + pr < p1.y) continue;
+            var dx = p1.x - p.x, dy = p1.y - p.y;
+            var m = (dx) * (y - p.y) - (dy) * (x - p.x);
             var l = Math.sqrt(dx * dx + dy * dy);
             m /= l;
-            if(Math.abs(m) < pr) return true;
+            if(Math.abs(m) < pr) return this;
         }
-        return false;
+        return null;
     };
     this.GetPSel = function() 
     {
@@ -108,10 +117,11 @@ var CArrow =
 
         if(CArrow.Pt)
         {
-            if(CArrow.PointAlign && MouseObject && MouseObject instanceof Point)
+            if(CArrow.PointAlign && MouseObject && MouseObject.pos)
             {
                 point = MouseObject;
-                CArrow.Arr.p2 = point;
+                var ps = CArrow.Arr.ps;
+                ps[ps.length - 1] = point;
             }
             else
             {
@@ -121,7 +131,7 @@ var CArrow =
         }
         else
         {
-            if(CArrow.PointAlign && MouseObject && MouseObject instanceof Point)
+            if(CArrow.PointAlign && MouseObject && MouseObject.pos)
                 point = MouseObject;
             else
                 Items.push(point = new Point(Main.MX, Main.MY));
