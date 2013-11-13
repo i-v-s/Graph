@@ -1,5 +1,6 @@
 var LocDB =
 {
+    DBName:"GraphDB",
     Save: function(DB, Table)
     {
         var db = openDatabase(DB, "0.1", "A db of blockscheme.", 20000);
@@ -45,11 +46,17 @@ var LocDB =
             }, null);
         })
     },
-    OnSaveButton:function()
+    OnSaveButton: function()
     {
         var s = document.getElementById("savename");
-        LocDB.Save("GraphDB", s.value);
+        LocDB.Save(LocDB.DBName, s.value);
         hideSaveDialog();
+    },
+    OnLoadButton: function()
+    {
+        var s = document.getElementById("loadname");
+        LocDB.Load(LocDB.DBName, s.value);
+        hideLoadDialog();
     },
     OnInit: function()
     {
@@ -61,7 +68,28 @@ var LocDB =
                 OnSaveButton = LocDB.OnSaveButton;
                 showSaveDialog();
             }};
-            CMenu.file.locload = {label:"Загрузить из браузера"};
+            CMenu.file.locload = {label:"Загрузить из браузера", onclick:function()
+            {
+                var db = openDatabase(LocDB.DBName, "0.1", "A db of blockscheme.", 20000);
+                if(!db) {alert("Failed to connect to database."); return;}
+
+                db.transaction(function(tx)
+                {
+                    tx.executeSql("select * from sqlite_master where type = 'table'", [], function(tx, result)
+                    {
+                        var l = result.rows.length;
+                        for(var i = 0; i < l; i++)
+                        {
+                            var row = result.rows.item(i);
+                            alert(row.name);
+                        }
+                        Main.Redraw();
+                    }, null);
+                })
+
+                OnLoadButton = LocDB.OnLoadButton;
+                showLoadDialog();
+            }};
         }
     }
 }
