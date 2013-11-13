@@ -65,6 +65,25 @@ var LocDB =
             if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.file.locsave = {label:"Сохранить в браузере", onclick:function()
             {
+                var db = openDatabase(LocDB.DBName, "0.1", "A db of blockscheme.", 20000);
+                if(!db) {alert("Failed to connect to database."); return;}
+                db.transaction(function(tx)
+                {
+                    tx.executeSql("select name from sqlite_master where type = 'table' ORDER BY name", [], function(tx, result)
+                    {
+                        var l = result.rows.length;
+                        require(["dijit/registry"], function(registry){
+                            var v = registry.byId('savename').store.data;
+                            v.length = 0;
+                            for(var i = 0; i < l; i++)
+                            {
+                                var name = result.rows.item(i).name;
+                                if(name.charAt(0) == '_') continue;
+                                v.push({id:name, name:name, value:name});
+                            }
+                        });
+                    }, null);
+                })
                 OnSaveButton = LocDB.OnSaveButton;
                 showSaveDialog();
             }};
@@ -75,15 +94,17 @@ var LocDB =
 
                 db.transaction(function(tx)
                 {
-                    tx.executeSql("select * from sqlite_master where type = 'table'", [], function(tx, result)
+                    tx.executeSql("select name from sqlite_master where type = 'table' ORDER BY name", [], function(tx, result)
                     {
                         var l = result.rows.length;
+                        var s = document.getElementById("loadname").options;
+                        s.length = 0;
                         for(var i = 0; i < l; i++)
                         {
-                            var row = result.rows.item(i);
-                            alert(row.name);
+                            var name = result.rows.item(i).name;
+                            if(name.charAt(0) == '_') continue;
+                            s.add(new Option(name, name));
                         }
-                        Main.Redraw();
                     }, null);
                 })
 

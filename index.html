@@ -9,18 +9,12 @@
 <body class="claro">
     <div class="dijitHidden">
         <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="savedialog">
-            <select data-dojo-type="dijit/form/ComboBox" id="savename">
-                <option selected>Scheme</option>
-            </select>
+            <select data-dojo-type="dijit/form/ComboBox" id="savename"></select>
             <button onclick="OnSaveButton()">Сохранить</button>
             <button onclick="hideSaveDialog()">Отмена</button>
         </div>
-        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="loaddialog">
-            <select data-dojo-type="dijit/form/MultiSelect" id="loadname" name="fruit" size="4">
-                <option value="AP">Apples</option>
-                <option value="OR">Oranges</option>
-                <option value="PE" selected="selected">Pears</option>
-            </select>
+        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Выберите имя'" id="loaddialog">
+            <select data-dojo-type="dijit/form/MultiSelect" id="loadname" style="height:100px; width:200px;"></select><br>
             <button onclick="OnLoadButton()">Загрузить</button>
             <button onclick="hideLoadDialog()">Отмена</button>
         </div>
