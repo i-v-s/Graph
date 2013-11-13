@@ -1,6 +1,7 @@
 var LocDB =
 {
     DBName:"GraphDB",
+    LastName:null,
     Save: function(DB, Table)
     {
         var db = openDatabase(DB, "0.1", "A db of blockscheme.", 20000);
@@ -48,14 +49,18 @@ var LocDB =
     },
     OnSaveButton: function()
     {
-        var s = document.getElementById("savename");
-        LocDB.Save(LocDB.DBName, s.value);
+        var n = document.getElementById("savename").value;
+        if(n == "") return;
+        LocDB.LastName = n;
+        LocDB.Save(LocDB.DBName, n);
         hideSaveDialog();
     },
     OnLoadButton: function()
     {
-        var s = document.getElementById("loadname");
-        LocDB.Load(LocDB.DBName, s.value);
+        var n = document.getElementById("loadname").value;
+        if(n == "") return;
+        LocDB.LastName = n;
+        LocDB.Load(LocDB.DBName, n);
         hideLoadDialog();
     },
     OnInit: function()
@@ -65,6 +70,7 @@ var LocDB =
             if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.file.locsave = {label:"Сохранить в браузере", onclick:function()
             {
+                if(LocDB.LastName) document.getElementById("savename").value = LocDB.LastName;
                 var db = openDatabase(LocDB.DBName, "0.1", "A db of blockscheme.", 20000);
                 if(!db) {alert("Failed to connect to database."); return;}
                 db.transaction(function(tx)
