@@ -167,6 +167,24 @@ var Main = {
         SelRect.h = y - SelRect.y;
         Main.NeedRedraw = true;
     },
+    Stack:[],
+    State:null,
+    States:
+    {
+        free:{move:Main.OnFreeMove, leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");}},
+        selmove:{move:Main.OnSelMove, leftup:Main.OnLeftUp},
+        objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp}
+    },
+    Call:function(state)
+    {
+        if(typeof state === "string") state = States[state];
+        Main.Stack.push(Main.State);
+        var NewState = {}; // Новое состояние - комбинация предущего и требуемого
+        var x;
+        for(x in Main.State) NewState[x] = Main.State[x];
+        for(x in state) NewState[x] = state[x];
+        Main.State = NewState;
+    },
     GetMousePos: function(evt)
     {
         var box = canvas.getBoundingClientRect();
@@ -182,6 +200,7 @@ var Main = {
     },
     Init: function()
     {
+        State = States.free;
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
         ctx = canvas.getContext('2d');
