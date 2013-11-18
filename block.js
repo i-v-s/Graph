@@ -88,7 +88,7 @@ function Block(r)//x, y, w, h, Text)
     this.OnSel = function(Sel)
     {
         var Memo = document.getElementById("Memo");
-        if(Sel) Memo.value = this.text.join("\n");
+        if(Sel) Memo.value = this.text ? this.text.join("\n") : "";
         else
         {
             this.text = Memo.value.split("\n");
