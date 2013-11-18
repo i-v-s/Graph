@@ -88,98 +88,66 @@ function Arrow(a)
 var CArrow =
 {
     Pt:null,
-    Arr:null,
-    Drawing:false,
-    PointAlign:true,
+    Obj:null,
     MainRedraw:null,
-    Redraw:function()
-    {
-        CArrow.MainRedraw();
-        CArrow.Arr.Draw(1);
-    },
-    OnMouseMove:function(x, y)
-    {
-        if(CArrow.PointAlign) Main.OnAlignedMove(x, y);
-        else Main.OnFreeMove(x, y);
-        if(CArrow.Drawing)
-        {
-            if(CArrow.Pt.x != Main.MX || CArrow.Pt.y != Main.MY)
-            {
-                Main.NeedRedraw = true;
-                CArrow.Pt.x = Main.MX;
-                CArrow.Pt.y = Main.MY;
-            }
-        }
-    },
-    OnLeftDown:function(x, y)
-    {
-        var point;
-
-        if(CArrow.Pt)
-        {
-            if(CArrow.PointAlign && MouseObject && MouseObject.pos)
-            {
-                point = MouseObject;
-                var ps = CArrow.Arr.ps;
-                ps[ps.length - 1] = point;
-            }
-            else
-            {
-                Items.push(CArrow.Pt);
-                point = CArrow.Pt;
-            }
-        }
-        else
-        {
-            if(CArrow.PointAlign && MouseObject && MouseObject.pos)
-                point = MouseObject;
-            else
-                Items.push(point = new Point(Main.MX, Main.MY));
-        }
-        CArrow.Pt = new Point(Main.MX, Main.MY);
-        if(CArrow.Arr)
-            CArrow.Arr.ps.push(CArrow.Pt);
-        else
-            CArrow.Arr = new Arrow([point, CArrow.Pt]);
-
-        if(!CArrow.Drawing)
-        {
-            CArrow.Drawing = true;
-            CArrow.MainRedraw = Main.Redraw;
-            Main.SetRedraw(CArrow.Redraw);
-        }
-        Main.NeedRedraw = true;
-    },
-    OnRightDown:function(x, y)
-    {
-        CArrow.Arr.ps.pop();
-        Items.push(CArrow.Arr);
-        CArrow.Pt = 0;
-        CArrow.Arr = 0;
-        CArrow.Drawing = false;
-        Main.PopMouseLeft();
-    },
-    OnRightUp: function(x, y)
-    {
-        Main.PopMouseRight()
-        Main.PopMouseMove();
-        Main.PopRedraw();
-        Main.Redraw();
-    },
-    OnCreate: function()
-    {
-        //var BLine = document.getElementById("BLine");
-        Main.SetMouseMove(CArrow.OnMouseMove);
-        Main.SetMouseLeft(CArrow.OnLeftDown, function(x, y){});
-        Main.SetMouseRight(CArrow.OnRightDown, CArrow.OnRightUp);
-    },
+    OnCreate: function() { Main.Call(States.prearrow);},
     OnInit:function()
     {
+        States.prearrow =
+        {
+            move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},
+            leftup: function(x, y)
+            {
+                CArrow.MainRedraw = State.redraw;
+                var point;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) point = MouseObject; // Выбираем первую точку
+                else Items.push(point = new Point(Main.MX, Main.MY)); // или создаём
+                CArrow.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
+                CArrow.Obj = new Arrow([point, CArrow.Pt]); // Создаём линию
+                Main.Goto(States.nxarrow);
+            },
+            rightup: Main.Pop
+        };
+        States.nxarrow =
+        {
+            redraw: function()
+            {
+                CArrow.MainRedraw();
+                CArrow.Obj.Draw(1);
+            },
+            move: function(x, y)
+            {
+                if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);
+                if(CArrow.Pt.x != Main.MX || CArrow.Pt.y != Main.MY) {Main.NeedRedraw = true; CArrow.Pt.x = Main.MX; CArrow.Pt.y = Main.MY;}
+            },
+            leftup: function(x, y)
+            {
+                if(Main.PointAlign && MouseObject && MouseObject.pos)
+                {
+                    var ps = CArrow.Obj.ps;
+                    ps[ps.length - 1] = MouseObject;
+                }
+                else
+                {
+                    Items.push(CArrow.Pt);
+                    CArrow.Pt = new Point(Main.MX, Main.MY);
+                }
+                CArrow.Obj.ps.push(CArrow.Pt);
+            },
+            rightup: function(x, y)
+            {
+                CArrow.Obj.ps.pop();
+                if(CArrow.Obj.ps.length > 1) Items.push(CArrow.Obj);
+                else Items.pop();
+                CArrow.Obj = null;
+                CArrow.Pt = null;
+                Main.Pop();
+            }
+        }
         if(CMenu)
         {
             //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.create.arrow = {label:"Стрелку", onclick:CArrow.OnCreate};
-            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
         }
     }
 }

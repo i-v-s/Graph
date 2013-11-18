@@ -7,16 +7,6 @@ var Navi =
         ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
         Main.Redraw();
     },
-    OnRightDown: function(x, y)
-    {
-        Main.MX = x * Main.Scale;
-        Main.MY = y * Main.Scale;
-        Main.SetMouseMove(Navi.OnMove);
-    },
-    OnRightUp: function(x, y)
-    {
-        Main.PopMouseMove();
-    },
     OnMouseWheel: function(evt)
     {
         var mp = Main.GetMousePos(evt);
@@ -37,7 +27,15 @@ var Navi =
     },
     OnInit: function(canvas, ctx)
     {
-        Main.SetMouseRight(Navi.OnRightDown, Navi.OnRightUp);
+        //Main.SetMouseRight(Navi.OnRightDown, Navi.OnRightUp);
+        States.free.rightdown = function(x, y)
+        {
+            Main.MX = x * Main.Scale;
+            Main.MY = y * Main.Scale;
+            Main.Call(States.navi);
+        },
+
+        States.navi = { move: Navi.OnMove, rightup: Main.Pop};
         if (canvas.addEventListener) {
             // IE9, Chrome, Safari, Opera
             canvas.addEventListener("mousewheel", Navi.OnMouseWheel, false);

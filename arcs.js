@@ -50,92 +50,54 @@ function Arc(p1, p2, A)
 var CArc =
 {
     Pt:null,
-    Ar:null,
-    Drawing:false,
-    PointAlign:true,
+    Obj:null,
     MainRedraw:null,
     Redraw:function()
     {
         CArc.MainRedraw();
-        CArc.Ar.Draw(1);
+        CArc.Obj.Draw(1);
     },
-    OnMouseMove:function(x, y)
-    {
-        if(CArc.PointAlign) Main.OnAlignedMove(x, y);
-        else Main.OnFreeMove(x, y);
-        if(CArc.Drawing)
-        {
-            if(CArc.Pt.x != Main.MX || CArc.Pt.y != Main.MY)
-            {
-                Main.NeedRedraw = true;
-                CArc.Pt.x = Main.MX;
-                CArc.Pt.y = Main.MY;
-            }
-        }
-    },
-    OnLeftDown:function(x, y)
-    {
-        var point;
-        if(CArc.Pt)
-        {
-            if(CArc.PointAlign && MouseObject && MouseObject instanceof Point)
-            {
-                point = MouseObject;
-                CArc.Ar.p2 = point;
-            }
-            else
-            {
-                Items.push(CArc.Pt);
-                point = CArc.Pt;
-            }
-            Items.push(CArc.Ar);
-        }
-        else
-        {
-            if(CArc.PointAlign && MouseObject && MouseObject instanceof Point)
-                point = MouseObject;
-            else
-                Items.push(point = new Point(Main.MX, Main.MY));
-        }
-        CArc.Pt = new Point(Main.MX, Main.MY);
-        CArc.Ar = new Arc(point, CArc.Pt, 90);
-
-        if(!CArc.Drawing)
-        {
-            CArc.Drawing = true;
-            CArc.MainRedraw = Main.Redraw;
-            Main.SetRedraw(CArc.Redraw);
-        }
-        Main.NeedRedraw = true;
-    },
-    OnRightDown:function(x, y)
-    {
-        CArc.Pt = 0;
-        CArc.Ar = 0;
-        CArc.Drawing = false;
-        Main.PopMouseLeft();
-    },
-    OnRightUp: function(x, y)
-    {
-        Main.PopMouseRight()
-        Main.PopMouseMove();
-        Main.PopRedraw();
-        Main.Redraw();
-    },
-    OnCreate: function()
-    {
-        //var BLine = document.getElementById("BLine");
-        Main.SetMouseMove(CArc.OnMouseMove);
-        Main.SetMouseLeft(CArc.OnLeftDown, function(x, y){});
-        Main.SetMouseRight(CArc.OnRightDown, CArc.OnRightUp);
-    },
+    OnCreate: function() { Main.Call(States.prearc);},
     OnInit:function()
     {
+        States.prearc =
+        {
+            move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},
+            leftup: function(x, y) {
+                CArc.MainRedraw = State.redraw;
+                var point;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) point = MouseObject; // Выбираем первую точку
+                else Items.push(point = new Point(Main.MX, Main.MY)); // или создаём
+                CArc.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
+                CArc.Obj = new Arc(point, CArc.Pt, 90); // Создаём линию
+                Main.Goto(States.nxarc);
+            },
+            rightup: Main.Pop
+        };
+        States.nxarc =
+        {
+            redraw: CArc.Redraw,
+            move: function(x, y)
+            {
+                if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);
+                if(CArc.Pt.x != Main.MX || CArc.Pt.y != Main.MY) {Main.NeedRedraw = true; CArc.Pt.x = Main.MX; CArc.Pt.y = Main.MY;}
+            },
+            leftup: function(x, y)
+            {
+                var point;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) CArc.Obj.p2 = point = MouseObject; // Выбираем вторую точку из под мыши
+                else Items.push(point = CArc.Pt); // или предыдущюю
+                Items.push(CArc.Obj); // Отправляем линию. Теперь вторая точка используется как первая для новой линии.
+                CArc.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
+                CArc.Obj = new Arc(point, CArc.Pt, 90);
+            },
+            rightup: Main.Pop
+        };
+        
         if(CMenu)
         {
             //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.create.arc = {label:"Дугу", onclick:CArc.OnCreate};
-            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
         }
     }
 }

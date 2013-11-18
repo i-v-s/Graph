@@ -85,92 +85,53 @@ function Line(p1, p2)
 var CLine =
 {
     Pt:null,
-    Ln:null,
-    Drawing:false,
-    PointAlign:true,
+    Obj:null,
     MainRedraw:null,
     Redraw:function()
     {
         CLine.MainRedraw();
-        CLine.Ln.Draw(1);
+        CLine.Obj.Draw(1);
     },
-    OnMouseMove:function(x, y)
-    {
-        if(CLine.PointAlign) Main.OnAlignedMove(x, y);
-        else Main.OnFreeMove(x, y);
-        if(CLine.Drawing)
-        {
-            if(CLine.Pt.x != Main.MX || CLine.Pt.y != Main.MY)
-            {
-                Main.NeedRedraw = true;
-                CLine.Pt.x = Main.MX;
-                CLine.Pt.y = Main.MY;
-            }
-        }
-    },
-    OnLeftDown:function(x, y)
-    {
-        var point;
-        if(CLine.Pt)
-        {
-            if(CLine.PointAlign && MouseObject && MouseObject.pos)
-            {
-                point = MouseObject;
-                CLine.Ln.p2 = point;
-            }
-            else
-            {
-                Items.push(CLine.Pt);
-                point = CLine.Pt;
-            }
-            Items.push(CLine.Ln);
-        }
-        else
-        {
-            if(CLine.PointAlign && MouseObject && MouseObject.pos)
-                point = MouseObject;
-            else
-                Items.push(point = new Point(Main.MX, Main.MY));
-        }
-        CLine.Pt = new Point(Main.MX, Main.MY);
-        CLine.Ln = new Line(point, CLine.Pt);
-
-        if(!CLine.Drawing)
-        {
-            CLine.Drawing = true;
-            CLine.MainRedraw = Main.Redraw;
-            Main.SetRedraw(CLine.Redraw);
-        }
-        Main.NeedRedraw = true;
-    },
-    OnRightDown:function(x, y)
-    {
-        CLine.Pt = null;
-        CLine.Ln = null;
-        CLine.Drawing = false;
-        Main.PopMouseLeft();
-    },
-    OnRightUp: function(x, y)
-    {
-        Main.PopMouseRight()
-        Main.PopMouseMove();
-        Main.PopRedraw();
-        Main.NeedRedraw = true;
-    },
-    OnCreate: function()
-    {
-        //var BLine = document.getElementById("BLine");
-        Main.SetMouseMove(CLine.OnMouseMove);
-        Main.SetMouseLeft(CLine.OnLeftDown, function(x, y){});
-        Main.SetMouseRight(CLine.OnRightDown, CLine.OnRightUp);
-    },
+    OnCreate: function() { Main.Call(States.preline);},
     OnInit:function()
     {
+        States.preline =
+        {
+            move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},
+            leftup: function(x, y) {
+                CLine.MainRedraw = State.redraw;
+                var point;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) point = MouseObject; // Выбираем первую точку
+                else Items.push(point = new Point(Main.MX, Main.MY)); // или создаём
+                CLine.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
+                CLine.Obj = new Line(point, CLine.Pt); // Создаём линию
+                Main.Goto(States.nxline);
+            },
+            rightup: Main.Pop
+        };
+        States.nxline =
+        {
+            redraw: CLine.Redraw,
+            move: function(x, y)
+            {
+                if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);
+                if(CLine.Pt.x != Main.MX || CLine.Pt.y != Main.MY) {Main.NeedRedraw = true; CLine.Pt.x = Main.MX; CLine.Pt.y = Main.MY;}
+            },
+            leftup: function(x, y)
+            {
+                var point;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) CLine.Obj.p2 = point = MouseObject; // Выбираем вторую точку из под мыши
+                else Items.push(point = CLine.Pt); // или предыдущюю
+                Items.push(CLine.Obj); // Отправляем линию. Теперь вторая точка используется как первая для новой линии.
+                CLine.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
+                CLine.Obj = new Line(point, CLine.Pt);
+            },
+            rightup: Main.Pop
+        };
         if(CMenu)
         {
             //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.create.line = {label:"Линию", onclick:CLine.OnCreate};
-            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
         }
     }
 }

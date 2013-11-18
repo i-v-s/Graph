@@ -17,50 +17,10 @@ var Main = {
     NeedRedraw: false,
     MouseDown: null,
     OnRightDown: null,
+    PointAlign:true,
     MX: 0, MY: 0,
-    SMouseMove: [],
-    SMouseLeft: [],
-    SMouseRight: [],
-    SRedraw: [],
     Modules:[],
-    SetRedraw:function(Redraw){Main.SRedraw.push(Main.Redraw); Main.Redraw = Redraw;},
-    PopRedraw:function()
-    {
-        if(Main.SRedraw.length == 0) throw "Redraw stack overrun!";
-        Main.Redraw = Main.SRedraw.pop();
-    },
-    SetMouseMove:function(OnMouseMove){Main.SMouseMove.push(Main.OnMouseMove); Main.OnMouseMove = OnMouseMove;},
-    PopMouseMove:function()
-    {
-        if(Main.SMouseMove.length == 0) throw "MouseMove stack overrun!";
-        Main.OnMouseMove = Main.SMouseMove.pop();
-    },
-    SetMouseLeft:function(OnDown, OnUp)
-    {
-        Main.SMouseLeft.push(new DownUp(Main.OnLeftDown, Main.OnLeftUp));
-        Main.OnLeftDown = OnDown;
-        Main.OnLeftUp = OnUp;
-    },
-    PopMouseLeft:function()
-    {
-        if(Main.SMouseLeft.length == 0) throw "MouseLeft stack overrun!";
-        var ud = Main.SMouseLeft.pop();
-        Main.OnLeftDown = ud.d;
-        Main.OnLeftUp = ud.u;
-    },
-    SetMouseRight:function(OnDown, OnUp)
-    {
-        Main.SMouseRight.push(new DownUp(Main.OnRightDown, Main.OnRightUp));
-        Main.OnRightDown = OnDown;
-        Main.OnRightUp = OnUp;
-    },
-    PopMouseRight:function()
-    {
-        if(Main.SMouseRight.length == 0) throw "MouseRight stack overrun!";
-        var ud = Main.SMouseRight.pop();
-        Main.OnRightDown = ud.d;
-        Main.OnRightUp = ud.u;
-    },
+
     Clear: function()
     {
         ctx.clearRect(-Main.OffsetX / Main.Scale, -Main.OffsetY / Main.Scale, canvas.width / Main.Scale, canvas.height / Main.Scale);
@@ -94,13 +54,13 @@ var Main = {
         Items.length = y;
         Main.Redraw();
     },
-    OnLeftDown:function(x, y)
+    /*OnLeftDown:function(x, y)
     {
         Main.MX = x;
         Main.MY = y;
         SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);
         Main.SetMouseMove(MouseObject ? Main.OnObjMove : Main.OnSelMove);
-    },
+    },*/
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
@@ -139,7 +99,7 @@ var Main = {
         }
 
         SelRect = null;
-        Main.PopMouseMove();
+        Main.Pop();
         Main.NeedRedraw = true;
     },
     OnObjMove: function(mx, my) // Перемещение объектов с левой кнопкой
@@ -167,23 +127,29 @@ var Main = {
         SelRect.h = y - SelRect.y;
         Main.NeedRedraw = true;
     },
-    Stack:[],
-    State:null,
-    States:
+    Goto:function(state)
     {
-        free:{move:Main.OnFreeMove, leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");}},
-        selmove:{move:Main.OnSelMove, leftup:Main.OnLeftUp},
-        objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp}
+        if(typeof state === "string") state = States[state];
+        var NewState = {}; // Новое состояние - комбинация предущего и требуемого
+        var x;
+        for(x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
+        for(x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
+        if(state.leftdown && !state.leftup) NewState.leftup = undefined;
+        else if(state.leftup && !state.leftdown) NewState.leftdown = undefined;
+        if(state.rightdown && !state.rightup) NewState.rightup = undefined;
+        else if(state.rightup && !state.rightdown) NewState.rightdown = undefined;
+
+        State = NewState;
     },
     Call:function(state)
     {
-        if(typeof state === "string") state = States[state];
-        Main.Stack.push(Main.State);
-        var NewState = {}; // Новое состояние - комбинация предущего и требуемого
-        var x;
-        for(x in Main.State) NewState[x] = Main.State[x];
-        for(x in state) NewState[x] = state[x];
-        Main.State = NewState;
+        Stack.push(State);
+        Main.Goto(state);
+    },
+    Pop:function()
+    {
+        if(Stack.length == 0) throw "Main.Pop() stack overrun!";
+        State = Stack.pop();
     },
     GetMousePos: function(evt)
     {
@@ -198,6 +164,15 @@ var Main = {
         var left = box.left + scrollLeft - clientLeft
         return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
     },
+    OnMouse: function(evt, method)
+    {
+        if(method)
+        {
+            var mp = Main.GetMousePos(evt);
+            method(mp.x, mp.y);
+            if(Main.NeedRedraw) {Main.NeedRedraw = false; State.redraw();}
+        }
+    },
     Init: function()
     {
         State = States.free;
@@ -208,37 +183,24 @@ var Main = {
         {
             var b = evt.button;
             Main.MouseDown = b;
-            var mp = Main.GetMousePos(evt);
-            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
             switch(b)
             {
-                case 0: if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
-                case 2: if(Main.OnRightDown) Main.OnRightDown(x, y); break;
+                case 0: Main.OnMouse(evt, State.leftdown); break;//if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
+                case 2: Main.OnMouse(evt, State.rightdown);break;//if(Main.OnRightDown) Main.OnRightDown(x, y); break;
             }
-            if(Main.NeedRedraw) {Main.NeedRedraw = false; Main.Redraw();}
         };
         canvas.onmouseup = function(evt)
         {
-            var mp = Main.GetMousePos(evt);
-            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
             switch(Main.MouseDown)
             {
-                case 0: if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
-                case 2: if(Main.OnRightUp) Main.OnRightUp(x, y); break;
+                case 0: Main.OnMouse(evt, State.leftup); break;//if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
+                case 2: Main.OnMouse(evt, State.rightup); break;//if(Main.OnRightUp) Main.OnRightUp(x, y); break;
             }
             Main.MouseDown = null;
-            if(Main.NeedRedraw) {Main.NeedRedraw = false; Main.Redraw();}
         };
         canvas.onmousemove = function(evt)
         {
-            var mp = Main.GetMousePos(evt);
-            var x = mp.x;//(evt.pageX - canvas.offsetLeft - Main.OffsetX) / Main.Scale;
-            var y = mp.y;//(evt.pageY - canvas.offsetTop - Main.OffsetY) / Main.Scale;
-            if(Main.OnMouseMove)
-                Main.OnMouseMove(x, y);
-            if(Main.NeedRedraw) {Main.NeedRedraw = false; Main.Redraw();}
+            Main.OnMouse(evt, State.move);
         };
         canvas.onkeydown = function()
         {
@@ -255,6 +217,16 @@ var Main = {
         this.Redraw();
     }
 };
+
+
+var Stack = [];
+var States =
+{
+    free:{redraw: Main.Redraw, move:Main.OnFreeMove, leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");}},
+    selmove:{move:Main.OnSelMove, leftup:Main.OnLeftUp},
+    objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp}
+};
+var State = States.free;
 
 function SimpleRect(x, y, w, h)
 {

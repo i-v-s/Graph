@@ -62,4 +62,4 @@ var Grid = {
 Main.Clear = Grid.Draw;
 Grid.MAM = Main.OnAlignedMove;
 Main.OnAlignedMove = Grid.OnAlignedMove;
-Main.Redraw = Grid.Redraw;
+States.free.redraw = Grid.Redraw;

@@ -74,6 +74,7 @@ function Block(r)//x, y, w, h, Text)
         //var x = this.P[0].x, y = this.P[0].y;
         ctx.fillStyle = this.Sel ? "#FFE0E0" :(Type > 0 ? "#E0E0E0": "#FFFFFF");// = Type ? "": ;
         ctx.fillRect(this.x, this.y, this.w, this.h);
+        ctx.strokeRect(this.x, this.y, this.w, this.h);
         var step = 20;
         var a = this.x + 3, b = this.y + (step >> 1);
         ctx.textBaseline = "top";
@@ -82,7 +83,7 @@ function Block(r)//x, y, w, h, Text)
         var x, e;
         if(this.text)for(x = 0, e = this.text.length; x < e; x++, b += step)
             ctx.fillText(this.text[x], a, b);
-        if(this.Sel) for(x = this.P.length - 1; x >= 0; x--) this.P[x].Draw(1);
+        if(this.Sel || Type > 0) for(x = this.P.length - 1; x >= 0; x--) this.P[x].Draw(1);
     };//ctx.strokeRect(this.P1.x, this.P1.y, this.w, this.h);};
     this.OnSel = function(Sel)
     {
@@ -112,100 +113,66 @@ function Block(r)//x, y, w, h, Text)
         if(x < this.x) return null;
         if(x > this.x + this.w) return null;
         if(y < this.y) return null;
-        if(y > this.y + this.w) return null;
+        if(y > this.y + this.h) return null;
         return this;
     }
 }
 
 var CBlock =
 {
-    PointAlign:true,
-    Bl:null,
-    Redraw:function()
-    {
-        CBlock.MainRedraw();
-        CBlock.Bl.Draw(1);
-    },
-    OnMouseMove:function(x, y)
-    {
-        if(CBlock.PointAlign) Main.OnAlignedMove(x, y);
-        else Main.OnFreeMove(x, y);
-        if(CBlock.Drawing)
-        {
-            if(CBlock.Bl.x + CBlock.Bl.w != Main.MX || CBlock.Bl.y + CBlock.Bl.h != Main.MY)
-            {
-                Main.NeedRedraw = true;
-                CBlock.Bl.w = Main.MX - CBlock.Bl.x;
-                CBlock.Bl.h = Main.MY - CBlock.Bl.y;
-            }
-        }
-    },
-    la: function(x, y){},
-    OnLeftUp:function(x, y){CBlock.la(x, y);},
-    OnRightDown:function(x, y)
-    {
-        CBlock.Bl = null;
-        CBlock.Drawing = false;
-        Main.PopMouseLeft();
-    },
-    OnRightUp:function(x, y)
-    {
-        Main.PopMouseRight();
-        Main.PopMouseMove();
-        Main.PopRedraw();
-        Main.NeedRedraw = true;
-    },
-    OnLeftDown:function(x, y)
-    {
-        var p;
-        if(CBlock.Bl)
-        {
-            if(CBlock.PointAlign && MouseObject && MouseObject.pos)
-            {
-                p = MouseObject.pos();
-                CBlock.Bl.w = p.x - CBlock.Bl.x;
-                CBlock.Bl.h = p.y - CBlock.Bl.y;
-            }
-            else
-            {
-                CBlock.Bl.w = Main.MX - CBlock.Bl.x;
-                CBlock.Bl.h = Main.MY - CBlock.Bl.y;
-            }
-            Items.push(CBlock.Bl);
-            CBlock.la = function(x, y){CBlock.OnRightDown(x, y); CBlock.OnRightUp(x, y); CBlock.la = function(x, y){};}
-            return;
-        }
-        else
-        {
-            if(CBlock.PointAlign && MouseObject && MouseObject.pos)
-            {
-                p = MouseObject.pos();
-                CBlock.Bl = new Block({x:p.x, y:p.y, w:1, h:1});
-            }
-            else
-                CBlock.Bl = new Block({x:Main.MX, y:Main.MY, w:1, h:1});
-
-            CBlock.Drawing = true;
-            CBlock.OnLeftUp = function(x, y){};
-            CBlock.MainRedraw = Main.Redraw;
-            Main.SetRedraw(CBlock.Redraw);
-            Main.NeedRedraw = true;
-        }
-    },
-    OnCreate: function()
-    {
-        //var BLine = document.getElementById("BLine");
-        Main.SetMouseMove(CBlock.OnMouseMove);
-        Main.SetMouseLeft(CBlock.OnLeftDown, CBlock.OnLeftUp);
-        Main.SetMouseRight(CBlock.OnRightDown, CBlock.OnRightUp);
-    },
+    MainRedraw:null,
+    Obj:null,
+    OnCreate: function() { Main.Call(States.preblock);},
     OnInit:function()
     {
+        States.preblock =
+        {
+            move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},
+            leftup: function(x, y) {
+                CBlock.MainRedraw = State.redraw;
+                var p;
+                if(Main.PointAlign && MouseObject && MouseObject.pos) // Выбираем первую точку
+                {
+                    p = MouseObject.pos();
+                    CBlock.Obj = new Block({x:p.x, y:p.y, w:1, h:1});
+                }
+                else CBlock.Obj = new Block({x:Main.MX, y:Main.MY, w:1, h:1}); // или создаём
+
+                Main.Goto(States.nxblock);
+            },
+            rightup: Main.Pop
+        };
+        States.nxblock =
+        {
+            redraw:function()
+            {
+                CBlock.MainRedraw();
+                CBlock.Obj.Draw(1);
+            },
+            move: function(x, y)
+            {
+                if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);
+                if(CBlock.Obj.x + CBlock.Obj.w != Main.MX || CBlock.Obj.y + CBlock.Obj.h != Main.MY)
+                {
+                    Main.NeedRedraw = true;
+                    CBlock.Obj.w = Main.MX - CBlock.Obj.x;
+                    CBlock.Obj.h = Main.MY - CBlock.Obj.y;
+                }
+            },
+            leftup: function(x, y)
+            {
+                var o = CBlock.Obj;
+                if(o.w < 0) { o.x += o.w; o.w = -o.w;}
+                if(o.h < 0) { o.y += o.h; o.h = -o.h;}
+                Items.push(o);
+                Main.Pop();
+            }
+        };
+
         if(CMenu)
         {
             //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.create.block = {label:"Блок", onclick:CBlock.OnCreate};
-            //CMenu.file.locsave = {label:"Сохранить в браузере", onclick:null};
         }
     }
 }
