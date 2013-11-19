@@ -2,10 +2,10 @@ function Arc(p1, p2, A)
 {
     this.p1 = p1;
     this.p2 = p2;
-    this.a = A * Math.PI / 360;
-    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 360 / Math.PI);}
-    this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 360 / Math.PI};};
-    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 360;},
+    this.a = A * Math.PI / 180;
+    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);}
+    this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI};};
+    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180;},
     this._P =
     {
         o: this,
@@ -18,7 +18,8 @@ function Arc(p1, p2, A)
             var ABy = B.y - A.y;
             var AB2 = ABx * ABx + ABy * ABy;
             var ABd2 = Math.sqrt(AB2) * 0.5;
-            var t = ABd2 / Math.tan(this.o.a * 0.5) + (ABy * x - ABx * y) / ABd2 * 0.5;
+            var t = ABd2 * Math.tan((Math.PI - this.o.a) * 0.5) + (ABy * x - ABx * y) / ABd2 * 0.5;
+            //console.log("a = " + (this.o.a * 180 / Math.PI) + ", AB = " + (ABd2 * 2) + ", M = " + ((ABy * x - ABx * y) / ABd2 * 0.5));
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
         Draw: function(Type)
@@ -33,7 +34,7 @@ function Arc(p1, p2, A)
     {
         var dx = (this.p2.x - this.p1.x) * 0.5;
         var dy = (this.p2.y - this.p1.y) * 0.5;
-        var ct = 1.0 / Math.tan(this.a);
+        var ct = 1.0 / Math.tan(this.a * 0.5);
         var rx = dx + dy * ct;
         var ry = dy - dx * ct;
         this.cx = this.p1.x + rx;

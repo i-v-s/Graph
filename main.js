@@ -14,6 +14,7 @@ var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
+    adm:3, // Допуск при выборе
     NeedRedraw: false,
     MouseDown: null,
     OnRightDown: null,

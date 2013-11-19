@@ -27,7 +27,7 @@ function Point(x, y)
     {
         var dx = Math.abs(this.x - x);
         var dy = Math.abs(this.y - y);
-        if(dx < 3 && dy < 3)
+        if(dx < Main.adm && dy < Main.adm)
         {
             Main.MX = this.x;
             Main.MY = this.y;
@@ -68,15 +68,19 @@ function Line(p1, p2)
     {
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
-        if(x > p1.x && x > p2.x) return null;
-        if(y > p1.y && y > p2.y) return null;
-        if(x < p1.x && x < p2.x) return null;
-        if(y < p1.y && y < p2.y) return null;
+        var xx = x - Main.adm;
+        var yy = y - Main.adm;
+        if(xx > p1.x && xx > p2.x) return null;
+        if(yy > p1.y && yy > p2.y) return null;
+        xx = x + Main.adm;
+        yy = y + Main.adm;
+        if(xx < p1.x && xx < p2.x) return null;
+        if(yy < p1.y && yy < p2.y) return null;
         var dx = p2.x - p1.x, dy = p2.y - p1.y;
         var m = (dx) * (y - p1.y) - (dy) * (x - p1.x);
         var l = Math.sqrt(dx * dx + dy * dy);
         m /= l;
-        return Math.abs(m) < 5 ? this : null;
+        return Math.abs(m) < Main.adm ? this : null;
     };
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
     this.Sel = false;
