@@ -127,6 +127,25 @@ var Main = {
         SelRect.h = y - SelRect.y;
         Main.NeedRedraw = true;
     },
+    GetId: function(o)
+    {
+        if(o.GetId) return o.GetId();
+        return Items.indexOf(o);
+    },
+    ById: function(id)
+    {
+        if(typeof id === "object") return id;
+        if(typeof id === "number") return Items[id];
+        var a = id.split('.');
+        var r = null;
+        for(var x in a)
+        {
+            if(x == 0) r = Items[a[x]];
+            else r = r.Child(a[x]);
+            if(!r) throw "Unrecognized id '" + id + "'";
+        }
+        return r;
+    },
     Goto:function(state)
     {
         if(typeof state === "string") state = States[state];

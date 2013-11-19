@@ -1,9 +1,11 @@
 function Arc(p1, p2, A)
 {
-    this.p1 = typeof p1 == "number" ? Items[p1] : p1;
-    this.p2 = typeof p2 == "number" ? Items[p2] : p2;
+    this.p1 = p1;
+    this.p2 = p2;
     this.a = A * Math.PI / 360;
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 360 / Math.PI);}
+    this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 360 / Math.PI};};
+    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 360;},
     this.Update = function()
     {
         var dx = (this.p2.x - this.p1.x) * 0.5;
@@ -17,7 +19,7 @@ function Arc(p1, p2, A)
         this.a1 = Math.atan2(-ry, -rx);
         this.a2 = Math.atan2(this.p2.y - this.cy, this.p2.x - this.cx);
     }
-    this.Update();
+    if(p1) this.Update();
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");

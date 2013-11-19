@@ -15,14 +15,22 @@ var LocDB =
             for(var x = 0, e = Items.length; x < e; x++)
             {
                 var i = Items[x];
-                var a = i.Serialize ? i.Serialize() : JSON.stringify(i, function(key, value)
+                var a = /*i.Serialize ? i.Serialize() :*/ JSON.stringify(i, function(key, value)
                 {
-                    if(key == "Moved" || key == "Sel") return undefined;
-                    if(value && typeof value == "object") return Items.indexOf(value);
+                    if(key === "") return value;
+                    if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
+                    if(value && typeof value == "object")
+                    {
+                        if(value instanceof Array)
+                            return value;
+                        if(value.GetId) return value.GetId();
+                        var i = Items.indexOf(value);
+                        return i < 0 ? undefined : i;
+                    }
                     return value;
                 });
                 var c = Items[x].constructor.name;
-                console.log(c + "(" + a + ")");
+                //console.log(c + "(" + a + ")");
                 tx.executeSql("INSERT INTO " + Table + " (class, data) values(?, ?)", [c, a], null, null);
             };
         })
@@ -40,9 +48,15 @@ var LocDB =
                 for(var i = 0; i < l; i++)
                 {
                     var row = result.rows.item(i);
-                    Items[i] = eval("new " + row['class'] + "(" + row['data'] + ")");
+                    var cstr = eval(row['class']);
+                    var item = new cstr();
+                    var data = JSON.parse(row["data"]);
+                    for(var x in data) if(data.hasOwnProperty(x)) item[x] = data[x];
+                    Items[i] = item;
+                    //Items[i] = eval("new " + row['class'] + "(" + row['data'] + ")");
                     //document.write('<b>' + ['label'] + '</b><br />');
                 }
+                for(var i = 0; i < l; i++) if(Items[i].OnLoad) Items[i].OnLoad();
                 Main.Redraw();
             }, null);
         })

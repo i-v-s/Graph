@@ -41,9 +41,10 @@ function Point(x, y)
 
 function Line(p1, p2)
 {
-    this.p1 = typeof p1 == "number" ? Items[p1] : p1;
-    this.p2 = typeof p2 == "number" ? Items[p2] : p2;
+    this.p1 = p1;
+    this.p2 = p2;
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);}
+    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2);},
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");

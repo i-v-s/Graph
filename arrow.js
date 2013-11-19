@@ -1,6 +1,5 @@
 function Arrow(a)
 {
-    for(var x = 0, e = a.length; x < e; x++) if(typeof a[x] == "number") a[x] = Items[a[x]];
     this.ps = a;
     this.Serialize = function()
     {
@@ -12,7 +11,7 @@ function Arrow(a)
         }
         return r + "]";
     }
-
+    this.OnLoad = function() { for(var x in this.ps) this.ps[x] = Main.ById(this.ps[x]);}
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;

@@ -1,7 +1,7 @@
 function Block(r)//x, y, w, h, Text)
 {
     for(x in r) if(r.hasOwnProperty(x)) this[x] = r[x];
-    this.P = [
+    this._P = [
         {
             pos:function(){return {x:this.o.x, y:this.o.y}},
             MoveBy:function(x, y){this.o.x += x; this.o.y += y; this.o.w -= x; this.o.h -= y;}
@@ -45,33 +45,28 @@ function Block(r)//x, y, w, h, Text)
             ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
     }
-    for(var x = this.P.length - 1; x >= 0; x--)
+    var GetId = function(){ return '' + Items.indexOf(this.o) + '.' + this.x};
+    for(var x = this._P.length - 1; x >= 0; x--)
     {
-        this.P[x].o = this;
-        this.P[x].Draw = PtDraw;
+        this._P[x].o = this;
+        this._P[x].x = x;
+        this._P[x].Draw = PtDraw;
+        this._P[x].GetId = GetId;
     }
 
-    //this.P = [new Point(x, y), new Point(x + w, y), new Point(x, y + h), new Point(x + w, y + h)];
-    //this.L = [new Line(this.P[0], this.P[1]), new Line(this.P[0], this.P[2]), new Line(this.P[2], this.P[3]), new Line(this.P[1], this.P[3])];
     if(this.text) this.text = this.text.split("\n");
-    /*this.OnPtMoveBy = function(Pt, dx, dy)
-    {
-        if(Pt === this.P[0]) { if(dy != 0 && !this.P[1].Sel) this.P[1].MoveBy(0, dy); if(dx != 0 && !this.P[2].Sel) this.P[2].MoveBy(dx, 0);}
-        if(Pt === this.P[1]) { if(dy != 0 && !this.P[0].Sel) this.P[0].MoveBy(0, dy); if(dx != 0 && !this.P[3].Sel) this.P[3].MoveBy(dx, 0);}
-        if(Pt === this.P[2]) { if(dy != 0 && !this.P[3].Sel) this.P[3].MoveBy(0, dy); if(dx != 0 && !this.P[0].Sel) this.P[0].MoveBy(dx, 0);}
-        if(Pt === this.P[3]) { if(dy != 0 && !this.P[2].Sel) this.P[2].MoveBy(0, dy); if(dx != 0 && !this.P[1].Sel) this.P[1].MoveBy(dx, 0);}
-    }*/
+    this.Child = function(c) {return this._P[c];}
     this.MoveBy = function(dx, dy)
     {
         if(!this.Moved)
         {
             this.x += dx; this.y += dy;
-            for(var x = this.P.length - 1; x >= 0; x--) this.P[x].Moved = true;
+            for(var x = this._P.length - 1; x >= 0; x--) this._P[x].Moved = true;
         };
     }
     this.Draw = function(Type)
     {
-        //var x = this.P[0].x, y = this.P[0].y;
+        //var x = this._P[0].x, y = this._P[0].y;
         ctx.fillStyle = this.Sel ? "#FFE0E0" :(Type > 0 ? "#E0E0E0": "#FFFFFF");// = Type ? "": ;
         ctx.fillRect(this.x, this.y, this.w, this.h);
         ctx.strokeRect(this.x, this.y, this.w, this.h);
@@ -83,7 +78,7 @@ function Block(r)//x, y, w, h, Text)
         var x, e;
         if(this.text)for(x = 0, e = this.text.length; x < e; x++, b += step)
             ctx.fillText(this.text[x], a, b);
-        if(this.Sel || Type > 0) for(x = this.P.length - 1; x >= 0; x--) this.P[x].Draw(1);
+        if(this.Sel || Type > 0) for(x = this._P.length - 1; x >= 0; x--) this._P[x].Draw(1);
     };//ctx.strokeRect(this.P1.x, this.P1.y, this.w, this.h);};
     this.OnSel = function(Sel)
     {
@@ -95,20 +90,13 @@ function Block(r)//x, y, w, h, Text)
             Memo.value = "";
         }
     }
-    /*this.Store = function(v)
-    {
-        var x;
-        for(x = 0; x < 4; x++) v.push(this.P[x]);
-        for(x = 0; x < 4; x++) v.push(this.L[x]);
-        v.push(this);
-    }*/
     this.Hit = function(x, y)
     {
-        for(var i = this.P.length - 1; i >= 0; i--)
+        for(var i = this._P.length - 1; i >= 0; i--)
         {
-            var p = this.P[i].pos();
+            var p = this._P[i].pos();
             if(Math.abs(p.x - x) < 3 && Math.abs(p.y - y) < 3)
-                return this.P[i];
+                return this._P[i];
         }
         if(x < this.x) return null;
         if(x > this.x + this.w) return null;
