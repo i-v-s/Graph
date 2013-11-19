@@ -32,16 +32,18 @@ function Arc(p1, p2, A)
 
     this.Update = function()
     {
-        var dx = (this.p2.x - this.p1.x) * 0.5;
-        var dy = (this.p2.y - this.p1.y) * 0.5;
+        var p1 = this.p1.pos();
+        var p2 = this.p2.pos();
+        var dx = (p2.x - p1.x) * 0.5;
+        var dy = (p2.y - p1.y) * 0.5;
         var ct = 1.0 / Math.tan(this.a * 0.5);
         var rx = dx - dy * ct;
         var ry = dy + dx * ct;
-        this.cx = this.p1.x + rx;
-        this.cy = this.p1.y + ry;
+        this.cx = p1.x + rx;
+        this.cy = p1.y + ry;
         this.R = Math.sqrt(rx * rx + ry * ry);
         this.a1 = Math.atan2(-ry, -rx);
-        this.a2 = Math.atan2(this.p2.y - this.cy, this.p2.x - this.cx);
+        this.a2 = Math.atan2(p2.y - this.cy, p2.x - this.cx);
     }
     if(p1) this.Update();
     this.Draw = function(Type)
