@@ -18,7 +18,7 @@ function Arc(p1, p2, A)
             var ABy = B.y - A.y;
             var AB2 = ABx * ABx + ABy * ABy;
             var ABd2 = Math.sqrt(AB2) * 0.5;
-            var t = ABd2 * Math.tan((Math.PI - this.o.a) * 0.5) + (ABy * x - ABx * y) / ABd2 * 0.5;
+            var t = ABd2 * Math.tan((Math.PI - this.o.a) * 0.5) - (ABy * x - ABx * y) / ABd2 * 0.5;
             //console.log("a = " + (this.o.a * 180 / Math.PI) + ", AB = " + (ABd2 * 2) + ", M = " + ((ABy * x - ABx * y) / ABd2 * 0.5));
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
@@ -35,8 +35,8 @@ function Arc(p1, p2, A)
         var dx = (this.p2.x - this.p1.x) * 0.5;
         var dy = (this.p2.y - this.p1.y) * 0.5;
         var ct = 1.0 / Math.tan(this.a * 0.5);
-        var rx = dx + dy * ct;
-        var ry = dy - dx * ct;
+        var rx = dx - dy * ct;
+        var ry = dy + dx * ct;
         this.cx = this.p1.x + rx;
         this.cy = this.p1.y + ry;
         this.R = Math.sqrt(rx * rx + ry * ry);
@@ -49,7 +49,7 @@ function Arc(p1, p2, A)
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.beginPath();
         this.Update();
-        ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2, true);
+        ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2);
         ctx.stroke();
         if(this.Sel || Type > 0) this._P.Draw(1);
     };
@@ -57,13 +57,14 @@ function Arc(p1, p2, A)
     {
         this.Update();
         var p = this._P.pos();
-        if(Math.abs(p.x - x) < 3 && Math.abs(p.y - y) < 3) return this._P;
+        var adm = Main.adm;
+        if(Math.abs(p.x - x) < adm && Math.abs(p.y - y) < adm) return this._P;
         var dx = x - this.cx;
         var dy = y - this.cy;
-        if(Math.abs(Math.sqrt(dx * dx + dy * dy) - this.R) > 3) return null;
+        if(Math.abs(Math.sqrt(dx * dx + dy * dy) - this.R) > adm) return null;
         var a = Math.atan2(dy, dx);
-        if(a > this.a1 || a < this.a2) return null;
-        return this;
+        if(this.a2 > this.a1) return (a > this.a2 || a < this.a1) ? null : this;
+        else return (a > this.a2 && a < this.a1) ? null : this;
     };
     this.MoveBy = function(dx, dy)
     {
