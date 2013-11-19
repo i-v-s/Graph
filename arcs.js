@@ -6,6 +6,29 @@ function Arc(p1, p2, A)
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 360 / Math.PI);}
     this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 360 / Math.PI};};
     this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 360;},
+    this._P =
+    {
+        o: this,
+        pos: function() {return {x:this.o.cx, y:this.o.cy};},
+        MoveBy: function(x, y)
+        {
+            var A = this.o.p1.pos();
+            var B = this.o.p2.pos();
+            var ABx = B.x - A.x;
+            var ABy = B.y - A.y;
+            var AB2 = ABx * ABx + ABy * ABy;
+            var ABd2 = Math.sqrt(AB2) * 0.5;
+            var t = ABd2 / Math.tan(this.o.a * 0.5) + (ABy * x - ABx * y) / ABd2 * 0.5;
+            this.o.a = 2 * Math.atan2(ABd2, t);
+        },
+        Draw: function(Type)
+        {
+            ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
+            var p = this.pos();
+            if(Type > 0 || this.Sel) ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
+        }
+    };
+
     this.Update = function()
     {
         var dx = (this.p2.x - this.p1.x) * 0.5;
@@ -27,10 +50,13 @@ function Arc(p1, p2, A)
         this.Update();
         ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2, true);
         ctx.stroke();
+        if(this.Sel || Type > 0) this._P.Draw(1);
     };
     this.Hit = function(x, y)
     {
         this.Update();
+        var p = this._P.pos();
+        if(Math.abs(p.x - x) < 3 && Math.abs(p.y - y) < 3) return this._P;
         var dx = x - this.cx;
         var dy = y - this.cy;
         if(Math.abs(Math.sqrt(dx * dx + dy * dy) - this.R) > 3) return null;
