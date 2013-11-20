@@ -80,16 +80,11 @@ function Block(r)//x, y, w, h, Text)
             ctx.fillText(this.text[x], a, b);
         if(this.Sel || Type > 0) for(x = this._P.length - 1; x >= 0; x--) this._P[x].Draw(1);
     };//ctx.strokeRect(this.P1.x, this.P1.y, this.w, this.h);};
-    this.OnSel = function(Sel)
+    this.OnLoad = function(Sel)
     {
-        var Memo = document.getElementById("Memo");
-        if(Sel) Memo.value = this.text ? this.text.join("\n") : "";
-        else
-        {
-            this.text = Memo.value.split("\n");
-            Memo.value = "";
-        }
-    }
+        if(this.x && this.y && this.w && this.h) return true;
+        return false;
+    };
     this.Hit = function(x, y)
     {
         for(var i = this._P.length - 1; i >= 0; i--)
@@ -103,6 +98,19 @@ function Block(r)//x, y, w, h, Text)
         if(y < this.y) return null;
         if(y > this.y + this.h) return null;
         return this;
+    }
+    this.OnOk = function()
+    {
+        var Memo = document.getElementById("blocktext");
+        this.text = undefined;
+        if(Memo.value !== "") this.text = Memo.value.split("\n");
+        hideBlockDialog();
+    }
+    this.OnDblClick = function()
+    {
+        var Memo = document.getElementById("blocktext");
+        Memo.value = this.text ? this.text.join("\n") : "";
+        showBlockDialog();
     }
 }
 

@@ -45,18 +45,36 @@ var LocDB =
             {
                 var l = result.rows.length;
                 Items.length = l;
+                var errors = [];
                 for(var i = 0; i < l; i++)
                 {
                     var row = result.rows.item(i);
-                    var cstr = eval(row['class']);
-                    var item = new cstr();
-                    var data = JSON.parse(row["data"]);
-                    for(var x in data) if(data.hasOwnProperty(x)) item[x] = data[x];
-                    Items[i] = item;
-                    //Items[i] = eval("new " + row['class'] + "(" + row['data'] + ")");
-                    //document.write('<b>' + ['label'] + '</b><br />');
+                    try
+                    {
+                        var cstr = eval(row.class);
+                        var item = new cstr();
+                        var data = JSON.parse(row.data);
+                        for(var x in data) if(data.hasOwnProperty(x)) item[x] = data[x];
+                        Items[i] = item;
+                    }
+                    catch(e)
+                    {
+                        Items[i] = undefined;
+                        errors.push("Error in object " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
+                    }
                 }
-                for(var i = 0; i < l; i++) if(Items[i].OnLoad) Items[i].OnLoad();
+                var r = 0;
+                for(var i = 0; i < l; i++) if(Items[i])
+                {
+                    if(Items[i].OnLoad && !Items[i].OnLoad())
+                    {
+                        errors.push("Error in object " + i + " [class: '" + Items[i].constructor.name + "', data: '" + result.rows.item(i).data +"']: OnLoad() failed");
+                        continue;
+                    }
+                    Items[r++] = Items[i];
+                }
+                Items.length = r;
+                for(e in errors) console.log(errors[e]);
                 Main.Redraw();
             }, null);
         })

@@ -18,6 +18,12 @@
             <button onclick="OnLoadButton()">Загрузить</button>
             <button onclick="hideLoadDialog()">Отмена</button>
         </div>
+        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
+            <textarea data-dojo-type="dijit/form/SimpleTextarea" id="blocktext"></textarea><br>
+            Тип <select data-dojo-type="dijit/form/ComboBox" id="blocktype"></select><br>
+            <button onclick="MouseObject.OnOk()">Ok</button>
+            <button onclick="hideBlockDialog()">Отмена</button>
+        </div>
     </div>
 	<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>
 	<script src="../dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
@@ -32,12 +38,15 @@
             "dijit/Dialog",
             "dijit/form/ComboBox",
             "dijit/form/MultiSelect",
+            "dijit/form/SimpleTextarea",
             "dojo/domReady!"
         ], function(dom, parser, registry){
             window.showSaveDialog = function() {registry.byId('savedialog').show();}
             window.hideSaveDialog = function() {registry.byId("savedialog").hide();}
             window.showLoadDialog = function() {registry.byId('loaddialog').show();}
             window.hideLoadDialog = function() {registry.byId("loaddialog").hide();}
+            window.showBlockDialog = function() {registry.byId('blockdialog').show();}
+            window.hideBlockDialog = function() {registry.byId("blockdialog").hide();}
 			parser.parse();
 		});
 	</script>
@@ -53,7 +62,6 @@
 <script src="user.js"></script>
 <script src="db.js"></script>
 <canvas id='canvas' width="800" height="600" oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
-<textarea id="Memo"></textarea>
 <script>Main.Init()</script>
 </body>
 </html>

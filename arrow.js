@@ -11,7 +11,17 @@ function Arrow(a)
         }
         return r + "]";
     }
-    this.OnLoad = function() { for(var x in this.ps) this.ps[x] = Main.ById(this.ps[x]);}
+    this.OnLoad = function()
+    {
+        if(!this.ps || this.ps.length < 2) return false;
+        for(var x in this.ps)
+        {
+            var v = Main.ById(this.ps[x]);
+            if(!v) return false;
+            this.ps[x] = v;
+        }
+        return true;
+    }
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;

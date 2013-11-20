@@ -218,10 +218,8 @@ var Main = {
             }
             Main.MouseDown = null;
         };
-        canvas.onmousemove = function(evt)
-        {
-            Main.OnMouse(evt, State.move);
-        };
+        canvas.onmousemove = function(evt) {Main.OnMouse(evt, State.move);};
+        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();}
         canvas.onkeydown = function()
         {
             alert("kd");
@@ -242,7 +240,13 @@ var Main = {
 var Stack = [];
 var States =
 {
-    free:{redraw: Main.Redraw, move:Main.OnFreeMove, leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");}},
+    free:
+    {
+        redraw: Main.Redraw,
+        move:Main.OnFreeMove,
+        leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");},
+        dblclick:function(x, y) {if(MouseObject && MouseObject.OnDblClick) MouseObject.OnDblClick(x, y);}
+    },
     selmove:{move:Main.OnSelMove, leftup:Main.OnLeftUp},
     objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp}
 };
