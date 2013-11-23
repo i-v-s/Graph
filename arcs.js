@@ -5,7 +5,7 @@ function Arc(p1, p2, A)
     this.a = A * Math.PI / 180;
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);}
     this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI};};
-    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180;},
+    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180; return this.p1 && this.p2;},
     this._P =
     {
         o: this,
@@ -92,6 +92,7 @@ var CArc =
     OnCreate: function() { Main.Call(States.prearc);},
     OnInit:function()
     {
+        Main.Ctors["Arc"] = Arc;
         States.prearc =
         {
             move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},

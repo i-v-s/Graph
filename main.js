@@ -21,6 +21,7 @@ var Main = {
     PointAlign:true,
     MX: 0, MY: 0,
     Modules:[],
+    Ctors:{},
 
     Clear: function()
     {

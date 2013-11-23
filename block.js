@@ -121,6 +121,7 @@ var CBlock =
     OnCreate: function() { Main.Call(States.preblock);},
     OnInit:function()
     {
+        Main.Ctors["Block"] = Block;
         States.preblock =
         {
             move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},

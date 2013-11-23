@@ -102,6 +102,7 @@ var CArrow =
     OnCreate: function() { Main.Call(States.prearrow);},
     OnInit:function()
     {
+        Main.Ctors["Arrow"] = Arrow;
         States.prearrow =
         {
             move: function(x, y) {if(Main.PointAlign) Main.OnAlignedMove(x, y); else Main.OnFreeMove(x, y);},

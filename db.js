@@ -51,8 +51,7 @@ var LocDB =
                     var row = result.rows.item(i);
                     try
                     {
-                        var cstr = eval(row.class);
-                        var item = new cstr();
+                        var item = new Main.Ctors[row.class];
                         var data = JSON.parse(row.data);
                         for(var x in data) if(data.hasOwnProperty(x)) item[x] = data[x];
                         Items[i] = item;
@@ -60,19 +59,24 @@ var LocDB =
                     catch(e)
                     {
                         Items[i] = undefined;
-                        errors.push("Error in object " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
+                        errors.push("Error parsing object " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
                     }
                 }
-                var r = 0;
                 for(var i = 0; i < l; i++) if(Items[i])
-                {
+                try {
                     if(Items[i].OnLoad && !Items[i].OnLoad())
                     {
                         errors.push("Error in object " + i + " [class: '" + Items[i].constructor.name + "', data: '" + result.rows.item(i).data +"']: OnLoad() failed");
+                        Items[i] = undefined;
                         continue;
                     }
-                    Items[r++] = Items[i];
+                } catch(e) 
+                {
+                    Items[i] = undefined; 
+                    errors.push("Error in object .OnLoad " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
                 }
+                var r = 0;
+                for(var i = 0; i < l; i++) if(Items[i]) Items[r++] = Items[i];
                 Items.length = r;
                 for(e in errors) console.log(errors[e]);
                 Main.Redraw();
