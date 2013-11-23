@@ -1,84 +1,102 @@
-var LocDB =
+var DB =
 {
     DBName:"GraphDB",
     LastName:null,
-    Save: function(DB, Table)
+    GetJSON: function()
     {
-        var db = openDatabase(DB, "0.1", "A db of blockscheme.", 20000);
+        var a = [];
+        for(var x in Items)
+        {
+            var i = Items[x];
+            a[x] = JSON.stringify(i, function(key, value)
+            {
+                if(key === "")
+                {
+                    var vr = new Object();
+                    for(var x in value) if(value.hasOwnProperty(x) && typeof value[x] !== "function") vr[x] = value[x];
+                    if(!vr._) vr._ = value.constructor.name;
+                    return vr;
+                }
+                if(key == "_") return value;
+                if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
+                if(value && typeof value == "object")
+                {
+                    if(value instanceof Array)
+                        return value;
+                    if(value.GetId) return value.GetId();
+                    var i = Items.indexOf(value);
+                    return i < 0 ? undefined : i;
+                }
+                return value;
+            });
+        };
+        return("[" + a.join(',\n') + "]");
+    },
+    LoadJSON: function(Text) 
+    {
+        var errors = [];
+        Items = [];
+        try{Items = JSON.parse(Text);} catch(e)
+        {
+            errors.push("JSON parse error: " + e.message);
+            return;
+        }
+        for(var i in Items) try
+        {
+            var data = Items[i];           
+            var item = new Main.Ctors[data._];
+            for(var x in data) if(data.hasOwnProperty(x) && x !== "_") item[x] = data[x];
+            Items[i] = item;
+        }
+        catch(e)
+        {
+            errors.push("Error creating object " + i + " [class: '" + Items[i]._ + "', data: '" + JSON.stringify(Items[i]) +"']: "+ e.message);
+            Items[i] = undefined;
+        }
+        for(var i in Items) if(Items[i]) try 
+        {
+            if(Items[i].OnLoad && !Items[i].OnLoad())
+            {
+                errors.push("Error in object " + i + " [class: '" + Items[i].constructor.name + "', data: '" + JSON.stringify(Items[i]) +"']: OnLoad() failed");
+                Items[i] = undefined;
+            }
+        } 
+        catch(e) 
+        {
+            errors.push("Error in object .OnLoad " + i + " [class: '" + Items[i].constructor.name + "']: "+ e.message);
+            Items[i] = undefined; 
+        }
+        var r = 0;
+        for(var i = 0, l = Items.length; i < l; i++) if(Items[i]) Items[r++] = Items[i];
+        Items.length = r;
+        //for(e in errors) console.log(errors[e]);
+        return errors;
+    },
+    Save: function(DBName, Table)
+    {
+        var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
         if(!db) {alert("Failed to connect to database."); return;}
         db.transaction(function(tx)
         {
             tx.executeSql("DROP TABLE IF EXISTS " + Table, [], null, null)
-            tx.executeSql("CREATE TABLE " + Table + " (id REAL UNIQUE, class TEXT, data TEXT, timestamp REAL)", [], null, null);
+            tx.executeSql("CREATE TABLE " + Table + " (id REAL UNIQUE, data TEXT, timestamp REAL)", [], null, null);
 
             tx.executeSql("DELETE FROM " + Table, [], null, null);
-            for(var x = 0, e = Items.length; x < e; x++)
-            {
-                var i = Items[x];
-                var a = /*i.Serialize ? i.Serialize() :*/ JSON.stringify(i, function(key, value)
-                {
-                    if(key === "") return value;
-                    if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
-                    if(value && typeof value == "object")
-                    {
-                        if(value instanceof Array)
-                            return value;
-                        if(value.GetId) return value.GetId();
-                        var i = Items.indexOf(value);
-                        return i < 0 ? undefined : i;
-                    }
-                    return value;
-                });
-                var c = Items[x].constructor.name;
-                //console.log(c + "(" + a + ")");
-                tx.executeSql("INSERT INTO " + Table + " (class, data) values(?, ?)", [c, a], null, null);
-            };
+            var r = DB.GetJSON();
+            console.log(r);
+            tx.executeSql("INSERT INTO " + Table + " (data) values(?)", [r], null, null);
         })
     },
-    Load: function(DB, Table)
+    Load: function(DBName, Table)
     {
-        var db = openDatabase(DB, "0.1", "A db of blockscheme.", 20000);
+        var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
         if(!db) {alert("Failed to connect to database."); return;}
         db.transaction(function(tx)
         {
             tx.executeSql("SELECT * FROM " + Table, [], function(tx, result)
             {
-                var l = result.rows.length;
-                Items.length = l;
-                var errors = [];
-                for(var i = 0; i < l; i++)
-                {
-                    var row = result.rows.item(i);
-                    try
-                    {
-                        var item = new Main.Ctors[row.class];
-                        var data = JSON.parse(row.data);
-                        for(var x in data) if(data.hasOwnProperty(x)) item[x] = data[x];
-                        Items[i] = item;
-                    }
-                    catch(e)
-                    {
-                        Items[i] = undefined;
-                        errors.push("Error parsing object " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
-                    }
-                }
-                for(var i = 0; i < l; i++) if(Items[i])
-                try {
-                    if(Items[i].OnLoad && !Items[i].OnLoad())
-                    {
-                        errors.push("Error in object " + i + " [class: '" + Items[i].constructor.name + "', data: '" + result.rows.item(i).data +"']: OnLoad() failed");
-                        Items[i] = undefined;
-                        continue;
-                    }
-                } catch(e) 
-                {
-                    Items[i] = undefined; 
-                    errors.push("Error in object .OnLoad " + i + " [class: '" + row['class'] + "', data: '" + row["data"] +"']: "+ e.message);
-                }
-                var r = 0;
-                for(var i = 0; i < l; i++) if(Items[i]) Items[r++] = Items[i];
-                Items.length = r;
-                for(e in errors) console.log(errors[e]);
+                var errors = DB.LoadJSON(result.rows.item(0).data);
+                if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
                 Main.Redraw();
             }, null);
         })
@@ -87,16 +105,16 @@ var LocDB =
     {
         var n = document.getElementById("savename").value;
         if(n == "") return;
-        LocDB.LastName = n;
-        LocDB.Save(LocDB.DBName, n);
+        DB.LastName = n;
+        DB.Save(DB.DBName, n);
         hideSaveDialog();
     },
     OnLoadButton: function()
     {
         var n = document.getElementById("loadname").value;
         if(n == "") return;
-        LocDB.LastName = n;
-        LocDB.Load(LocDB.DBName, n);
+        DB.LastName = n;
+        DB.Load(DB.DBName, n);
         hideLoadDialog();
     },
     OnInit: function()
@@ -106,8 +124,8 @@ var LocDB =
             if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
             CMenu.file.locsave = {label:"Сохранить в браузере", onclick:function()
             {
-                if(LocDB.LastName) document.getElementById("savename").value = LocDB.LastName;
-                var db = openDatabase(LocDB.DBName, "0.1", "A db of blockscheme.", 20000);
+                if(DB.LastName) document.getElementById("savename").value = DB.LastName;
+                var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
                 if(!db) {alert("Failed to connect to database."); return;}
                 db.transaction(function(tx)
                 {
@@ -126,12 +144,12 @@ var LocDB =
                         });
                     }, null);
                 })
-                OnSaveButton = LocDB.OnSaveButton;
+                OnSaveButton = DB.OnSaveButton;
                 showSaveDialog();
             }};
             CMenu.file.locload = {label:"Загрузить из браузера", onclick:function()
             {
-                var db = openDatabase(LocDB.DBName, "0.1", "A db of blockscheme.", 20000);
+                var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
                 if(!db) {alert("Failed to connect to database."); return;}
 
                 db.transaction(function(tx)
@@ -150,10 +168,10 @@ var LocDB =
                     }, null);
                 })
 
-                OnLoadButton = LocDB.OnLoadButton;
+                OnLoadButton = DB.OnLoadButton;
                 showLoadDialog();
             }};
         }
     }
 }
-Main.Modules.push(LocDB);
+Main.Modules.push(DB);
