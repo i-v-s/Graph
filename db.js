@@ -1,3 +1,17 @@
+function getXmlHttp()
+{
+    var xmlhttp;
+    try {
+        xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+    } catch (e) {
+        try {
+          xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        } catch (E) {xmlhttp = false;}
+    }
+    if (!xmlhttp && typeof xmlhttp != 'undefined') xmlhttp = new XMLHttpRequest();
+    return xmlhttp;
+}
+
 var DB =
 {
     DBName:"GraphDB",
@@ -170,6 +184,14 @@ var DB =
 
                 OnLoadButton = DB.OnLoadButton;
                 showLoadDialog();
+            }};
+            CMenu.file.remload = {label:"Загрузить с сервера", onclick:function() 
+            {
+                var h = getXmlHttp();
+                if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+                h.open("GET", "/graph/g-list.php", false);
+                h.send(null);
+                if(h.status == 200) alert(h.responseText);
             }};
         }
     }
