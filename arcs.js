@@ -22,6 +22,7 @@ function Arc(p1, p2, A)
             //console.log("a = " + (this.o.a * 180 / Math.PI) + ", AB = " + (ABd2 * 2) + ", M = " + ((ABy * x - ABx * y) / ABd2 * 0.5));
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
+        GetId: function(){ return '' + Main.GetId(this.o) + ".0"},
         Draw: function(Type)
         {
             ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -29,7 +30,7 @@ function Arc(p1, p2, A)
             if(Type > 0 || this.Sel) ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
         }
     };
-
+    this.Child = function(c) {return this._P;};
     this.Update = function()
     {
         var p1 = this.p1.pos();
