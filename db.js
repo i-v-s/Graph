@@ -136,7 +136,14 @@ var DB =
         var n = document.getElementById("loadname").value;
         if(n == "") return;
         DB.LastName = n;
-        DB.Load(DB.DBName, n);
+        var h = getXmlHttp();
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        h.open("GET", "/g-get.php?file=" + n, false);
+        h.send(null);
+        if(h.status != 200) alert("Неверный ответ сервера:" + h.status);
+        var errors = LoadJSON(h.responseText);
+        if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
+        Main.Redraw();
         hideLoadDialog();
     },
     OnInit: function()
