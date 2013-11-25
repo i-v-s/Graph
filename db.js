@@ -131,6 +131,14 @@ var DB =
         DB.Load(DB.DBName, n);
         hideLoadDialog();
     },
+    OnRemLoadButton: function()
+    {
+        var n = document.getElementById("loadname").value;
+        if(n == "") return;
+        DB.LastName = n;
+        DB.Load(DB.DBName, n);
+        hideLoadDialog();
+    },
     OnInit: function()
     {
         if(CMenu)
@@ -191,7 +199,22 @@ var DB =
                 if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
                 h.open("GET", "/g-list.php", false);
                 h.send(null);
-                if(h.status == 200) alert(h.responseText);
+                if(h.status != 200) alert("Неверный ответ сервера:" + h.status);
+                var data;
+                try{data = JSON.parse(h.responseText);} catch(e)
+                {
+                    alert("JSON parse error: " + e.message);
+                    return;
+                }
+                var s = document.getElementById("loadname").options;
+                s.length = 0;
+                for(var i in data)
+                {
+                    var name = data[i].name;
+                    s.add(new Option(name, name));
+                }
+                OnLoadButton = DB.OnRemLoadButton;
+                showLoadDialog();
             }};
         }
     }
