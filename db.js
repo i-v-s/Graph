@@ -111,7 +111,7 @@ var DB =
             tx.executeSql("SELECT * FROM " + Table, [], function(tx, result)
             {
                 var errors = DB.LoadJSON(result.rows.item(0).data);
-                if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
+                if(errors && errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
                 Main.Redraw();
             }, null);
         })
