@@ -141,7 +141,7 @@ var DB =
         h.open("GET", "/g-get.php?file=" + n, false);
         h.send(null);
         if(h.status != 200) alert("Неверный ответ сервера:" + h.status);
-        var errors = LoadJSON(h.responseText);
+        var errors = DB.LoadJSON(h.responseText);
         if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
         Main.Redraw();
         hideLoadDialog();
