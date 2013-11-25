@@ -14,6 +14,7 @@ function getXmlHttp()
 
 var DB =
 {
+    HTTP:null,
     DBName:"GraphDB",
     LastName:null,
     GetJSON: function()
@@ -131,12 +132,27 @@ var DB =
         DB.Load(DB.DBName, n);
         hideLoadDialog();
     },
+    OnRemSaveButton: function()
+    {
+        var n = document.getElementById("savename").value;
+        if(n == "") return;
+        DB.LastName = n;
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        h.open("POST", "/g-put.php?file=" + n, false);
+        var text = DB.GetJSON();
+        h.send(text);
+        
+        hideSaveDialog();
+    },
     OnRemLoadButton: function()
     {
         var n = document.getElementById("loadname").value;
         if(n == "") return;
         DB.LastName = n;
-        var h = getXmlHttp();
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
         if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
         h.open("GET", "/g-get.php?file=" + n, false);
         h.send(null);
@@ -200,13 +216,41 @@ var DB =
                 OnLoadButton = DB.OnLoadButton;
                 showLoadDialog();
             }};
-            CMenu.file.remload = {label:"Загрузить с сервера", onclick:function() 
+            CMenu.file.remsave = {label:"Сохранить на сервере", onclick:function()
             {
-                var h = getXmlHttp();
+                if(!DB.HTTP) DB.HTTP = getXmlHttp();
+                var h = DB.HTTP;
                 if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
                 h.open("GET", "/g-list.php", false);
                 h.send(null);
-                if(h.status != 200) alert("Неверный ответ сервера:" + h.status);
+                if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
+                var data;
+                try{data = JSON.parse(h.responseText);} catch(e)
+                {
+                    alert("JSON parse error: " + e.message);
+                    return;
+                }
+                require(["dijit/registry"], function(registry){
+                    var v = registry.byId('savename').store.data;
+                    v.length = 0;
+                    for(var i in data)
+                    {
+                        var name = data[i].name;
+                        if(name.charAt(0) == '_') continue;
+                        v.push({id:name, name:name, value:name});
+                    }
+                });
+                OnSaveButton = DB.OnRemSaveButton;
+                showSaveDialog();                
+            }};
+            CMenu.file.remload = {label:"Загрузить с сервера", onclick:function() 
+            {
+                if(!DB.HTTP) DB.HTTP = getXmlHttp();
+                var h = DB.HTTP;
+                if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+                h.open("GET", "/g-list.php", false);
+                h.send(null);
+                if(h.status != 200){ alert("Неверный ответ сервера:" + h.status); return;}
                 var data;
                 try{data = JSON.parse(h.responseText);} catch(e)
                 {
