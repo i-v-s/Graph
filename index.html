@@ -14,6 +14,8 @@
             <button onclick="hideSaveDialog()">Отмена</button>
         </div>
         <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Выберите имя'" id="loaddialog">
+            <span style="display:none">Пользователь
+            <select data-dojo-type="dijit/form/ComboBox" id="username"></select><br></span>
             <select data-dojo-type="dijit/form/MultiSelect" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
             <button onclick="OnLoadButton()">Загрузить</button>
             <button onclick="hideLoadDialog()">Отмена</button>
