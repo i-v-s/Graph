@@ -22,6 +22,7 @@ body {
 
 .hmenu li /* Элемент горизонтального меню */
 { 
+    list-style-type: none;
 	/*outline: 1px solid #2A5106;*/
 	padding: .1em 1em .13em;
     /*background: #0F0FFF; */
