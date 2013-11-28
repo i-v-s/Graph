@@ -1,0 +1,114 @@
+/* CSS Reset (Eric Meyer) */
+/*
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent;margin:0;padding:0}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}:focus{outline:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+*/
+body {
+    background: #FFFFFF;
+    font: 12px Arial, Helvetica, sans-serif;
+}
+
+.hmenu { /* Горизонтальное меню */
+	/*float: left; 
+    /*border-radius: 10px;
+    background: #79FF00; */
+    font-family: sans-serif;
+    font-size: 12pt;
+    color: #000;/*#79FF00;*/
+    margin: 5px;
+    z-index: 10;
+    display: block;
+    -webkit-padding-start: 0px;
+}
+
+.hmenu li /* Элемент горизонтального меню */
+{ 
+	/*outline: 1px solid #2A5106;*/
+	padding: .1em 1em .13em;
+    /*background: #0F0FFF; */
+	float: left;
+}
+
+.hmenu li:hover { 
+	position: relative; /* Это чтоб подменю стали вертикальными */
+    /*border-radius: 7px;*/
+    background: #C0EFEF; 
+    color: #000000;
+           
+   
+    border-radius: 10px 10px 0 0;
+    /*-moz-border-radius: 10px;
+    -webkit-border-radius: 10px; */
+}
+
+
+.hmenu li ul /* Всплывающее меню (нормально спрятанное)*/
+{ 
+    background: #EFF;/*#2A5106;*/
+    /*background: #2A5106;*/
+    /*margin: 0px;*/
+    display: none; 
+    margin-top: 1px;
+    margin-left: -16px;
+    padding: 8px 0px 8px;
+    border-radius: 0px 10px 10px 10px;
+    /*border: 1px solid #C0EFEF;*/
+
+    box-shadow: 2px 2px 5px #888;
+    /*-moz-box-shadow: 5px 5px 25px #000;
+    -webkit-box-shadow: 5px 5px 25px #000;*/
+}
+
+.hmenu li:hover > ul /* Всплывающее меню (показанное)*/
+{
+	-webkit-padding-start: 0px;
+	/*float: top;*/
+    /*background: #06512A;*/
+    /*margin: 5px;*/
+    display: block;   
+	position:absolute;
+}
+
+.hmenu li ul li /* Пункты подменю */
+{
+	min-width: 120px;
+}
+
+.hmenu li ul li:hover
+{
+    background: #C0EFEF; 
+    border-radius: 0;
+}
+
+.hmenu li ul li ul/* Всплывающее меню (нормально спрятанное)*/
+{ 
+    /*margin: 0px;*/
+    display: none; 
+    margin-top: -2em;
+    margin-left: 120px;
+    padding: 8px 0px 8px;
+    border-radius: 10px 10px 10px 10px;
+}
+
+button {
+	display: inline-block;
+	outline: none;
+	cursor: pointer;
+	text-align: center;
+	text-decoration: none;
+	font: 14px/100% Arial, Helvetica, sans-serif;
+	padding: .5em 2em .55em;
+	text-shadow: 0 1px 1px rgba(0,0,0,.3);
+	-webkit-border-radius: .5em; 
+	-moz-border-radius: .5em;
+	border-radius: .6em;
+	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+	-moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+	box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+button:hover {
+	text-decoration: none;
+}
+button:active {
+	position: relative;
+	top: 1px;
+}

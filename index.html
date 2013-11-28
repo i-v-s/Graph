@@ -4,9 +4,27 @@
 	<meta charset="utf-8">
 	<title>Graph editor</title>
 	<link rel="stylesheet" href="graph.css" media="screen">
+    <link id="CSS" rel="stylesheet" href="lite.css" media="screen">
 	<link rel="stylesheet" href="../dijit/themes/claro/claro.css" media="screen">
+    <script type="text/javascript">function SetCSS(f){document.getElementById('CSS').href = f;}</script>
 </head>
 <body class="claro">
+    <ul class="hmenu">
+        <li> Файл </li>
+        <li> Правка </li>
+        <li> Вид 
+            <ul>
+                <li> Тема 
+                    <ul>
+                        <li onclick="SetCSS('matrix.css')"> Matrix </li>
+                        <li onclick="SetCSS('lite.css')"> Lite </li>
+                    </ul>
+                </li>
+                
+            </ul>
+        </li>
+        <li> Создать </li>
+    </ul>
     <div class="dijitHidden">
         <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="savedialog">
             <select data-dojo-type="dijit/form/ComboBox" id="savename"></select>
@@ -25,7 +43,7 @@
             <button onclick="hideBlockDialog()">Отмена</button>
         </div>
     </div>
-	<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>
+	<!--<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>-->
 	<script src="../dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
 	<script>
         var OnSaveButton = function(){hideSaveDialog();};
