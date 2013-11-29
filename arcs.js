@@ -128,12 +128,13 @@ var CArc =
             rightup: Main.Pop
         };
         
-        if(CMenu)
-        {
-            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
-            CMenu.create.arc = {label:"Дугу", onclick:CArc.OnCreate};
-        }
-    }
+        this.menu[0].click = CArc.OnCreate;
+    },
+    menu: [{
+        path: "createmenu",
+        label: "Дугу",
+        click:null
+    }]
 }
 
 Main.Modules.push(CArc);

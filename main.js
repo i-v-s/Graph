@@ -200,6 +200,14 @@ var Main = {
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
         ctx = canvas.getContext('2d');
+        canvas.height = canvas.clientHeight;
+        canvas.width = canvas.clientWidth;
+        window.onresize = function()
+        {
+            canvas.height = canvas.clientHeight;
+            canvas.width = canvas.clientWidth;
+            Main.Redraw();
+        }
         canvas.onmousedown = function(evt)
         {
             var b = evt.button;
@@ -226,14 +234,20 @@ var Main = {
             alert("kd");
 
         }
-        if(CMenu)
-        {
-            CMenu.file.new = {label:"Новый", onclick:Main.DeleteAll};
-            CMenu.edit.delete = {label:"Удалить", onclick:Main.Delete};
-        }
-        for(var x = 0, e = Main.Modules.length; x < e; x++)
+        for(x in Main.Modules)
             if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
-        this.Redraw();
+        if(window.CMenu)
+        {
+            CMenu.Insert("filemenu", "Новый", Main.DeleteAll);
+            CMenu.Insert("editmenu", "Удалить", Main.Delete);
+            for(x in Main.Modules)
+            {
+                var m = Main.Modules[x].menu;
+                if(!m) continue;
+                for(y in m) CMenu.InsertRec(m[y]);
+            }
+        }
+        Main.Redraw();
     }
 };
 

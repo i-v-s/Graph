@@ -4,15 +4,63 @@
 	<meta charset="utf-8">
 	<title>Graph editor</title>
 	<link rel="stylesheet" href="graph.css" media="screen">
-	<link rel="stylesheet" href="../dijit/themes/claro/claro.css" media="screen">
+    <link id="CSS" rel="stylesheet" href="lite.css" media="screen">
+	<!--<link rel="stylesheet" href="../dijit/themes/claro/claro.css" media="screen">-->
+    <script type="text/javascript">function SetCSS(f){document.getElementById('CSS').href = f;}</script>
 </head>
-<body class="claro">
-    <div class="dijitHidden">
-        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Введите имя'" id="savedialog">
-            <select data-dojo-type="dijit/form/ComboBox" id="savename"></select>
+<body>
+<!-- Канва -->
+    <canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
+<!-- Главное меню -->
+    <ul class="hmenu" id="mainmenu">
+        <li> Файл <ul id="filemenu"></ul></li>
+        <li> Правка <ul id="editmenu"></ul></li>
+        <li> Вид 
+            <ul id="viewmenu">
+                <li> Тема 
+                    <ul>
+                        <li onclick="SetCSS('lite.css')"> Лёгкая </li>
+                        <li onclick="SetCSS('matrix.css')"> Матрица </li>
+                    </ul>
+                </li>
+                
+            </ul>
+        </li>
+        <li> Создать <ul id="createmenu"></ul></li>
+    </ul>
+<!-- Серый экран -->
+    <div id='blocker' hidden="true"></div>
+<!-- Диалоги -->    
+    <script type="text/javascript">
+        function hideModal(id) {document.getElementById(id).hidden = true; document.getElementById("blocker").hidden = true;}
+        function showModal(id) {document.getElementById(id).hidden = false; document.getElementById("blocker").hidden = false;}
+        function comboClick(id)
+        {
+            var e = document.getElementById(id);
+            e.hidden = !e.hidden;
+            this;
+        }
+    </script>
+
+    <div id="savedialog" class="dialog" hidden="true" title="Введите имя">
+        <h1> Сохранить как </h1>
+        <div>
+            <div class="combobox">
+                <!--<button style="float:right" style="width:30" onclick="comboClick('savelist')">\/</button>-->
+                <select id="savelist" type="multiple">
+                    <option> test </option>
+                    <option> test1 </option>
+                    <option> test6 </option>
+                    <option> test7 </option>
+                </select>
+                <input id="savename" class="combobox" type="text" style="width:90%"> 
+            </div>
+            <br>
+            <input type="checkbox">Сохранить локально</input><br>  
             <button onclick="OnSaveButton()">Сохранить</button>
-            <button onclick="hideSaveDialog()">Отмена</button>
+            <button onclick="hideModal('savedialog')">Отмена</button>
         </div>
+<<<<<<< HEAD
         <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Выберите имя'" id="loaddialog">
             <span style="display:none">Пользователь
             <select data-dojo-type="dijit/form/ComboBox" id="username"></select><br></span>
@@ -21,38 +69,21 @@
             <button onclick="hideLoadDialog()">Отмена</button>
         </div>
         <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
+=======
+    </div>
+    <div id="loaddialog" class="dialog" hidden="true" title="Выберите имя">
+        <select multiple size="1" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
+        <button onclick="OnLoadButton()">Загрузить</button>
+        <button onclick="hideModal('loaddialog')">Отмена</button>
+    </div>
+    <!--<div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
+>>>>>>> 814ef32cf9559e939779692eaf4135ffae1d8960
             <textarea data-dojo-type="dijit/form/SimpleTextarea" id="blocktext"></textarea><br>
             Тип <select data-dojo-type="dijit/form/ComboBox" id="blocktype"></select><br>
             <button onclick="MouseObject.OnOk()">Ok</button>
             <button onclick="hideBlockDialog()">Отмена</button>
-        </div>
-    </div>
-	<div id="mainMenu" data-dojo-type="dijit/MenuBar"></div>
-	<script src="../dojo/dojo.js" data-dojo-config="isDebug:1, async:1"></script>
-	<script>
-        var OnSaveButton = function(){hideSaveDialog();};
-        var OnLoadButton = function(){hideLoadDialog();};
-        require([
-            "dojo/dom",
-            "dojo/parser",
-            "dijit/registry",
-            "dijit/WidgetSet", // for registry.byClass
-            "dijit/Dialog",
-            "dijit/form/ComboBox",
-            "dijit/form/MultiSelect",
-            "dijit/form/SimpleTextarea",
-            "dojo/domReady!"
-        ], function(dom, parser, registry){
-            window.showSaveDialog = function() {registry.byId('savedialog').show();}
-            window.hideSaveDialog = function() {registry.byId("savedialog").hide();}
-            window.showLoadDialog = function() {registry.byId('loaddialog').show();}
-            window.hideLoadDialog = function() {registry.byId("loaddialog").hide();}
-            window.showBlockDialog = function() {registry.byId('blockdialog').show();}
-            window.hideBlockDialog = function() {registry.byId("blockdialog").hide();}
-			parser.parse();
-		});
-	</script>
-<br>
+        </div>-->
+<!-- Скрипты -->
 <script src="main.js"></script>
 <script src="menu.js"></script>
 <script src="navi.js"></script>
@@ -63,7 +94,6 @@
 <script src="arcs.js"></script>
 <script src="user.js"></script>
 <script src="db.js"></script>
-<canvas id='canvas' width="800" height="600" oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <script>Main.Init()</script>
 </body>
 </html>
