@@ -7,64 +7,77 @@ body {
     font: 12px Arial, Helvetica, sans-serif;
 }
 
-.hmenu { /* Горизонтальное меню */
-	/*float: left; 
-    /*border-radius: 10px;
-    background: #79FF00; */
+/************ Цвета и тени меню *************************/
+
+.hmenu, button /* Цвет текста */
+{
+    cursor: pointer;
+    /*#79FF00;*/
+    color: #76E215;
     font-family: monospace;
     font-size: 12pt;
-    color: #76E215;/*#79FF00;*/
+}
+
+.hmenu > li:hover, button:hover /* Выделенный пункт*/
+{
+    background: #2A5106;
+    color: #79FF00;
+}
+
+.hmenu li ul, .dialog, button/* Всплывающее подменю */
+{ 
+
+    background: #000;
+    border: 1px solid #2A5106;
+}
+
+.hmenu li ul li ul, .dialog, button/* Всплывающее подменю */
+{ 
+    border-radius: 2px 2px 2px 2px;
+}
+
+
+/************** Параметры меню ********************/
+
+
+.hmenu { /* Горизонтальное меню */
+    position: absolute;
     margin: 5px;
     z-index: 10;
     display: block;
     -webkit-padding-start: 0px;
 }
 
+
+
 .hmenu li /* Элемент горизонтального меню */
 { 
     list-style-type: none;    
 	/*outline: 1px solid #2A5106;*/
-	padding: .1em 1em .13em;
+	padding: .13em 1em .13em;
     /*background: #0F0FFF; */
 	float: left;
 }
 
-.hmenu li:hover { 
-	position: relative; /* Это чтоб подменю стали вертикальными */
+
+
+.hmenu > li:hover { 
+ 	position: relative; /* Это чтоб подменю стали вертикальными */
     /*border-radius: 7px;*/
-    background: #2A5106; 
-    color: #79FF00;
-           
+          
    
-    border-radius: 10px 10px 0 0;
+    border-radius: 2px 2px 0 0;
     /*-moz-border-radius: 10px;
     -webkit-border-radius: 10px; */
 }
 
-/*.hmenu li.sub:hover { 
-    background: #2A5106; 
-    color: #79FF00;
-           
-    box-shadow: 5px 5px 25px #000;
-    -moz-box-shadow: 5px 5px 25px #000;
-    -webkit-box-shadow: 5px 5px 25px #000;
-    
-    border-radius: 10px 10px 0 0;
-    -moz-border-radius: 10px 10px 0 0;
-    -webkit-border-radius: 10px 10px 0 0;
-}*/
-
-
 .hmenu li ul /* Всплывающее меню (нормально спрятанное)*/
 { 
-    background: #000;
-    /*margin: 0px;*/
     display: none; 
     margin-top: 1px;
     margin-left: -16px;
-    padding: 8px 0px 8px;
-    border-radius: 0px 10px 10px 10px;
-    border: 1px solid #2A5106;
+    padding: 0px;
+    border-radius: 0px 2px 2px 2px;
 
     box-shadow: 5px 5px 25px #000;
     -moz-box-shadow: 5px 5px 25px #000;
@@ -81,27 +94,33 @@ body {
 	position:absolute;
 }
 
-.hmenu li ul li /* Пункты подменю */
+.hmenu li ul li, .hmenu li.msep /* Пункты подменю */
 {
+    border-radius: 0;
 	min-width: 120px;
 }
 
-.hmenu li ul li:hover
+.hmenu li ul li:hover, .hmenu li.msep
 {
-    background: #2A5106; 
     border-radius: 0;
+    background: #2A5106; 
 }
 
-.hmenu li ul li ul/* Всплывающее меню (нормально спрятанное)*/
+.hmenu li.msep
+{
+    padding: 1px 16px 1px;
+}
+
+.hmenu li ul li ul/* Всплывающее подменю (нормально спрятанное)*/
 { 
-    background: #000;/*#2A5106;*/
-    /*margin: 0px;*/
     display: none; 
     margin-top: -2em;
     margin-left: 120px;
-    padding: 8px 0px 8px;
-    border-radius: 10px 10px 10px 10px;
-    border: 1px solid #2A5106;
+}
+
+.dialog
+{
+    padding: 10px;
 }
 
 button {
@@ -110,12 +129,11 @@ button {
 	cursor: pointer;
 	text-align: center;
 	text-decoration: none;
-	font: 14px/100% Arial, Helvetica, sans-serif;
+	/*font: 14px/100% Arial, Helvetica, sans-serif;*/
 	padding: .5em 2em .55em;
-	text-shadow: 0 1px 1px rgba(0,0,0,.3);
-	-webkit-border-radius: .5em; 
+	/*-webkit-border-radius: .5em; 
 	-moz-border-radius: .5em;
-	border-radius: .6em;
+	border-radius: .6em;*/
 	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
 	-moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
 	box-shadow: 0 1px 2px rgba(0,0,0,.2);

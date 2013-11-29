@@ -154,12 +154,13 @@ var CArrow =
                 Main.Pop();
             }
         }
-        if(CMenu)
-        {
-            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
-            CMenu.create.arrow = {label:"Стрелку", onclick:CArrow.OnCreate};
-        }
-    }
+        this.menu[0].click = CArrow.OnCreate;
+    },
+    menu: [{
+        path: "createmenu",
+        label: "Стрелку",
+        click:null
+    }]
 }
 
 Main.Modules.push(CArrow);

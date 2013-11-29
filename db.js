@@ -17,6 +17,7 @@ var DB =
     HTTP:null,
     DBName:"GraphDB",
     LastName:null,
+    LastUser:null,
     GetJSON: function()
     {
         var a = [];
@@ -162,18 +163,34 @@ var DB =
         Main.Redraw();
         hideLoadDialog();
     },
+    OpenSaveDialog: function()
+    {
+        showModal("savedialog");
+    },
+    menu: 
+    {
+        s1:{path: "filemenu", label: "-"},
+        save:{path: "filemenu", label: "Сохранить", click:null},
+        saveas:{path: "filemenu", label: "Сохранить как", click:null},
+        s2:{path: "filemenu", label: "-"},
+        open:{path: "filemenu", label: "Открыть", click:null},
+        last:{path: "filemenu", label: "Последние", subid: "filelast"}
+    },
     OnInit: function()
     {
-        if(CMenu)
+        this.menu.save.click = function()
         {
-            if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
-            CMenu.file.locsave = {label:"Сохранить в браузере", onclick:function()
+            if(this.LastName) DB.Save();
+            else DB.OpenSaveDialog();
+        }
+        this.menu.saveas.click = function()
+        {
+            DB.OpenSaveDialog();
+            if(DB.LastName) document.getElementById("savename").value = DB.LastName;
+            var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
+            if(!db) {alert("Failed to connect to database."); return;}
+            db.transaction(function(tx)
             {
-                if(DB.LastName) document.getElementById("savename").value = DB.LastName;
-                var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
-                if(!db) {alert("Failed to connect to database."); return;}
-                db.transaction(function(tx)
-                {
                     tx.executeSql("select name from sqlite_master where type = 'table' ORDER BY name", [], function(tx, result)
                     {
                         var l = result.rows.length;
@@ -189,11 +206,11 @@ var DB =
                         });
                     }, null);
                 })
-                OnSaveButton = DB.OnSaveButton;
-                showSaveDialog();
-            }};
-            CMenu.file.locload = {label:"Загрузить из браузера", onclick:function()
-            {
+            OnSaveButton = DB.OnSaveButton;
+            showSaveDialog();
+        };
+        this.menu.open.click = function()
+        {
                 var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
                 if(!db) {alert("Failed to connect to database."); return;}
 
@@ -214,9 +231,11 @@ var DB =
                 })
 
                 OnLoadButton = DB.OnLoadButton;
-                showLoadDialog();
-            }};
-            CMenu.file.remsave = {label:"Сохранить на сервере", onclick:function()
+                document.getElementById("loaddialog").hidden = false;
+                document.getElementById("blocker").hidden = false;
+
+            };
+            /*CMenu.file.remsave = {label:"Сохранить на сервере", onclick:function()
             {
                 if(!DB.HTTP) DB.HTTP = getXmlHttp();
                 var h = DB.HTTP;
@@ -266,8 +285,8 @@ var DB =
                 }
                 OnLoadButton = DB.OnRemLoadButton;
                 showLoadDialog();
-            }};
-        }
+            }};*/
+        
     }
 }
 Main.Modules.push(DB);

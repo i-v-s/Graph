@@ -135,12 +135,13 @@ var CLine =
             },
             rightup: Main.Pop
         };
-        if(CMenu)
-        {
-            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
-            CMenu.create.line = {label:"Линию", onclick:CLine.OnCreate};
-        }
-    }
+        CLine.menu[0].click = CLine.OnCreate;
+    },
+    menu: [{
+        path: "createmenu",
+        label: "Линию",
+        click:null
+    }]
 }
 
 Main.Modules.push(CLine);

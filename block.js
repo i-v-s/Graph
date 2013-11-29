@@ -166,12 +166,13 @@ var CBlock =
             }
         };
 
-        if(CMenu)
-        {
-            //if(!CMenu.isEmpty(CMenu.file)) CMenu.file.ldbsep = "-";
-            CMenu.create.block = {label:"Блок", onclick:CBlock.OnCreate};
-        }
-    }
+        this.menu[0].click = CBlock.OnCreate;
+    },
+    menu: [{
+        path: "createmenu",
+        label: "Блок",
+        click:null
+    }]
 }
 
 Main.Modules.push(CBlock);
