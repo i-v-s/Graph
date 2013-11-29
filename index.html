@@ -60,16 +60,6 @@
             <button onclick="OnSaveButton()">Сохранить</button>
             <button onclick="hideModal('savedialog')">Отмена</button>
         </div>
-<<<<<<< HEAD
-        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Выберите имя'" id="loaddialog">
-            <span style="display:none">Пользователь
-            <select data-dojo-type="dijit/form/ComboBox" id="username"></select><br></span>
-            <select data-dojo-type="dijit/form/MultiSelect" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
-            <button onclick="OnLoadButton()">Загрузить</button>
-            <button onclick="hideLoadDialog()">Отмена</button>
-        </div>
-        <div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
-=======
     </div>
     <div id="loaddialog" class="dialog" hidden="true" title="Выберите имя">
         <select multiple size="1" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
@@ -77,7 +67,6 @@
         <button onclick="hideModal('loaddialog')">Отмена</button>
     </div>
     <!--<div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
->>>>>>> 814ef32cf9559e939779692eaf4135ffae1d8960
             <textarea data-dojo-type="dijit/form/SimpleTextarea" id="blocktext"></textarea><br>
             Тип <select data-dojo-type="dijit/form/ComboBox" id="blocktype"></select><br>
             <button onclick="MouseObject.OnOk()">Ok</button>
