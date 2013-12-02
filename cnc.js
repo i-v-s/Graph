@@ -17,7 +17,22 @@ function GPath()
         	ctx.lineTo(p.x, p.y);
     	}
         ctx.stroke();		
-	},
+	};
+	this.ToGCode = function(dx, dy, z, Gz, Prep)
+	{
+        var p = this.s[0].p.pos();
+        var R = new Array(this.s.length);
+        R[0] = Gz + " X" + (p.x + dx) + " Y" + (p.y + dy) + " Z" + z + "\n" + Prep;
+        for(var x in this.s) if(x > 0)
+        {
+        	p = this.s[x].p.pos();
+        	if(this.s[x].g instanceof Line)
+        		R[x] = "G1 X" + (p.x + dx) + " Y" + (p.y + dy);
+        	else
+        		R[x] = "(??? X" + (p.x + dx) + " Y" + (p.y + dy) + ")";
+        }
+        return R.join("\n");
+	};
 	this.Hit = function(x, y)
 	{
 		return null;
@@ -29,7 +44,10 @@ function GPath()
 
 var CGPath = 
 {
-
+	dx:0,
+	dy:0,
+	safeZ:0,
+	defZ:0,
 	Scan:function(s, r)
 	{
 		var l = r.length - 1;
@@ -68,26 +86,44 @@ var CGPath =
 
 
 		var t = s.shift();
-		var e;
-		d:do
+		var e, x, l;
+		do 
 		{
 			var r = [{p: t.p1, g: null}, {p: t.p2, g: t}];
 			if(e = CGPath.Scan(s, r)) { alert(e); return;}
 			var p = new GPath();
 			p.s = r;
 			Items.push(p);
-			for(var x in s) if(s[x]) continue d;
-		} while(false);
+			for(x = 0, l = s.length; x < l; x++) if(t = s[x]) { s[x] = undefined; break;}
+		} while(x < l);
 		Main.Redraw();
 	},
-	menu: [{
+	GetGCode:function()
+	{
+		var R = [];
+		for(x in Items) if(Items[x].ToGCode)
+		{
+			R.push(Items[x].ToGCode(CGPath.dx, CGPath.dy, Items[x].z ? Items[x].z : CGPath.defZ, "G1", ""));
+			R.push("G0 Z" + CGPath.safeZ);
+		} 
+		document.getElementById("goutarea").value = R.join("\n");
+		showModal("goutdialog");
+	},
+	menu: [
+	{
         path: "createmenu",
         label: "Путь ЧПУ",
         click:null
+    },
+    {
+    	path: "cncmenu",
+    	label: "Вывести GCode",
+    	click:null
     }],
     OnInit:function()
     {
     	this.menu[0].click = this.Create;
+    	this.menu[1].click = this.GetGCode;
     }
 }
 

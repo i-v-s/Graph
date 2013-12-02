@@ -27,6 +27,7 @@
             </ul>
         </li>
         <li> Создать <ul id="createmenu"></ul></li>
+        <li> ЧПУ <ul id="cncmenu"></ul></li>
     </ul>
 <!-- Серый экран -->
     <div id='blocker' hidden="true"></div>
@@ -69,6 +70,10 @@
         <select multiple size="1" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
         <button onclick="OnLoadButton()">Загрузить</button>
         <button onclick="hideModal('loaddialog')">Отмена</button>
+    </div>
+    <div id="goutdialog" class="dialog" hidden="true">
+        <textarea id="goutarea"></textarea><br>
+        <button onclick="hideModal('goutdialog')">Закрыть</button>
     </div>
     <!--<div data-dojo-type="dijit/Dialog" data-dojo-props="title:'Свойства блока'" id="blockdialog">
             <textarea data-dojo-type="dijit/form/SimpleTextarea" id="blocktext"></textarea><br>
