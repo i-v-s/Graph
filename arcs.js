@@ -50,6 +50,7 @@ function Arc(p1, p2, A)
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.lineWidth = 1;
         ctx.beginPath();
         this.Update();
         ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2);

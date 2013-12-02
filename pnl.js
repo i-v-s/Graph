@@ -48,6 +48,7 @@ function Line(p1, p2)
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.lineWidth = 1;
         ctx.beginPath();
         var p = this.p1.pos();
         ctx.moveTo(p.x, p.y);
@@ -82,6 +83,13 @@ function Line(p1, p2)
         m /= l;
         return Math.abs(m) < Main.adm ? this : null;
     };
+    this.Vector = function(p)
+    {
+        var a = this.p1.pos();
+        var b = this.p2.pos();
+        if(p === this.p1) return {x: b.x - a.x, y: b.y - a.y};
+        if(p === this.p2) return {x: a.x - b.x, y: a.y - b.y};
+    }
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
     this.Sel = false;
     this.Moved = false;
