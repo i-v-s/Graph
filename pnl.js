@@ -10,6 +10,7 @@ function Point(x, y)
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
         if(Type > 0 || this.Sel)
         {
+            ctx.lineWidth = 1;
             ctx.strokeRect(this.x - 2, this.y - 2, 5, 5);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
     };
@@ -83,12 +84,16 @@ function Line(p1, p2)
         m /= l;
         return Math.abs(m) < Main.adm ? this : null;
     };
-    this.Vector = function(p)
+    this.vec = function(p)
     {
         var a = this.p1.pos();
         var b = this.p2.pos();
-        if(p === this.p1) return {x: b.x - a.x, y: b.y - a.y};
-        if(p === this.p2) return {x: a.x - b.x, y: a.y - b.y};
+        var x = b.x - a.x;
+        var y = b.y - a.y;
+        var l = Math.sqrt(x * x + y * y);
+        if(l > 0.000000001) {x /= l; y /= l;}
+        if(p === this.p1) return {x: x, y: y};
+        if(p === this.p2) return {x: -x, y: -y};
     }
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
     this.Sel = false;

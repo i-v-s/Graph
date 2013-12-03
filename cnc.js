@@ -2,19 +2,44 @@ function GPath()
 {
 	this.s = null; // 
 	this._p = null; // Массив точек пути {G, p}
-	this.sh = 5;
+	this.sh = 7;
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 4;
         ctx.beginPath();
-
+        var sl = this.s.length - 1;
         var p = this.s[0].p.pos();
+        var v = this.s[1].g.vec(this.s[0].p);
+        p.x += v.y * this.sh;
+        p.y -= v.x * this.sh;
         ctx.moveTo(p.x, p.y);
-        for(var x in this.s) if(x > 0)
-        {
-        	p = this.s[x].p.pos();
-        	ctx.lineTo(p.x, p.y);
+        for(var x = 0; x <= sl; x++) if(x > 0)
+        {       	
+        	var pt =  this.s[x].p;
+        	var va = this.s[x].g.vec(pt), vb, m;
+        	if(x < sl)
+        	{
+        		vb = this.s[x + 1].g.vec(pt);
+        		m = va.x * vb.y - va.y * vb.x;
+
+
+        	}
+
+        	p = pt.pos();
+        	var a1 = Math.atan2(va.x, -va.y);
+	        var ax = p.x - va.y * this.sh;
+    	    var ay = p.y + va.x * this.sh;
+        	ctx.lineTo(ax, ay);
+
+        	if(x < sl) // Строим "колено"
+        	{
+        		var bx = p.x + vb.y * this.sh;
+		        var by = p.y - vb.x * this.sh;
+		        var a2 = Math.atan2(-vb.x, vb.y);
+		        if(m < 0) ctx.arc(p.x, p.y, this.sh, a1, a2);
+		        else ctx.moveTo(bx, by);
+        	}
     	}
         ctx.stroke();		
 	};
