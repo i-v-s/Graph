@@ -1,4 +1,16 @@
 
+function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус R; Начало отрезка p; Вектор направления v
+{
+	var dx = p.x - cx; 
+  	var dy = p.y - cy;
+  	var Bd = v.x * dx + v.y * dy;
+  	var d2 = dx * dx + dy * dy;
+  	var t = Math.sqrt(Bd * Bd - d2 + R * R) - Bd;
+  	p.x += v.x * t;
+  	p.y += v.y * t;
+  	return p;
+}
+
 function ShiftedCross(P, A, B, shift) // Точка P, предыдущий сегмент A, последующий сегмент B, сдвиг shift
 {
    	var p = P.pos();
@@ -21,20 +33,32 @@ function ShiftedCross(P, A, B, shift) // Точка P, предыдущий се
    	var m = vA.x * vB.y - vA.y * vB.x;
    	if(m > 0)
    	{ // Поиск пересечения
-		/*if(B instanceof Line)
+		if(B instanceof Line)
 		{
 			if(A instanceof Line)
-	    	{*/
+	    	{
 			    var k = (1 + vA.x * vB.x + vA.y * vB.y) / m;
 			    p.x += shift * (vB.x * k + vB.y);
 			    p.y += shift * (vB.y * k - vB.x);
 			    return p;
-  			/*}
-    	} else if(B instanceof Arc)
+  			}
+  			else
+  			{
+  				var R = A.R + shift;
+  				p.x += shift * vB.y;
+  				p.y -= shift * vB.x; // Конечная точка отрезка
+  				return LineArcCross(A.cx, A.cy, R, p, vB);
+  			}
+    	} 
+    	else
     	{
-
-
-		}*/
+    		{   			
+  				var R = B.R + shift;
+  				p.x -= shift * vA.y;
+  				p.y += shift * vA.x; // Конечная точка отрезка
+  				return LineArcCross(B.cx, B.cy, R, p, vA);
+    		}
+		}
     }
     else
     { // Расчёт колена
@@ -53,7 +77,7 @@ function GPath()
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
-        ctx.lineWidth = 2;//14;
+        ctx.lineWidth = 14;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.beginPath();
@@ -77,7 +101,10 @@ function GPath()
         	// Рисуем сегмент:
         	if(A instanceof Arc)
         	{
-        		ctx.arc(A.cx, A.cy, A.R + this.sh, A.a1, A.a2);
+        		var a1 = A.a1, a2 = A.a2;
+        		if(p1.a1 === undefined) a1 = Math.atan2(p1.y - A.cy, p1.x - A.cx);
+        		if(p2.a1 === undefined) a2 = Math.atan2(p2.y - A.cy, p2.x - A.cx);
+        		ctx.arc(A.cx, A.cy, A.R + this.sh, a1, a2);
         	}
         	else 
         	{
