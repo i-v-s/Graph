@@ -1,3 +1,50 @@
+
+function ShiftedCross(P, A, B, shift) // Точка P, предыдущий сегмент A, последующий сегмент B, сдвиг shift
+{
+   	var p = P.pos();
+	if(!A)
+	{
+	    var vB = B.vec(P);
+	    p.x += shift * vB.y;
+	    p.y -= shift * vB.x;
+		return p;
+	}
+	if(!B)
+	{
+	    var vA = A.vec(P);
+	    p.x -= shift * vA.y;
+	    p.y += shift * vA.x;
+		return p;
+	}
+   	var vA = A.vec(P);
+    var vB = B.vec(P);
+   	var m = vA.x * vB.y - vA.y * vB.x;
+   	if(m > 0)
+   	{ // Поиск пересечения
+		/*if(B instanceof Line)
+		{
+			if(A instanceof Line)
+	    	{*/
+			    var k = (1 + vA.x * vB.x + vA.y * vB.y) / m;
+			    p.x += shift * (vB.x * k + vB.y);
+			    p.y += shift * (vB.y * k - vB.x);
+			    return p;
+  			/*}
+    	} else if(B instanceof Arc)
+    	{
+
+
+		}*/
+    }
+    else
+    { // Расчёт колена
+    	p.a1 = (A instanceof Arc) ? (P === A.p1 ? A.a1 : A.a2) : Math.atan2(vA.x, -vA.y);
+    	p.vB = vB;
+    	p.a2 = (B instanceof Arc) ? (P === B.p1 ? B.a1 : B.a2) : Math.atan2(-vB.x, vB.y);
+    	return p;
+    }
+}
+
 function GPath()
 {
 	this.s = null; // 
@@ -6,41 +53,47 @@ function GPath()
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;//14;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
         ctx.beginPath();
         var sl = this.s.length - 1;
-        var p = this.s[0].p.pos();
-        var v = this.s[1].g.vec(this.s[0].p);
-        p.x += v.y * this.sh;
-        p.y -= v.x * this.sh;
-        ctx.moveTo(p.x, p.y);
-        for(var x = 0; x <= sl; x++) if(x > 0)
-        {       	
-        	var pt =  this.s[x].p;
-        	var va = this.s[x].g.vec(pt), vb, m;
+
+        var P = this.s[0].p; // Текущая точка
+        var closed = (P === this.s[sl].p); // Контур замкнут?
+
+        var A = closed ? this.s[sl].g : null; // Сегмент до точки
+        var B = this.s[1].g; // Сегмент после точки
+
+        var p1 = ShiftedCross(P, A, B, this.sh);
+        for(var x = 1; x <= sl; x++)
+        {
+        	P = this.s[x].p;
+        	A = B;
         	if(x < sl)
+        		B = this.s[x + 1].g;
+        	else B = closed ? this.s[1].g : null;
+        	var p2 = ShiftedCross(P, A, B, this.sh);
+        	// Рисуем сегмент:
+        	if(A instanceof Arc)
         	{
-        		vb = this.s[x + 1].g.vec(pt);
-        		m = va.x * vb.y - va.y * vb.x;
-
-
+        		ctx.arc(A.cx, A.cy, A.R + this.sh, A.a1, A.a2);
         	}
-
-        	p = pt.pos();
-        	var a1 = Math.atan2(va.x, -va.y);
-	        var ax = p.x - va.y * this.sh;
-    	    var ay = p.y + va.x * this.sh;
-        	ctx.lineTo(ax, ay);
-
-        	if(x < sl) // Строим "колено"
+        	else 
         	{
-        		var bx = p.x + vb.y * this.sh;
-		        var by = p.y - vb.x * this.sh;
-		        var a2 = Math.atan2(-vb.x, vb.y);
-		        if(m < 0) ctx.arc(p.x, p.y, this.sh, a1, a2);
-		        else ctx.moveTo(bx, by);
+        		if(x == 1)
+        		{
+        		 	if(p1.vB) {p1.x += this.sh * p1.vB.y; p1.y -= this.sh * p1.vB.x;}
+        			ctx.moveTo(p1.x, p1.y);
+        		}
+        		if(p2.a1 === undefined) ctx.lineTo(p2.x, p2.y);
         	}
-    	}
+        	// Рисуем колено:
+        	if(p2.a1 !== undefined)
+        		ctx.arc(p2.x, p2.y, this.sh, p2.a1, p2.a2);
+        	p1 = p2;
+
+        }
         ctx.stroke();		
 	};
 	this.ToGCode = function(dx, dy, z, Gz, Prep)

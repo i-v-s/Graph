@@ -70,6 +70,13 @@ function Arc(p1, p2, A)
         if(this.a2 > this.a1) return (a > this.a2 || a < this.a1) ? null : this;
         else return (a > this.a2 && a < this.a1) ? null : this;
     };
+    this.vec = function(P)
+    {
+        var p = P.pos();
+        if(P === this.p1) return {x: (this.cy - p.y) / this.R, y: (p.x - this.cx) / this.R};
+        if(P === this.p2) return {x: (p.y - this.cy) / this.R, y: (this.cx - p.x) / this.R};
+        return null;
+    }
     this.MoveBy = function(dx, dy)
     {
         if(!this.Moved)
