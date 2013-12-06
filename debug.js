@@ -15,14 +15,23 @@ var CDebug =
 		{
 			console.log("" + i + ": " + DB.ItemToJSON(Items[i]));
 		}
-
+	},
+	der:function()
+	{
+		for(i in Items) if(Items[i].Sel)
+		{
+			console.log("" + i + " .der: ");
+			for(d in Items[i]._der)
+				console.log("	" + Main.GetId(Items[i]._der[d]));
+		}
 	},
 	OnInit:function()
 	{
     	CMenu.Add({
     		debug:{label: "Отладка",
-    			out:{label: "Вывести в консоль", click: this.Dump},
-    			json:{label: "Вывести в JSON", click: this.JSON}
+    			out:{label: "В консоль", click: this.Dump},
+    			json:{label: "В JSON", click: this.JSON},
+    			der:{label: "_der", click: this.der}
     		}
     	});
 	}

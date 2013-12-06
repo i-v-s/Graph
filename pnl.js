@@ -3,13 +3,13 @@ function Point(x, y)
 {
     this.x = x;
     this.y = y;
-    this.der = [];
+    this._der = [];
     this.Serialize = function() {return this.x.toString() + "," + this.y;}
     this.pos = function() {return {x:this.x, y:this.y};}
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
-        if(Type > 0 || this.Sel || !this.der.length)
+        if(Type > 0 || this.Sel || !this._der.length)
         {
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x - 2, this.y - 2, 5, 5);
@@ -51,8 +51,8 @@ function Line(p1, p2)
         this.p1 = Main.ById(this.p1);
         this.p2 = Main.ById(this.p2);
         if(!(this.p1 && this.p2)) return false;
-        this.p1.der.push(this);
-        this.p2.der.push(this);
+        this.p1._der.push(this);
+        this.p2._der.push(this);
         return  true;
     },
     this.Draw = function(Type)
@@ -95,10 +95,10 @@ function Line(p1, p2)
     };
     this.del = function()
     {
-        RemoveFromArray(this.p1.der, this);
-        RemoveFromArray(this.p2.der, this);
-        /*if(this.p1 && (typeof this.p1 === "object")) this.p1.der.remove(this);
-        if(this.p2 && (typeof this.p2 === "object")) this.p2.der.remove(this);*/
+        RemoveFromArray(this.p1._der, this);
+        RemoveFromArray(this.p2._der, this);
+        /*if(this.p1 && (typeof this.p1 === "object")) this.p1._der.remove(this);
+        if(this.p2 && (typeof this.p2 === "object")) this.p2._der.remove(this);*/
     };
     this.vec = function(p)
     {
@@ -112,8 +112,8 @@ function Line(p1, p2)
         if(p === this.p2) return {x: -x, y: -y};
     }
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
-    if(typeof p1 === "object" ) p1.der.push(this);
-    if(typeof p2 === "object" ) p2.der.push(this);
+    if(typeof p1 === "object" ) p1._der.push(this);
+    if(typeof p2 === "object" ) p2._der.push(this);
     this.Sel = false;
     this.Moved = false;
 }
@@ -158,13 +158,17 @@ var CLine =
             leftup: function(x, y)
             {
                 var point;
-                if(Main.PointAlign && MouseObject && MouseObject.pos) CLine.Obj.p2 = point = MouseObject; // Выбираем вторую точку из под мыши
+                if(Main.PointAlign && MouseObject && MouseObject.pos) 
+                {
+                    RemoveFromArray(CLine.Obj.p2._der, CLine.Obj);
+                    CLine.Obj.p2 = point = MouseObject; // Выбираем вторую точку из под мыши
+                    point._der.push(CLine.Obj);
+                }
                 else Items.push(point = CLine.Pt); // или предыдущюю
                 Items.push(CLine.Obj); // Отправляем линию. Теперь вторая точка используется как первая для новой линии.
                 CLine.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
                 CLine.Obj = new Line(point, CLine.Pt);
-            },
-            rightup: Main.Pop
+            }
         };
         CMenu.Add({create:{_: {label: "Линию", click: this.OnCreate}}});
     }
