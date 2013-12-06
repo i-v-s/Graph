@@ -100,6 +100,7 @@ function GPath()
         var B = this.s[1].g; // Сегмент после точки
 
         var p1 = ShiftedCross(P, A, B, this.sh);
+        var p0 = p1;
         for(var x = 1; x <= sl; x++)
         {
         	P = this.s[x].p;
@@ -129,9 +130,22 @@ function GPath()
         	if(p2.a1 !== undefined)
         		ctx.arc(p2.x, p2.y, this.sh, p2.a1, p2.a2);
         	p1 = p2;
-
         }
-        ctx.stroke();		
+        ctx.stroke();
+        // Рисуем указатель начала
+        var p = p0;//this.s[0].p.pos();
+        var v = this.s[1].g.vec(this.s[0].p);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p.x - this.sh * v.y, p.y + this.sh * v.x);
+        //p.x += this.sh * v.y; 
+        //p.y -= this.sh * v.x;
+        ctx.lineTo(p.x + 2 * this.sh * v.x, p.y + 2 * this.sh * v.y);
+        p.x += this.sh * v.y; 
+        p.y -= this.sh * v.x;
+        ctx.lineTo(p.x, p.y);       
+        ctx.fill();
 	};
 	this.ToGCode = function(dx, dy, z, Gz, Prep)
 	{
