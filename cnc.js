@@ -52,11 +52,21 @@ function ShiftedCross(P, A, B, shift) // Точка P, предыдущий се
     	} 
     	else
     	{
+    		if(A instanceof Line)
     		{   			
   				var R = B.R + shift;
   				p.x -= shift * vA.y;
   				p.y += shift * vA.x; // Конечная точка отрезка
   				return LineArcCross(B.cx, B.cy, R, p, vA);
+    		}
+    		else
+    		{
+  				var R = B.R + shift;
+  				p.x -= shift * vA.y;
+  				p.y += shift * vA.x; // Конечная точка отрезка
+  				return LineArcCross(B.cx, B.cy, R, p, vA);
+
+    			
     		}
 		}
     }
@@ -159,7 +169,7 @@ var CGPath =
 		do
 		{ 
 			var w = false;
-			for(var x in s)  if(s[x]) for(var y in r)
+			for(var x = 0, e = s.length; x < e; x++)  if(s[x]) for(var y in r)
 			{
 				var ss = s[x];
 				var rr = r[y];
@@ -182,7 +192,7 @@ var CGPath =
 		} while(w);
 		return null;
 	},
-	Create: function()
+	OnCreate: function()
 	{
 		var s = [];
 		for(var x in Items)
@@ -214,21 +224,17 @@ var CGPath =
 		document.getElementById("goutarea").value = R.join("\n");
 		showModal("goutdialog");
 	},
-	menu: [
-	{
-        path: "createmenu",
-        label: "Путь ЧПУ",
-        click:null
-    },
-    {
-    	path: "cncmenu",
-    	label: "Вывести GCode",
-    	click:null
-    }],
     OnInit:function()
     {
-    	this.menu[0].click = this.Create;
-    	this.menu[1].click = this.GetGCode;
+    	CMenu.Add({
+    		create:{
+    			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
+    		},
+    		cnc:{label: "ЧПУ",
+    			out: {label: "Вывести GCode", click: this.GetGCode}
+    		}
+
+    	});
     }
 }
 

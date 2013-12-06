@@ -18,33 +18,37 @@ var DB =
     DBName:"GraphDB",
     LastName:null,
     LastUser:null,
+    ItemToJSON: function(i)
+    {
+        return JSON.stringify(i, function(key, value)
+        {
+            if(key === "")
+            {
+                var vr = new Object();
+                for(var x in value) if(value.hasOwnProperty(x) && typeof value[x] !== "function") vr[x] = value[x];
+                if(!vr._) vr._ = value.constructor.name;
+                return vr;
+            }
+            if(key == "_") return value;
+            if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
+            if(value && typeof value == "object")
+            {
+                if(value instanceof Array)
+                    return value;
+                if(value.GetId) return value.GetId();
+                var i = Items.indexOf(value);
+                    return i < 0 ? undefined : i;
+            }
+            return value;
+        });
+    },
     GetJSON: function()
     {
         var a = [];
         for(var x in Items)
         {
             var i = Items[x];
-            a[x] = JSON.stringify(i, function(key, value)
-            {
-                if(key === "")
-                {
-                    var vr = new Object();
-                    for(var x in value) if(value.hasOwnProperty(x) && typeof value[x] !== "function") vr[x] = value[x];
-                    if(!vr._) vr._ = value.constructor.name;
-                    return vr;
-                }
-                if(key == "_") return value;
-                if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
-                if(value && typeof value == "object")
-                {
-                    if(value instanceof Array)
-                        return value;
-                    if(value.GetId) return value.GetId();
-                    var i = Items.indexOf(value);
-                    return i < 0 ? undefined : i;
-                }
-                return value;
-            });
+            a[x] = DB.ItemToJSON(Items[x]);
         };
         return("[" + a.join(',\n') + "]");
     },

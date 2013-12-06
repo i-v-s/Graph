@@ -13,8 +13,8 @@
     <canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <!-- Главное меню -->
     <menu type="toolbar" class="hmenu" id="mainmenu">
-        <li> Файл <ul id="filemenu"></ul></li>
-        <li> Правка <ul id="editmenu"></ul></li>
+        <li id="menufile"> Файл </li>
+        <li id="menuedit"> Правка </li>
         <li> Вид 
             <ul id="viewmenu">
                 <li> Тема 
@@ -26,8 +26,8 @@
                 
             </ul>
         </li>
-        <li> Создать <ul id="createmenu"></ul></li>
-        <li> ЧПУ <ul id="cncmenu"></ul></li>
+        <li id="menucreate"> Создать </li>
+        <li id="menucnc"> ЧПУ </li>
     </menu>
 <!-- Серый экран -->
     <div id='blocker' hidden="true"></div>
@@ -93,6 +93,7 @@
 <script src="cnc.js"></script>
 <script src="user.js"></script>
 <script src="db.js"></script>
+<script src="debug.js"></script>
 <script>Main.Init()</script>
 </body>
 </html>

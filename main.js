@@ -4,11 +4,34 @@ var SelRect = null;
 var ctx = null;
 var canvas = null;
 
-function DownUp(Down, Up)
+
+/*Array.prototype.remove = function(v)
+{
+    var o = 0;
+    for(var i = 0, e = this.length; i < e; i++)
+    {
+        var t = this[i];
+        if(t !== v) this[o++] = t;
+    }
+    this.length = o;
+};*/
+function RemoveFromArray(a, v)
+{
+    var o = 0;
+    for(var i = 0, e = a.length; i < e; i++)
+    {
+        var t = a[i];
+        if(t !== v) a[o++] = t;
+    }
+    a.length = o;
+}
+
+
+/*function DownUp(Down, Up)
 {
     this.d = Down;
     this.u = Up;
-}
+}*/
 
 var Main = {
     Scale: 1.0,
@@ -52,6 +75,11 @@ var Main = {
         {
             var i = Items[x];
             if((i.GetPSel && !i.GetPSel()) || !i.Sel) Items[y++] = i;
+            else
+            {
+                if(i.del) i.del();
+                i.deleted = true;
+            }
         }
         Items.length = y;
         Main.Redraw();
@@ -238,14 +266,10 @@ var Main = {
             if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
         if(window.CMenu)
         {
-            CMenu.Insert("filemenu", "Новый", Main.DeleteAll);
-            CMenu.Insert("editmenu", "Удалить", Main.Delete);
-            for(x in Main.Modules)
-            {
-                var m = Main.Modules[x].menu;
-                if(!m) continue;
-                for(y in m) CMenu.InsertRec(m[y]);
-            }
+            CMenu.Add({
+                file:{_: {label: "Новый", click: Main.DeleteAll}}, 
+                edit:{_: {label: "Удалить", click: Main.Delete}}
+            });
         }
         Main.Redraw();
     }

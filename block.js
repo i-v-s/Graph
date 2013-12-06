@@ -165,14 +165,8 @@ var CBlock =
                 Main.Pop();
             }
         };
-
-        this.menu[0].click = CBlock.OnCreate;
-    },
-    menu: [{
-        path: "createmenu",
-        label: "Блок",
-        click:null
-    }]
+        CMenu.Add({create:{_: {label: "Блок", click: this.OnCreate}}});
+    }
 }
 
 Main.Modules.push(CBlock);

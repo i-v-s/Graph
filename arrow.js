@@ -154,13 +154,8 @@ var CArrow =
                 Main.Pop();
             }
         }
-        this.menu[0].click = CArrow.OnCreate;
-    },
-    menu: [{
-        path: "createmenu",
-        label: "Стрелку",
-        click:null
-    }]
+        CMenu.Add({create:{_: {label: "Стрелку", click: this.OnCreate}}});
+    }
 }
 
 Main.Modules.push(CArrow);

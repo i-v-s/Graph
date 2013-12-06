@@ -3,12 +3,13 @@ function Point(x, y)
 {
     this.x = x;
     this.y = y;
+    this.der = [];
     this.Serialize = function() {return this.x.toString() + "," + this.y;}
     this.pos = function() {return {x:this.x, y:this.y};}
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
-        if(Type > 0 || this.Sel)
+        if(Type > 0 || this.Sel || !this.der.length)
         {
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x - 2, this.y - 2, 5, 5);
@@ -45,7 +46,15 @@ function Line(p1, p2)
     this.p1 = p1;
     this.p2 = p2;
     this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);}
-    this.OnLoad = function() { return (this.p1 = Main.ById(this.p1)) && (this.p2 = Main.ById(this.p2))},
+    this.OnLoad = function() 
+    { 
+        this.p1 = Main.ById(this.p1);
+        this.p2 = Main.ById(this.p2);
+        if(!(this.p1 && this.p2)) return false;
+        this.p1.der.push(this);
+        this.p2.der.push(this);
+        return  true;
+    },
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
@@ -84,6 +93,13 @@ function Line(p1, p2)
         m /= l;
         return Math.abs(m) < Main.adm ? this : null;
     };
+    this.del = function()
+    {
+        RemoveFromArray(this.p1.der, this);
+        RemoveFromArray(this.p2.der, this);
+        /*if(this.p1 && (typeof this.p1 === "object")) this.p1.der.remove(this);
+        if(this.p2 && (typeof this.p2 === "object")) this.p2.der.remove(this);*/
+    };
     this.vec = function(p)
     {
         var a = this.p1.pos();
@@ -96,6 +112,8 @@ function Line(p1, p2)
         if(p === this.p2) return {x: -x, y: -y};
     }
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
+    if(typeof p1 === "object" ) p1.der.push(this);
+    if(typeof p2 === "object" ) p2.der.push(this);
     this.Sel = false;
     this.Moved = false;
 }
@@ -148,13 +166,8 @@ var CLine =
             },
             rightup: Main.Pop
         };
-        CLine.menu[0].click = CLine.OnCreate;
-    },
-    menu: [{
-        path: "createmenu",
-        label: "Линию",
-        click:null
-    }]
+        CMenu.Add({create:{_: {label: "Линию", click: this.OnCreate}}});
+    }
 }
 
 Main.Modules.push(CLine);

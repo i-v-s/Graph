@@ -136,7 +136,7 @@ var CArc =
             rightup: Main.Pop
         };
         
-        this.menu[0].click = CArc.OnCreate;
+        CMenu.Add({create:{_: {label: "Дугу", click: this.OnCreate}}});
     },
     menu: [{
         path: "createmenu",
