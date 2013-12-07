@@ -19,6 +19,7 @@ var DB =
     LastName:null,
     LastUser:null,
     LastLocal:true,
+    CurrentUser:null,
     /////////// Работа с JSON /////////////////////////////////////////////////
     ItemToJSON: function(i)
     {
@@ -149,6 +150,22 @@ var DB =
         for(var x in data) r.push(data[x].name);
         return r;
     },
+    RemoteUsers: function()
+    {
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        try
+        {
+            h.open("GET", "/g-users.php", false);
+            h.send(null);
+        } catch(e) {alert("GET error: " + e.message); return;}
+        if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
+        var data;
+        try{data = JSON.parse(h.responseText);} catch(e){alert("JSON parse error: " + e.message); return;}
+        DB.CurrentUser = data.shift();
+        return data;
+    },
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     Load: function(DBName, Table)
     {
@@ -239,6 +256,23 @@ var DB =
         if(DB.LastName) DB.Save();
         else DB.OnSaveAs();
     },
+    OnOpen:function()
+    {
+        var options = document.getElementById("loaduser");
+        options.length = 0;
+        var e = document.createElement("option");
+        e.innerHTML = "Локальные файлы";
+        options.appendChild(e);            
+        var users = DB.RemoteUsers();
+        if(users) for(var x in users)
+        {
+            var e = document.createElement("option");
+            e.innerHTML = users[x].name;
+            options.appendChild(e);            
+        }
+
+        showModal("loaddialog");
+    },
     OnInit: function()
     {
         if(CMenu)
@@ -249,7 +283,7 @@ var DB =
                 save:{label: "Сохранить", click:this.OnSave},
                 saveas:{label: "Сохранить как", click:this.OnSaveAs},
                 _2:{label: "-"},
-                open:{label: "Открыть", click:null},
+                open:{label: "Открыть", click:this.OnOpen},
                 lastfiles:{label: "Последние"}
             }});
         }

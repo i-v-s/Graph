@@ -52,21 +52,18 @@
         <div>
             <div class="combobox">
                 <!--<button style="float:right" style="width:30" onclick="comboClick('savelist')">\/</button>-->
-                <select id="savelist" type="multiple" onchange="comboChange('savelist', 'savename')">
-                    <option> test </option>
-                    <option> test1 </option>
-                    <option> test6 </option>
-                    <option> test7 </option>
-                </select>
+                <select id="savelist" type="multiple" onchange="comboChange('savelist', 'savename')"></select>
                 <input id="savename" class="combobox" type="text" style="width:90%"> 
             </div>
             <br>
-            <input id="savelocal" type="checkbox" onchange="DB.OnSaveLocalChange()" checked>Сохранить локально</input><br>  
+            <input id="savelocal" type="checkbox" onchange="DB.OnSaveLocalChange()">Сохранить локально</input><br>  
             <button onclick="DB.OnSaveButton()">Сохранить</button>
             <button onclick="hideModal('savedialog')">Отмена</button>
         </div>
     </div>
     <div id="loaddialog" class="dialog" hidden="true" title="Выберите имя">
+        <h1> Открыть </h1>
+        <select id="loaduser" type="multiple" onchange="DB.OnUserChange()"></select><br>
         <select multiple size="1" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
         <button onclick="OnLoadButton()">Загрузить</button>
         <button onclick="hideModal('loaddialog')">Отмена</button>
