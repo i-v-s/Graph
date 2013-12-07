@@ -143,7 +143,9 @@ var DB =
         if(!DB.HTTP) DB.HTTP = getXmlHttp();
         var h = DB.HTTP;
         if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
-        h.open("GET", "/g-list.php", false);
+        var req = "/g-get.php?file=" + Name;
+        if(User) req += "&user=" + User;
+        h.open("GET", req, false);
         h.send(null);
         if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
         var v = h.responseText;
