@@ -97,21 +97,6 @@ var DB =
         Main.Redraw();
         return errors;
     },
-    /*Save: function(DBName, Table)
-    {
-        var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
-        if(!db) {alert("Failed to connect to database."); return;}
-        db.transaction(function(tx)
-        {
-            tx.executeSql("DROP TABLE IF EXISTS " + Table, [], null, null)
-            tx.executeSql("CREATE TABLE " + Table + " (id REAL UNIQUE, data TEXT, timestamp REAL)", [], null, null);
-
-            tx.executeSql("DELETE FROM " + Table, [], null, null);
-            var r = DB.GetJSON();
-            console.log(r);
-            tx.executeSql("INSERT INTO " + Table + " (data) values(?)", [r], null, null);
-        })
-    },*/
     ////////////////////////// Локальное хранилище ///////////////////////////////////////////////////////////////////
     LocalSave: function(Name) {localStorage["graph_" + Name] = DB.GetJSON();},
     LocalLoad: function(Name) 
@@ -182,21 +167,6 @@ var DB =
         DB.CurrentUser = data.shift();
         return data;
     },
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*Load: function(DBName, Table)
-    {
-        var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
-        if(!db) {alert("Failed to connect to database."); return;}
-        db.transaction(function(tx)
-        {
-            tx.executeSql("SELECT * FROM " + Table, [], function(tx, result)
-            {
-                var errors = DB.LoadJSON(result.rows.item(0).data);
-                if(errors && errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
-                Main.Redraw();
-            }, null);
-        })
-    },*/
     Save:function()
     {
         if(DB.LastLocal) DB.LocalSave(DB.LastName);
@@ -222,39 +192,12 @@ var DB =
         hideModal("loaddialog");
         DB.LastUser = u;
         DB.LastName = n;
+        DB.LastLocal = (u == 0);
     },
-    /*OnRemSaveButton: function()
-    {
-        var n = document.getElementById("savename").value;
-        if(n == "") return;
-        DB.LastName = n;
-        if(!DB.HTTP) DB.HTTP = getXmlHttp();
-        var h = DB.HTTP;
-        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
-        h.open("POST", "/g-put.php?file=" + n, false);
-        var text = DB.GetJSON();
-        h.send(text);
-        
-        hideSaveDialog();
-    },
-    OnRemLoadButton: function()
-    {
-        var n = document.getElementById("loadname").value;
-        if(n == "") return;
-        DB.LastName = n;
-        if(!DB.HTTP) DB.HTTP = getXmlHttp();
-        var h = DB.HTTP;
-        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
-        h.open("GET", "/g-get.php?file=" + n, false);
-        h.send(null);
-        if(h.status != 200) alert("Неверный ответ сервера:" + h.status);
-        var errors = DB.LoadJSON(h.responseText);
-        if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
-        Main.Redraw();
-        hideLoadDialog();
-    },*/
     OnSaveAs:function()
     {
+        document.getElementById("savename").value = DB.LastName ? DB.LastName : "";
+        document.getElementById("savelocal").checked = DB.LastLocal;
         DB.OnSaveLocalChange();
         showModal("savedialog");
     },
@@ -327,113 +270,8 @@ var DB =
             var sl = document.getElementById("savelocal");
             sl.checked = true;
             sl.disabled = true;
-            //sl.
-        }
-
-        /*this.menu.saveas.click = function()
-        {
-            DB.OpenSaveDialog();
-            if(DB.LastName) document.getElementById("savename").value = DB.LastName;
-            var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
-            if(!db) {alert("Failed to connect to database."); return;}
-            db.transaction(function(tx)
-            {
-                    tx.executeSql("select name from sqlite_master where type = 'table' ORDER BY name", [], function(tx, result)
-                    {
-                        var l = result.rows.length;
-                        require(["dijit/registry"], function(registry){
-                            var v = registry.byId('savename').store.data;
-                            v.length = 0;
-                            for(var i = 0; i < l; i++)
-                            {
-                                var name = result.rows.item(i).name;
-                                if(name.charAt(0) == '_') continue;
-                                v.push({id:name, name:name, value:name});
-                            }
-                        });
-                    }, null);
-                })
-            OnSaveButton = DB.OnSaveButton;
-            showSaveDialog();
-        };
-        this.menu.open.click = function()
-        {
-                var db = openDatabase(DB.DBName, "0.1", "A db of blockscheme.", 20000);
-                if(!db) {alert("Failed to connect to database."); return;}
-
-                db.transaction(function(tx)
-                {
-                    tx.executeSql("select name from sqlite_master where type = 'table' ORDER BY name", [], function(tx, result)
-                    {
-                        var l = result.rows.length;
-                        var s = document.getElementById("loadname").options;
-                        s.length = 0;
-                        for(var i = 0; i < l; i++)
-                        {
-                            var name = result.rows.item(i).name;
-                            if(name.charAt(0) == '_') continue;
-                            s.add(new Option(name, name));
-                        }
-                    }, null);
-                })
-
-                OnLoadButton = DB.OnLoadButton;
-                document.getElementById("loaddialog").hidden = false;
-                document.getElementById("blocker").hidden = false;
-
-            };
-            /*CMenu.file.remsave = {label:"Сохранить на сервере", onclick:function()
-            {
-                if(!DB.HTTP) DB.HTTP = getXmlHttp();
-                var h = DB.HTTP;
-                if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
-                h.open("GET", "/g-list.php", false);
-                h.send(null);
-                if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
-                var data;
-                try{data = JSON.parse(h.responseText);} catch(e)
-                {
-                    alert("JSON parse error: " + e.message);
-                    return;
-                }
-                require(["dijit/registry"], function(registry){
-                    var v = registry.byId('savename').store.data;
-                    v.length = 0;
-                    for(var i in data)
-                    {
-                        var name = data[i].name;
-                        if(name.charAt(0) == '_') continue;
-                        v.push({id:name, name:name, value:name});
-                    }
-                });
-                OnSaveButton = DB.OnRemSaveButton;
-                showSaveDialog();                
-            }};
-            CMenu.file.remload = {label:"Загрузить с сервера", onclick:function() 
-            {
-                if(!DB.HTTP) DB.HTTP = getXmlHttp();
-                var h = DB.HTTP;
-                if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
-                h.open("GET", "/g-list.php", false);
-                h.send(null);
-                if(h.status != 200){ alert("Неверный ответ сервера:" + h.status); return;}
-                var data;
-                try{data = JSON.parse(h.responseText);} catch(e)
-                {
-                    alert("JSON parse error: " + e.message);
-                    return;
-                }
-                var s = document.getElementById("loadname").options;
-                s.length = 0;
-                for(var i in data)
-                {
-                    var name = data[i].name;
-                    s.add(new Option(name, name));
-                }
-                OnLoadButton = DB.OnRemLoadButton;
-                showLoadDialog();
-            }};*/
-        
+            DB.LastLocal = true;
+        }       
     }
 }
 Main.Modules.push(DB);
