@@ -8,7 +8,7 @@ var CMenu =
         {
             var id = "menu" + i;
             var li = null;
-            if(i != "_")for(var t in r.children) 
+            if(i.charAt(0) != "_")for(var t in r.children) 
                 if(r.children[t].id == id) 
                     {
                         li = r.children[t];
@@ -17,8 +17,9 @@ var CMenu =
             if(!li)
             {
                 li = document.createElement("li");
+                if(o[i].label == "-") {li.className = "msep"; r.appendChild(li); continue;}
                 li.innerHTML = o[i].label;
-                if(i != "_") li.id = id;
+                if(i.charAt(0) != "_") li.id = id;
                 li.onclick = o[i].click;
                 r.appendChild(li);
             }

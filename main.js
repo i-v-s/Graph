@@ -26,13 +26,6 @@ function RemoveFromArray(a, v)
     a.length = o;
 }
 
-
-/*function DownUp(Down, Up)
-{
-    this.d = Down;
-    this.u = Up;
-}*/
-
 var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
@@ -262,8 +255,6 @@ var Main = {
             alert("kd");
 
         }
-        for(x in Main.Modules)
-            if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
         if(window.CMenu)
         {
             CMenu.Add({
@@ -271,6 +262,8 @@ var Main = {
                 edit:{_: {label: "Удалить", click: Main.Delete}}
             });
         }
+        for(x in Main.Modules)
+            if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
         Main.Redraw();
     }
 };

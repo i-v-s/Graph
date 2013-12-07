@@ -18,6 +18,8 @@ var DB =
     DBName:"GraphDB",
     LastName:null,
     LastUser:null,
+    LastLocal:true,
+    /////////// Работа с JSON /////////////////////////////////////////////////
     ItemToJSON: function(i)
     {
         return JSON.stringify(i, function(key, value)
@@ -92,7 +94,7 @@ var DB =
         //for(e in errors) console.log(errors[e]);
         return errors;
     },
-    Save: function(DBName, Table)
+    /*Save: function(DBName, Table)
     {
         var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
         if(!db) {alert("Failed to connect to database."); return;}
@@ -106,7 +108,35 @@ var DB =
             console.log(r);
             tx.executeSql("INSERT INTO " + Table + " (data) values(?)", [r], null, null);
         })
+    },*/
+    ////////////////////////// Локальное хранилище ///////////////////////////////////////////////////////////////////
+    LocalSave: function(Name) {localStorage["graph_" + Name] = DB.GetJSON();},
+    LocalLoad: function(Name) 
+    {
+        var v = localStorage["graph_" + Name];
+        if(!v) return;
+        var e = DB.LoadJSON(v);
+        if(e && e.length > 0) alert("При загрузке произошли ошибки:\n" + e.join("\n"));
     },
+    LocalList: function()
+    {
+        var r = [];
+        for(x in localStorage)
+            if(x.substr(0, 6) == "graph_") r.push(x.substr(6));
+        return r;
+    },
+    ///////////////////////// Удалённое хранилище ///////////////////////////////////
+    RemoteSave: function(Name)
+    {
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        h.open("POST", "/g-put.php?file=" + Name, false);
+        var text = DB.GetJSON();
+        h.send(text);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
     Load: function(DBName, Table)
     {
         var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
@@ -121,13 +151,20 @@ var DB =
             }, null);
         })
     },
+    Save:function()
+    {
+        if(DB.LastLocal) DB.LocalSave(DB.LastName);
+        else DB.RemoteSave(DB.LastName);
+    },
     OnSaveButton: function()
     {
         var n = document.getElementById("savename").value;
         if(n == "") return;
         DB.LastName = n;
-        DB.Save(DB.DBName, n);
-        hideSaveDialog();
+        var sl = document.getElementById("savelocal");
+        DB.LastLocal = sl.checked;
+        DB.Save();
+        hideModal("savedialog");
     },
     OnLoadButton: function()
     {
@@ -167,27 +204,39 @@ var DB =
         Main.Redraw();
         hideLoadDialog();
     },
-    OpenSaveDialog: function()
+    OnSaveAs:function()
     {
+        var options = document.getElementById("savelist");
+        options.length = 0;
+        var list = DB.LocalList();
+        for(var x in list)
+        {
+            var e = document.createElement("option");
+            e.innerHTML = list[x];
+            options.appendChild(e);
+        }
         showModal("savedialog");
     },
-    menu: 
+    OnSave: function()
     {
-        s1:{path: "filemenu", label: "-"},
-        save:{path: "filemenu", label: "Сохранить", click:null},
-        saveas:{path: "filemenu", label: "Сохранить как", click:null},
-        s2:{path: "filemenu", label: "-"},
-        open:{path: "filemenu", label: "Открыть", click:null},
-        last:{path: "filemenu", label: "Последние", subid: "filelast"}
+        if(DB.LastName) DB.Save();
+        else DB.OnSaveAs();
     },
     OnInit: function()
     {
-        this.menu.save.click = function()
+        if(CMenu)
         {
-            if(this.LastName) DB.Save();
-            else DB.OpenSaveDialog();
+            CMenu.Add({file:
+            {
+                _1:{label: "-"},
+                save:{label: "Сохранить", click:this.OnSave},
+                saveas:{label: "Сохранить как", click:this.OnSaveAs},
+                _2:{label: "-"},
+                open:{label: "Открыть", click:null},
+                lastfiles:{label: "Последние"}
+            }});
         }
-        this.menu.saveas.click = function()
+        /*this.menu.saveas.click = function()
         {
             DB.OpenSaveDialog();
             if(DB.LastName) document.getElementById("savename").value = DB.LastName;
