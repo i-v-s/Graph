@@ -134,7 +134,7 @@ var DB =
         h.open("POST", "/g-put.php?file=" + Name, false);
         var text = DB.GetJSON();
         h.send(text);
-    }
+    },
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     Load: function(DBName, Table)
