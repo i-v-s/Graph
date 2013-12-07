@@ -63,10 +63,12 @@
     </div>
     <div id="loaddialog" class="dialog" hidden="true" title="Выберите имя">
         <h1> Открыть </h1>
-        <select id="loaduser" type="multiple" onchange="DB.OnUserChange()"></select><br>
-        <select multiple size="1" id="loadname" style="height:100px; width:200px;" ondblclick="OnLoadButton()"></select><br>
-        <button onclick="OnLoadButton()">Загрузить</button>
-        <button onclick="hideModal('loaddialog')">Отмена</button>
+        <div> 
+            Пользователь <select id="loaduser" type="multiple" onchange="DB.OnOpenUserChange()"></select><br>
+            <select multiple size="1" id="loadname" style="height:150px; width:250px;" ondblclick="DB.OnLoadButton()"></select><br>
+            <button onclick="DB.OnLoadButton()">Загрузить</button>
+            <button onclick="hideModal('loaddialog')">Отмена</button>
+        </div>
     </div>
     <div id="goutdialog" class="dialog" hidden="true">
         <textarea id="goutarea"></textarea><br>

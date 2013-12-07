@@ -20,6 +20,7 @@ var DB =
     LastUser:null,
     LastLocal:true,
     CurrentUser:null,
+    Users:null,
     /////////// Работа с JSON /////////////////////////////////////////////////
     ItemToJSON: function(i)
     {
@@ -40,7 +41,7 @@ var DB =
                     return value;
                 if(value.GetId) return value.GetId();
                 var i = Items.indexOf(value);
-                    return i < 0 ? undefined : i;
+                    return i < 0 ? value : i;
             }
             return value;
         });
@@ -93,6 +94,7 @@ var DB =
         for(var i = 0, l = Items.length; i < l; i++) if(Items[i]) Items[r++] = Items[i];
         Items.length = r;
         //for(e in errors) console.log(errors[e]);
+        Main.Redraw();
         return errors;
     },
     /*Save: function(DBName, Table)
@@ -136,6 +138,18 @@ var DB =
         var text = DB.GetJSON();
         h.send(text);
     },
+    RemoteLoad: function(User, Name)
+    {
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        h.open("GET", "/g-list.php", false);
+        h.send(null);
+        if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
+        var v = h.responseText;
+        var e = DB.LoadJSON(v);
+        if(e && e.length > 0) alert("При загрузке произошли ошибки:\n" + e.join("\n"));
+    },
     RemoteList: function(User)
     {
         if(!DB.HTTP) DB.HTTP = getXmlHttp();
@@ -154,20 +168,20 @@ var DB =
     {
         if(!DB.HTTP) DB.HTTP = getXmlHttp();
         var h = DB.HTTP;
-        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        if(!h) {console.log("Ошибка создания XMLHttpRequest."); return;}
         try
         {
             h.open("GET", "/g-users.php", false);
             h.send(null);
-        } catch(e) {alert("GET error: " + e.message); return;}
-        if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
+        } catch(e) {console.log("GET error: " + e.message); return;}
+        if(h.status != 200) {console.log("Неверный ответ сервера:" + h.status); return;}
         var data;
-        try{data = JSON.parse(h.responseText);} catch(e){alert("JSON parse error: " + e.message); return;}
+        try{data = JSON.parse(h.responseText);} catch(e){console.log("JSON parse error: " + e.message); return;}
         DB.CurrentUser = data.shift();
         return data;
     },
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    Load: function(DBName, Table)
+    /*Load: function(DBName, Table)
     {
         var db = openDatabase(DBName, "0.1", "A db of blockscheme.", 20000);
         if(!db) {alert("Failed to connect to database."); return;}
@@ -180,7 +194,7 @@ var DB =
                 Main.Redraw();
             }, null);
         })
-    },
+    },*/
     Save:function()
     {
         if(DB.LastLocal) DB.LocalSave(DB.LastName);
@@ -196,15 +210,18 @@ var DB =
         DB.Save();
         hideModal("savedialog");
     },
-    /*OnLoadButton: function()
+    OnLoadButton: function()
     {
         var n = document.getElementById("loadname").value;
         if(n == "") return;
+        var u = document.getElementById("loaduser").value;
+        if(u > 0) DB.RemoteLoad(u, n);
+        else DB.LocalLoad(n);
+        hideModal("loaddialog");
+        DB.LastUser = u;
         DB.LastName = n;
-        DB.Load(DB.DBName, n);
-        hideLoadDialog();
     },
-    OnRemSaveButton: function()
+    /*OnRemSaveButton: function()
     {
         var n = document.getElementById("savename").value;
         if(n == "") return;
@@ -256,21 +273,22 @@ var DB =
         if(DB.LastName) DB.Save();
         else DB.OnSaveAs();
     },
-    OnOpen:function()
+    OnOpenUserChange: function()
     {
-        var options = document.getElementById("loaduser");
+        var options = document.getElementById("loadname");
         options.length = 0;
-        var e = document.createElement("option");
-        e.innerHTML = "Локальные файлы";
-        options.appendChild(e);            
-        var users = DB.RemoteUsers();
-        if(users) for(var x in users)
+        var u = document.getElementById("loaduser").value;
+        var list = u > 0 ? DB.RemoteList(u) : DB.LocalList();
+        for(var x in list)
         {
             var e = document.createElement("option");
-            e.innerHTML = users[x].name;
-            options.appendChild(e);            
+            e.innerHTML = list[x];
+            options.appendChild(e);
         }
-
+    },
+    OnOpen:function()
+    {
+        DB.OnOpenUserChange();
         showModal("loaddialog");
     },
     OnInit: function()
@@ -287,6 +305,29 @@ var DB =
                 lastfiles:{label: "Последние"}
             }});
         }
+        DB.Users = DB.RemoteUsers();
+        var options = document.getElementById("loaduser");
+        options.length = 0;
+        var e = document.createElement("option");
+        e.text = "Локальный";
+        e.value = 0;
+        options.appendChild(e);            
+        var users = DB.Users;
+        if(users) for(var x in users)
+        {
+            var e = document.createElement("option");
+            e.text = users[x].name;
+            e.value = users[x].id;
+            if(users[x].id == DB.CurrentUser) e.defaultSelected = true;
+            options.appendChild(e);
+        } else
+        {
+            var sl = document.getElementById("savelocal");
+            sl.checked = true;
+            sl.disabled = true;
+            //sl.
+        }
+
         /*this.menu.saveas.click = function()
         {
             DB.OpenSaveDialog();

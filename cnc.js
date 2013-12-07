@@ -240,6 +240,7 @@ var CGPath =
 	},
     OnInit:function()
     {
+    	Main.Ctors["GPath"] = GPath;
     	CMenu.Add({
     		create:{
     			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
