@@ -61,7 +61,7 @@
                 <input id="savename" class="combobox" type="text" style="width:90%"> 
             </div>
             <br>
-            <input id="savelocal" type="checkbox" checked>Сохранить локально</input><br>  
+            <input id="savelocal" type="checkbox" onchange="DB.OnSaveLocalChange()" checked>Сохранить локально</input><br>  
             <button onclick="DB.OnSaveButton()">Сохранить</button>
             <button onclick="hideModal('savedialog')">Отмена</button>
         </div>

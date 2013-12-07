@@ -135,7 +135,20 @@ var DB =
         var text = DB.GetJSON();
         h.send(text);
     },
-
+    RemoteList: function(User)
+    {
+        if(!DB.HTTP) DB.HTTP = getXmlHttp();
+        var h = DB.HTTP;
+        if(!h) {alert("Ошибка создания XMLHttpRequest."); return;}
+        h.open("GET", "/g-list.php", false);
+        h.send(null);
+        if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
+        var data;
+        try{data = JSON.parse(h.responseText);} catch(e){alert("JSON parse error: " + e.message); return;}
+        var r = [];
+        for(var x in data) r.push(data[x].name);
+        return r;
+    },
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     Load: function(DBName, Table)
     {
@@ -166,7 +179,7 @@ var DB =
         DB.Save();
         hideModal("savedialog");
     },
-    OnLoadButton: function()
+    /*OnLoadButton: function()
     {
         var n = document.getElementById("loadname").value;
         if(n == "") return;
@@ -203,19 +216,23 @@ var DB =
         if(errors.length > 0) alert("При загрузке произошли ошибки:\n" + errors.join("\n"));
         Main.Redraw();
         hideLoadDialog();
-    },
+    },*/
     OnSaveAs:function()
+    {
+        DB.OnSaveLocalChange();
+        showModal("savedialog");
+    },
+    OnSaveLocalChange:function()
     {
         var options = document.getElementById("savelist");
         options.length = 0;
-        var list = DB.LocalList();
+        var list = document.getElementById("savelocal").checked ? DB.LocalList() : DB.RemoteList();
         for(var x in list)
         {
             var e = document.createElement("option");
             e.innerHTML = list[x];
             options.appendChild(e);
         }
-        showModal("savedialog");
     },
     OnSave: function()
     {

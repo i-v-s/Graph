@@ -23,6 +23,6 @@ canvas
 {
     position: absolute;
     z-index: 20;
-    top: 40%; 
-    left: 40%;
+    top: 10%; 
+    left: 30%;
 }
