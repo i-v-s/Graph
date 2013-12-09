@@ -4,8 +4,10 @@ function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус
 	var dx = p.x - cx; 
   	var dy = p.y - cy;
   	var Bd = v.x * dx + v.y * dy;
+  	if(Bd < 0) Bd = -Bd;
   	var d2 = dx * dx + dy * dy;
   	var t = Math.sqrt(Bd * Bd - d2 + R * R) - Bd;
+  	if(t < 0) t += 2 * Bd;
   	p.x += v.x * t;
   	p.y += v.y * t;
   	return p;
@@ -44,7 +46,15 @@ function ShiftedCross(P, A, B, shift) // Точка P, предыдущий се
   			}
   			else
   			{
-  				var R = A.R + shift;
+  				var R = A.R;
+  				//if(A.p1 === P)
+  				//{
+  					R += shift;
+  				//}
+  				//else
+  				{
+  				//	R -= shift;
+  				}
   				p.x += shift * vB.y;
   				p.y -= shift * vB.x; // Конечная точка отрезка
   				return LineArcCross(A.cx, A.cy, R, p, vB);
@@ -84,10 +94,13 @@ function GPath()
 	this.s = null; // 
 	this._p = null; // Массив точек пути {G, p}
 	this.sh = 7;
+	this.SP = {x:0, y:0};
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
-        ctx.lineWidth = 14;
+        var shift = this.sh;
+        ctx.lineWidth = 2 * Math.abs(shift);
+        if(this.inv) shift = -shift;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.beginPath();
@@ -99,7 +112,7 @@ function GPath()
         var A = closed ? this.s[sl].g : null; // Сегмент до точки
         var B = this.s[1].g; // Сегмент после точки
 
-        var p1 = ShiftedCross(P, A, B, this.sh);
+        var p1 = ShiftedCross(P, A, B, shift);
         var p0 = p1;
         for(var x = 1; x <= sl; x++)
         {
@@ -108,44 +121,55 @@ function GPath()
         	if(x < sl)
         		B = this.s[x + 1].g;
         	else B = closed ? this.s[1].g : null;
-        	var p2 = ShiftedCross(P, A, B, this.sh);
+        	var p2 = ShiftedCross(P, A, B, shift);
         	// Рисуем сегмент:
         	if(A instanceof Arc)
         	{
         		var a1 = A.a1, a2 = A.a2;
         		if(p1.a1 === undefined) a1 = Math.atan2(p1.y - A.cy, p1.x - A.cx);
         		if(p2.a1 === undefined) a2 = Math.atan2(p2.y - A.cy, p2.x - A.cx);
-        		ctx.arc(A.cx, A.cy, A.R + this.sh, a1, a2);
+        		if(A.p2 === P)
+        			ctx.arc(A.cx, A.cy, A.R + shift, a1, a2);
+        		else
+        			ctx.arc(A.cx, A.cy, A.R - shift, a1, a2, true);
         	}
         	else 
         	{
         		if(x == 1)
         		{
-        		 	if(p1.vB) {p1.x += this.sh * p1.vB.y; p1.y -= this.sh * p1.vB.x;}
+        		 	if(p1.vB) {p1.x += shift * p1.vB.y; p1.y -= shift * p1.vB.x;}
         			ctx.moveTo(p1.x, p1.y);
         		}
         		if(p2.a1 === undefined) ctx.lineTo(p2.x, p2.y);
         	}
         	// Рисуем колено:
         	if(p2.a1 !== undefined)
-        		ctx.arc(p2.x, p2.y, this.sh, p2.a1, p2.a2);
+        		ctx.arc(p2.x, p2.y, shift, p2.a1, p2.a2);
         	p1 = p2;
         }
         ctx.stroke();
         // Рисуем указатель начала
         var p = p0;//this.s[0].p.pos();
         var v = this.s[1].g.vec(this.s[0].p);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+		if(this.Sel) ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
+		else ctx.fillStyle = Type ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(p.x - this.sh * v.y, p.y + this.sh * v.x);
-        //p.x += this.sh * v.y; 
-        //p.y -= this.sh * v.x;
-        ctx.lineTo(p.x + 2 * this.sh * v.x, p.y + 2 * this.sh * v.y);
-        p.x += this.sh * v.y; 
-        p.y -= this.sh * v.x;
+        ctx.moveTo(p.x - shift * v.y, p.y + shift * v.x);
+        //p.x += shift * v.y; 
+        //p.y -= shift * v.x;
+        this.SP.x = p.x + 2 * shift * v.x;
+        this.SP.y = p.y + 2 * shift * v.y;
+        ctx.lineTo(p.x + 2 * shift * v.x, p.y + 2 * shift * v.y);
+        p.x += shift * v.y; 
+        p.y -= shift * v.x;
         ctx.lineTo(p.x, p.y);       
         ctx.fill();
+	};
+	this.Hit = function(x, y)
+	{
+		if(Math.abs(x - this.SP.x) < Main.adm && Math.abs(y - this.SP.y) < Main.adm) return this;
+		return null;
 	};
 	this.ToGCode = function(dx, dy, z, Gz, Prep)
 	{
@@ -162,12 +186,6 @@ function GPath()
         }
         return R.join("\n");
 	};
-	this.Hit = function(x, y)
-	{
-		return null;
-	}
-
-
 }
 
 

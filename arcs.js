@@ -70,6 +70,12 @@ function Arc(p1, p2, A)
         if(this.a2 > this.a1) return (a > this.a2 || a < this.a1) ? null : this;
         else return (a > this.a2 && a < this.a1) ? null : this;
     };
+    this.RHit = function(l, t, r, b)
+    {
+        var p1 = this.p1.pos();
+        var p2 = this.p2.pos();
+        return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
+    };
     this.vec = function(P)
     {
         var p = P.pos();

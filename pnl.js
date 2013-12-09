@@ -36,6 +36,10 @@ function Point(x, y)
             return this;
         } else return null;
     };
+    this.RHit = function(l, t, r, b)
+    {
+        return l < this.x && t < this.y && r > this.x && b > this.y;
+    }
     this.GetPSel = function() {return this.Sel;}
     this.Sel = false;
     this.Moved = false;
@@ -93,6 +97,13 @@ function Line(p1, p2)
         m /= l;
         return Math.abs(m) < Main.adm ? this : null;
     };
+    this.RHit = function(l, t, r, b)
+    {
+        var p1 = this.p1.pos();
+        var p2 = this.p2.pos();
+        return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
+    }
+
     this.del = function()
     {
         RemoveFromArray(this.p1._der, this);

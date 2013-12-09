@@ -46,15 +46,27 @@ var Main = {
     Redraw: function()
     {
         Main.Clear();
+        var left, top, right, bottom;
+        if(SelRect)
+        {
+            left = SelRect.left();
+            top = SelRect.top();
+            right = SelRect.right();
+            bottom = SelRect.bottom();
+        }
         for(var x = 0; x < Items.length; x++)
         {
             var f = Items[x];
-            if(f !== MouseObject) f.Draw(0);
+            if(f !== MouseObject)
+            {
+                var t = 0;
+                if(SelRect && Items[x].RHit && Items[x].RHit(left, top, right, bottom)) t = 1;
+                f.Draw(t);
+            }
         }
         if(MouseObject) MouseObject.Draw(1);
-        //ctx.stroke();
         ctx.strokeStyle = "#8080FF";
-        //if(SelRect) SelRect.Stroke();
+        if(SelRect) SelRect.Stroke();
     },
     DeleteAll: function()
     {
@@ -77,13 +89,6 @@ var Main = {
         Items.length = y;
         Main.Redraw();
     },
-    /*OnLeftDown:function(x, y)
-    {
-        Main.MX = x;
-        Main.MY = y;
-        SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);
-        Main.SetMouseMove(MouseObject ? Main.OnObjMove : Main.OnSelMove);
-    },*/
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
@@ -107,17 +112,33 @@ var Main = {
     OnMouseMove: null,
     OnLeftUp: function(mx, my)
     {
-        if(SelRect && SelRect.x == Main.MX && SelRect.y == Main.MY)
+        if(SelRect)
         {
-            if(MouseObject)
+            if(SelRect.w == 0 && SelRect.h == 0)
             {
-                if(MouseObject.OnSel) MouseObject.OnSel(!MouseObject.Sel);
-                MouseObject.Sel = !MouseObject.Sel;
-            }
-            else for(var x = 0; x < Items.length; x++)
+                if(MouseObject)
+                {
+                    if(MouseObject.OnSel) MouseObject.OnSel(!MouseObject.Sel);
+                    MouseObject.Sel = !MouseObject.Sel;
+                }
+                else for(var x = 0; x < Items.length; x++)
+                {
+                    if(Items[x].OnSel && Items[x].Sel) Items[x].OnSel(false);
+                    Items[x].Sel = false;
+                }
+            } 
+            else
             {
-                if(Items[x].OnSel && Items[x].Sel) Items[x].OnSel(false);
-                Items[x].Sel = false;
+                var left = SelRect.left();
+                var top = SelRect.top();
+                var right = SelRect.right();
+                var bottom = SelRect.bottom();
+
+                for(var x = 0; x < Items.length; x++) if(Items[x].RHit && Items[x].RHit(left, top, right, bottom))
+                {
+                    if(Items[x].OnSel && !Items[x].Sel) Items[x].OnSel(true);
+                    Items[x].Sel = true;
+                }
             }
         }
 
@@ -137,7 +158,7 @@ var Main = {
             for(x = 0; x < Items.length; x++) Items[x].Sel = false;
             MouseObject.Sel = true;
         }
-        for(x = 0; x < Items.length; x++) if(Items[x].Sel) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
+        for(x = 0, e = Items.length; x < e; x++) if(Items[x].Sel && Items[x].MoveBy) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
         if(!MouseObject.Moved && MouseObject.MoveBy)
             MouseObject.MoveBy(dx, dy);
         for(x = 0; x < Items.length; x++) Items[x].Moved = false;
@@ -290,4 +311,9 @@ function SimpleRect(x, y, w, h)
     this.y = y;
     this.w = w;
     this.h = h;
+    this.left = function() {return this.w > 0 ? this.x : this.x + this.w;}
+    this.top = function() {return this.h > 0 ? this.y : this.y + this.h;}
+    this.right = function() {return this.w < 0 ? this.x : this.x + this.w;}
+    this.bottom = function() {return this.h < 0 ? this.y : this.y + this.h;}
+    this.Stroke = function() {ctx.strokeRect(this.x, this.y, this.w, this.h);}
 }
