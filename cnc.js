@@ -174,6 +174,16 @@ function GPath()
 		if(Math.abs(x - this.SP.x) < Main.adm && Math.abs(y - this.SP.y) < Main.adm) return this;
 		return null;
 	};
+    this.OnLoad = function() 
+    {
+    	for(var x = this.s.length; x--; )
+    	{
+    		var s = this.s[x];
+    		s.g = Main.ById(s.g);
+    		s.p = Main.ById(s.p);    		
+    	}
+    	return true;
+    },
 	this.ToGCode = function(dx, dy, z, Gz, Prep)
 	{
         var p = this.s[0].p.pos();
