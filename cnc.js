@@ -13,7 +13,7 @@ function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус
   	return p;
 }
 
-function ShiftedCross(P, A, B, shift) // Точка P, предыдущий сегмент A, последующий сегмент B, сдвиг shift
+function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий сегмент A, последующий сегмент B, сдвиг shift
 {
    	var p = P.pos();
 	if(!A)
@@ -33,7 +33,9 @@ function ShiftedCross(P, A, B, shift) // Точка P, предыдущий се
    	var vA = A.vec(P);
     var vB = B.vec(P);
    	var m = vA.x * vB.y - vA.y * vB.x;
-   	if(m > 0)
+   	var t = m > 0;
+   	if(shift < 0) t = !t;
+   	if(t || !rea)
    	{ // Поиск пересечения
 		if(B instanceof Line)
 		{
@@ -95,6 +97,7 @@ function GPath()
 	this._p = null; // Массив точек пути {G, p}
 	this.sh = 7;
 	this.SP = {x:0, y:0};
+	this.rea = false; // Округлять внешние углы?
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
@@ -112,7 +115,7 @@ function GPath()
         var A = closed ? this.s[sl].g : null; // Сегмент до точки
         var B = this.s[1].g; // Сегмент после точки
 
-        var p1 = ShiftedCross(P, A, B, shift);
+        var p1 = ShiftedCross(P, A, B, shift, this.rea);
         var p0 = p1;
         for(var x = 1; x <= sl; x++)
         {
@@ -121,7 +124,7 @@ function GPath()
         	if(x < sl)
         		B = this.s[x + 1].g;
         	else B = closed ? this.s[1].g : null;
-        	var p2 = ShiftedCross(P, A, B, shift);
+        	var p2 = ShiftedCross(P, A, B, shift, this.rea);
         	// Рисуем сегмент:
         	if(A instanceof Arc)
         	{
@@ -144,7 +147,7 @@ function GPath()
         	}
         	// Рисуем колено:
         	if(p2.a1 !== undefined)
-        		ctx.arc(p2.x, p2.y, shift, p2.a1, p2.a2);
+        		ctx.arc(p2.x, p2.y, Math.abs(shift), p2.a1, p2.a2, shift < 0);
         	p1 = p2;
         }
         ctx.stroke();
@@ -155,14 +158,14 @@ function GPath()
 		else ctx.fillStyle = Type ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(p.x - shift * v.y, p.y + shift * v.x);
-        //p.x += shift * v.y; 
-        //p.y -= shift * v.x;
-        this.SP.x = p.x + 2 * shift * v.x;
-        this.SP.y = p.y + 2 * shift * v.y;
-        ctx.lineTo(p.x + 2 * shift * v.x, p.y + 2 * shift * v.y);
-        p.x += shift * v.y; 
-        p.y -= shift * v.x;
+        ctx.moveTo(p.x - this.sh * v.y, p.y + this.sh * v.x);
+        //p.x += this.sh * v.y; 
+        //p.y -= this.sh * v.x;
+        this.SP.x = p.x + 2 * this.sh * v.x;
+        this.SP.y = p.y + 2 * this.sh * v.y;
+        ctx.lineTo(p.x + 2 * this.sh * v.x, p.y + 2 * this.sh * v.y);
+        p.x += this.sh * v.y; 
+        p.y -= this.sh * v.x;
         ctx.lineTo(p.x, p.y);       
         ctx.fill();
 	};
@@ -186,6 +189,16 @@ function GPath()
         }
         return R.join("\n");
 	};
+	this.Reverse = function()
+	{
+		this.s.reverse();
+		for(var x = this.s.length; --x;)
+		{
+			this.s[x].g = this.s[x - 1].g;
+		}
+		this.s[0].g = null;
+		this.inv = !this.inv
+	}
 }
 
 
@@ -256,6 +269,21 @@ var CGPath =
 		document.getElementById("goutarea").value = R.join("\n");
 		showModal("goutdialog");
 	},
+	Inverse: function()
+	{
+		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].inv = !Items[x].inv;
+		Main.Redraw();
+	},
+	chRound: function()
+	{
+		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].rea = !Items[x].rea;
+		Main.Redraw();
+	},
+	Reverse: function()
+	{
+		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
+		Main.Redraw();
+	},
     OnInit:function()
     {
     	Main.Ctors["GPath"] = GPath;
@@ -264,7 +292,10 @@ var CGPath =
     			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
     		},
     		cnc:{label: "ЧПУ",
-    			out: {label: "Вывести GCode", click: this.GetGCode}
+    			out: {label: "Вывести GCode", click: this.GetGCode},
+    			_1: {label: "Сменить направление", click: this.Reverse},
+    			_2: {label: "Сменить смещение", click: this.Inverse},
+    			_3: {label: "Сменить скругление", click: this.chRound}
     		}
 
     	});
