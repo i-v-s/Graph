@@ -148,7 +148,9 @@ var DB =
         h.send(null);
         if(h.status != 200) {alert("Неверный ответ сервера:" + h.status); return;}
         var data;
-        try{data = JSON.parse(h.responseText);} catch(e){alert("JSON parse error: " + e.message); return;}
+        var text = h.responseText;
+        if(text == "") return null;
+        try{data = JSON.parse(text);} catch(e){alert("JSON parse error: " + e.message); return;}
         var r = [];
         for(var x in data) r.push(data[x].name);
         return r;
@@ -207,7 +209,19 @@ var DB =
     {
         var options = document.getElementById("savelist");
         options.length = 0;
-        var list = document.getElementById("savelocal").checked ? DB.LocalList() : DB.RemoteList();
+        var sl = document.getElementById("savelocal");
+        var list;
+        if(sl.checked) list = DB.LocalList();
+        else
+        {
+            list = DB.RemoteList();
+            if(!list) 
+            {
+                if(!DB.CurrentUser) alert("Для сохранения на сервере требуется авторизация.");
+                sl.checked = true;
+                return;
+            }
+        }
         for(var x in list)
         {
             var e = document.createElement("option");
