@@ -4,12 +4,16 @@ function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус
 	var dx = p.x - cx; 
   	var dy = p.y - cy;
   	var Bd = v.x * dx + v.y * dy;
-  	if(Bd < 0) Bd = -Bd;
   	var d2 = dx * dx + dy * dy;
-  	var t = Math.sqrt(Bd * Bd - d2 + R * R) - Bd;
-  	if(t < 0) t += 2 * Bd;
-  	p.x += v.x * t;
-  	p.y += v.y * t;
+  	var t = Bd * Bd - d2 + R * R;
+  	if(t < 0) {alert("Корень отрицательного числа!");}
+  	var sr = Math.sqrt(t);
+  	t = sr + Bd;
+  	if(t > 0) t -= 2 * sr;
+  	p.x -= v.x * t;
+  	p.y -= v.y * t;
+  	ctx.fillStyle = "#000000";
+  	ctx.fillRect(p.x, p.y, 1, 1);
   	return p;
 }
 
@@ -49,14 +53,10 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
   			else
   			{
   				var R = A.R;
-  				//if(A.p1 === P)
-  				//{
+  				if(A.p2 === P)
   					R += shift;
-  				//}
-  				//else
-  				{
-  				//	R -= shift;
-  				}
+  				else
+  					R -= shift;
   				p.x += shift * vB.y;
   				p.y -= shift * vB.x; // Конечная точка отрезка
   				return LineArcCross(A.cx, A.cy, R, p, vB);
@@ -66,7 +66,11 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
     	{
     		if(A instanceof Line)
     		{   			
-  				var R = B.R + shift;
+  				var R = B.R;
+  				if(B.p1 === P) 
+  					R += shift;
+  				else
+  					R -= shift;
   				p.x -= shift * vA.y;
   				p.y += shift * vA.x; // Конечная точка отрезка
   				return LineArcCross(B.cx, B.cy, R, p, vA);
@@ -84,9 +88,17 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
     }
     else
     { // Расчёт колена
-    	p.a1 = (A instanceof Arc) ? (P === A.p1 ? A.a1 : A.a2) : Math.atan2(vA.x, -vA.y);
+    	if(shift < 0)
+    	{
+    		p.a1 = Math.atan2(-vA.x, vA.y);
+    		p.a2 = Math.atan2(vB.x, -vB.y);
+    	}
+    	else
+    	{
+    		p.a1 = Math.atan2(vA.x, -vA.y); // p.a1 = (A instanceof Arc) ? (P === A.p1 ? A.a1 : A.a2) : Math.atan2(vA.x, -vA.y);
+    		p.a2 = Math.atan2(-vB.x, vB.y); // p.a2 = (B instanceof Arc) ? (P === B.p1 ? B.a1 : B.a2) : Math.atan2(-vB.x, vB.y);
+    	}
     	p.vB = vB;
-    	p.a2 = (B instanceof Arc) ? (P === B.p1 ? B.a1 : B.a2) : Math.atan2(-vB.x, vB.y);
     	return p;
     }
 }
@@ -97,7 +109,7 @@ function GPath()
 	this._p = null; // Массив точек пути {G, p}
 	this.sh = 7;
 	this.SP = {x:0, y:0};
-	this.rea = false; // Округлять внешние углы?
+	this.rea = true; // Округлять внешние углы?
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
