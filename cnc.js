@@ -36,8 +36,9 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
 	}
    	var vA = A.vec(P);
     var vB = B.vec(P);
-   	var m = (vA.x * vB.y - vA.y * vB.x) * shift;
+   	var m = (vA.x * vB.y - vA.y * vB.x);// * shift;
    	var t = (m >= -0.00000001);
+	if(shift < 0) t = !t;
    	if(t || !rea)
    	{ // Поиск пересечения
 		if(B instanceof Line)
