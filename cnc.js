@@ -13,7 +13,7 @@ function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус
   	p.x -= v.x * t;
   	p.y -= v.y * t;
   	ctx.fillStyle = "#000000";
-  	ctx.fillRect(p.x, p.y, 1, 1);
+  	//ctx.fillRect(p.x, p.y, 1, 1);
   	return p;
 }
 
@@ -36,9 +36,8 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
 	}
    	var vA = A.vec(P);
     var vB = B.vec(P);
-   	var m = vA.x * vB.y - vA.y * vB.x;
-   	var t = m > 0;
-   	if(shift < 0) t = !t;
+   	var m = (vA.x * vB.y - vA.y * vB.x) * shift;
+   	var t = (m >= -0.00000001);
    	if(t || !rea)
    	{ // Поиск пересечения
 		if(B instanceof Line)
@@ -52,11 +51,7 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
   			}
   			else
   			{
-  				var R = A.R;
-  				if(A.p2 === P)
-  					R += shift;
-  				else
-  					R -= shift;
+  				var R = (A.p2 === P) ? A.R + shift : A.R - shift;
   				p.x += shift * vB.y;
   				p.y -= shift * vB.x; // Конечная точка отрезка
   				return LineArcCross(A.cx, A.cy, R, p, vB);
@@ -64,25 +59,18 @@ function ShiftedCross(P, A, B, shift, rea) // Точка P, предыдущий
     	} 
     	else
     	{
+			var Rb = (B.p1 === P) ? B.R + shift : B.R - shift;
     		if(A instanceof Line)
     		{   			
-  				var R = B.R;
-  				if(B.p1 === P) 
-  					R += shift;
-  				else
-  					R -= shift;
   				p.x -= shift * vA.y;
   				p.y += shift * vA.x; // Конечная точка отрезка
-  				return LineArcCross(B.cx, B.cy, R, p, vA);
+  				return LineArcCross(B.cx, B.cy, Rb, p, vA);
     		}
     		else
     		{
-  				var R = B.R + shift;
   				p.x -= shift * vA.y;
   				p.y += shift * vA.x; // Конечная точка отрезка
-  				return LineArcCross(B.cx, B.cy, R, p, vA);
-
-    			
+  				return LineArcCross(B.cx, B.cy, Rb, p, vA);  			
     		}
 		}
     }
@@ -140,13 +128,18 @@ function GPath()
         	// Рисуем сегмент:
         	if(A instanceof Arc)
         	{
-        		var a1 = A.a1, a2 = A.a2;
-        		if(p1.a1 === undefined) a1 = Math.atan2(p1.y - A.cy, p1.x - A.cx);
-        		if(p2.a1 === undefined) a2 = Math.atan2(p2.y - A.cy, p2.x - A.cx);
         		if(A.p2 === P)
+        		{
+        			var a1 = A.a1, a2 = A.a2;
+        			if(p1.a1 === undefined) a1 = Math.atan2(p1.y - A.cy, p1.x - A.cx);
+        			if(p2.a1 === undefined) a2 = Math.atan2(p2.y - A.cy, p2.x - A.cx);
         			ctx.arc(A.cx, A.cy, A.R + shift, a1, a2);
-        		else
+        		} else {
+        			var a1 = A.a2, a2 = A.a1;
+        			if(p1.a1 === undefined) a1 = Math.atan2(p1.y - A.cy, p1.x - A.cx);
+        			if(p2.a1 === undefined) a2 = Math.atan2(p2.y - A.cy, p2.x - A.cx);
         			ctx.arc(A.cx, A.cy, A.R - shift, a1, a2, true);
+        		}
         	}
         	else 
         	{
