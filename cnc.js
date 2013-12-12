@@ -322,7 +322,7 @@ var CGPath =
     			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
     		},
     		cnc:{label: "ЧПУ",
-    			_p: {label: "Параметры", click: function(){CreateDialog(CGPath.ParamDlg, CGPath);}},
+    			_p: {label: "Параметры", click: function(){Dialogs.Create(CGPath.ParamDlg, CGPath);}},
     			out: {label: "Вывести GCode", click: this.GetGCode},
     			_1: {label: "Сменить направление", click: this.Reverse},
     			_2: {label: "Сменить смещение", click: this.Inverse},

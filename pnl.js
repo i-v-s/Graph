@@ -39,7 +39,23 @@ function Point(x, y)
     this.RHit = function(l, t, r, b)
     {
         return l < this.x && t < this.y && r > this.x && b > this.y;
-    }
+    };
+    this.Update = function()
+    {
+        Main.Redraw();
+    };
+    this.OnDblClick = function()
+    {
+        if(Dialogs) Dialogs.Create(
+        {
+            title:"Свойства",
+            data:
+            {
+                x:"X",
+                y:"Y"
+            }
+        }, this);
+    };
     this.GetPSel = function() {return this.Sel;}
     this.Sel = false;
     this.Moved = false;
