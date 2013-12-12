@@ -94,7 +94,7 @@ var DB =
         for(var i = 0, l = Items.length; i < l; i++) if(Items[i]) Items[r++] = Items[i];
         Items.length = r;
         //for(e in errors) console.log(errors[e]);
-        Main.Redraw();
+        Main.TestRedraw();
         return errors;
     },
     ////////////////////////// Локальное хранилище ///////////////////////////////////////////////////////////////////

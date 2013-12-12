@@ -60,13 +60,34 @@ var Main = {
             if(f !== MouseObject)
             {
                 var t = 0;
-                if(SelRect && Items[x].RHit && Items[x].RHit(left, top, right, bottom)) t = 1;
+                if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
                 f.Draw(t);
             }
         }
         if(MouseObject) MouseObject.Draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();
+    },
+    TestRedraw: function()
+    {
+        Main.Clear();
+        var y = 0;
+        var err = [];
+        for(var x = 0; x < Items.length; x++)
+        {
+            try
+            {
+                Items[x].Draw(0);
+                Items[y++] = Items[x];
+            }
+            catch(e) 
+            {
+                var t = Items[x];
+                if(t) err.push("#" + x + " " + Items[x].constructor.name);
+            }
+        }
+        Items.length = y;
+        if(err.length > 0) alert("Ошибка отрисовки объектов: \n" + err.join("\n"));
     },
     DeleteAll: function()
     {
