@@ -43,12 +43,13 @@ var Dialogs =
 			i.value = val;
 			i.__obj = Obj;
 			i.__var = x;
+			if(Dlg.update) i.__upd = Dlg.update;
 			i.onchange = function()
 			{
 				var v = this.value;
 				if(this.type === "number") v = parseFloat(v);
 				this.__obj[this.__var] = v;
-				if(this.__obj.Update) this.__obj.Update();
+				if(this.__upd) this.__upd();
 			}
 			td.appendChild(i);
 			tr.appendChild(td);

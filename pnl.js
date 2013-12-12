@@ -40,15 +40,12 @@ function Point(x, y)
     {
         return l < this.x && t < this.y && r > this.x && b > this.y;
     };
-    this.Update = function()
-    {
-        Main.Redraw();
-    };
     this.OnDblClick = function()
     {
         if(Dialogs) Dialogs.Create(
         {
             title:"Свойства",
+            update:Main.Redraw,
             data:
             {
                 x:"X",
