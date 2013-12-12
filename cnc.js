@@ -220,10 +220,24 @@ function GPath()
 
 var CGPath = 
 {
-	dx:0,
-	dy:0,
+	sizeX:324,
+	sizeY:224,
 	safeZ:0,
 	defZ:0,
+	hiZ:10,
+	loZ:20,
+    ParamDlg:
+	{
+		title:"Параметры ЧПУ",
+		data:
+		{
+			sizeX:"Длина рабочей области",
+			sizeY:"Ширина рабочей области",
+			safeZ:"Безопасная высота",
+			hiZ:"Максимальная высота заготовки",
+			loZ:"Минимальная высота заготовки"
+		}
+	},
 	Scan:function(s, r)
 	{
 		var l = r.length - 1;
@@ -300,7 +314,7 @@ var CGPath =
 		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
 		Main.Redraw();
 	},
-    OnInit:function()
+	OnInit:function()
     {
     	Main.Ctors["GPath"] = GPath;
     	CMenu.Add({
@@ -308,6 +322,7 @@ var CGPath =
     			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
     		},
     		cnc:{label: "ЧПУ",
+    			_p: {label: "Параметры", click: function(){CreateDialog(CGPath.ParamDlg, CGPath);}},
     			out: {label: "Вывести GCode", click: this.GetGCode},
     			_1: {label: "Сменить направление", click: this.Reverse},
     			_2: {label: "Сменить смещение", click: this.Inverse},
