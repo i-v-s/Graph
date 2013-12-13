@@ -266,6 +266,10 @@ var Main = {
             if(Main.NeedRedraw) {Main.NeedRedraw = false; State.redraw();}
         }
     },
+    OnProps: function()
+    {
+        for(x in Items) if(Items[x].Sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
+    },
     Init: function()
     {
         State = States.free;
@@ -310,7 +314,10 @@ var Main = {
         {
             CMenu.Add({
                 file:{_: {label: "Новый", click: Main.DeleteAll}}, 
-                edit:{_: {label: "Удалить", click: Main.Delete}}
+                edit:{
+                    _: {label: "Удалить", click: Main.Delete},
+                    _1:{label: "Свойства", click: Main.OnProps}
+                }
             });
         }
         for(x in Main.Modules)

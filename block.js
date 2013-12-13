@@ -108,9 +108,22 @@ function Block(r)//x, y, w, h, Text)
     }
     this.OnDblClick = function()
     {
-        var Memo = document.getElementById("blocktext");
+        if(Dialogs) Dialogs.Create(
+        {
+            title:"Свойства",
+            update:Main.Redraw,
+            data:
+            {
+                text:{name:"Текст", tag:"textarea"},
+                x:"X",
+                y:"Y",
+                w:"Ширина",
+                h:"Высота"
+            }
+        }, this);        
+        /*var Memo = document.getElementById("blocktext");
         Memo.value = this.text ? this.text.join("\n") : "";
-        showBlockDialog();
+        showBlockDialog();*/
     }
 }
 

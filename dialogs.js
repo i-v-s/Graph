@@ -31,11 +31,15 @@ var Dialogs =
 			var tr = document.createElement("tr");
 			var td = document.createElement("td");
 			tr.appendChild(td);
-			td.innerHTML = v;
+			if(typeof v === "object") td.innerHTML = v.name;
+			else td.innerHTML = v;
 
 			td = document.createElement("td");
-			var i = document.createElement("input");
+			var tag = "input";
+			if(typeof v === "object") tag = v.tag;
+			var i = document.createElement(tag);
 			var val = Obj[x];
+			if(tag === "textarea") val = val.join("\n");
 			var tp = typeof val;
 			if(tp === "number") i.type = "number";
 			else i.type = "text";
@@ -48,6 +52,7 @@ var Dialogs =
 			{
 				var v = this.value;
 				if(this.type === "number") v = parseFloat(v);
+				if(this.type === "textarea") v = v.split("\n");
 				this.__obj[this.__var] = v;
 				if(this.__upd) this.__upd();
 			}
@@ -72,7 +77,7 @@ var Dialogs =
 		di.appendChild(div);
 		d.onmousemove = function(e)
 		{
-			if(this.__mx !== undefined && this.__my !== undefined)
+			if(this.__mx !== undefined && this.__my !== undefined && e.target.tagName === "H1")
 			{
 				this.style.left = "" + (this.offsetLeft + e.pageX - this.__mx) + "px";
 				this.style.top = "" + (this.offsetTop + e.pageY - this.__my) + "px";
