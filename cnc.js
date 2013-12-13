@@ -156,6 +156,7 @@ function GPath()
         		ctx.arc(p2.x, p2.y, Math.abs(shift), p2.a1, p2.a2, shift < 0);
         	p1 = p2;
         }
+        if(Type === "GCode") return;
         ctx.stroke();
         // Рисуем указатель начала
         var p = p0;//this.s[0].p.pos();
@@ -192,7 +193,29 @@ function GPath()
     },
 	this.ToGCode = function(dx, dy, z, Gz, Prep)
 	{
-        var p = this.s[0].p.pos();
+		var old_ctx = ctx;
+		var R = [];
+		ctx = 
+		{
+			moveTo: function(x, y)
+			{
+				
+			},
+			lineTo: function(x, y)
+			{
+
+			},
+			arc: function(x, y, R, a1, a2, r)
+			{
+
+			}
+		}
+		this.Draw("GCode");
+
+		ctx = old_ctx;
+        return R.join("\n");
+        
+        /*var p = this.s[0].p.pos();
         var R = new Array(this.s.length);
         R[0] = Gz + " X" + (p.x + dx) + " Y" + (p.y + dy) + " Z" + z + "\n" + Prep;
         for(var x in this.s) if(x > 0)
@@ -203,7 +226,7 @@ function GPath()
         	else
         		R[x] = "(??? X" + (p.x + dx) + " Y" + (p.y + dy) + ")";
         }
-        return R.join("\n");
+        return R.join("\n");*/
 	};
 	this.Reverse = function()
 	{

@@ -38,13 +38,22 @@ var Main = {
     MX: 0, MY: 0,
     Modules:[],
     Ctors:{},
-
+    Color: "#000",
+    Back: "#FFF",
+    OnCSS: function()
+    {
+        var s = getComputedStyle(document.body);
+        Main.Color = s.color;
+        Main.Back = s.background;
+        Main.Redraw();
+    },
     Clear: function()
     {
         ctx.clearRect(-Main.OffsetX / Main.Scale, -Main.OffsetY / Main.Scale, canvas.width / Main.Scale, canvas.height / Main.Scale);
     },
     Redraw: function()
     {
+        //Main.OnCSS();
         Main.Clear();
         var left, top, right, bottom;
         if(SelRect)

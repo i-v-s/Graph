@@ -2,20 +2,31 @@
 /*
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent;margin:0;padding:0}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}:focus{outline:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 */
+
+/************ Цвета и тени  *************************/
+
 body {
     background: #000;
     font: 12px Arial, Helvetica, sans-serif;
+    color: #76E215;
+    font-family: monospace;
+    font-size: 12pt;
 }
 
-/************ Цвета и тени меню *************************/
+
+
+.dialog select, .dialog input
+{
+    color: #76E215;
+    background: #020;
+    border-width: 0;    
+}
 
 .hmenu, button /* Цвет текста */
 {
     cursor: pointer;
     /*#79FF00;*/
     color: #76E215;
-    font-family: monospace;
-    font-size: 12pt;
 }
 
 .hmenu > li:hover, button:hover /* Выделенный пункт*/
@@ -35,6 +46,15 @@ body {
 { 
     border-radius: 2px 2px 2px 2px;
 }
+
+/************** Шрифт ************************/
+
+body, .dialog h1, .dialog button, .dialog input, .dialog select
+{
+    font-size: 12pt;
+    font-family: monospace;
+}
+
 
 
 /************** Параметры меню ********************/
@@ -120,7 +140,22 @@ body {
 
 .dialog
 {
-    padding: 10px;
+    padding: 0px;
+}
+
+.dialog > div
+{
+    padding: 10px;  
+}
+
+.dialog h1
+{
+    /*border-radius: 10px 10px 0px 0px;
+    background: linear-gradient(to top, rgba(153, 191, 195, 0.7), rgba(207, 248, 240, 0.7));*/
+    background: #2A5106; 
+    text-align: center;
+    margin: 0;
+    padding: 2px;
 }
 
 button {
@@ -129,7 +164,6 @@ button {
 	cursor: pointer;
 	text-align: center;
 	text-decoration: none;
-	/*font: 14px/100% Arial, Helvetica, sans-serif;*/
 	padding: .5em 2em .55em;
 	/*-webkit-border-radius: .5em; 
 	-moz-border-radius: .5em;
