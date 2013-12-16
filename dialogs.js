@@ -39,12 +39,12 @@ var Dialogs =
 			if(typeof v === "object") tag = v.tag;
 			var i = document.createElement(tag);
 			var val = Obj[x];
-			if(tag === "textarea") val = val.join("\n");
+			if(tag === "textarea") val = val ? val.join("\n") : "";
 			var tp = typeof val;
 			if(tp === "number") i.type = "number";
 			else i.type = "text";
 			i.align = "right";
-			i.value = val;
+			i.value = (val !== undefined) ? val : "";
 			i.__obj = Obj;
 			i.__var = x;
 			if(Dlg.update) i.__upd = Dlg.update;
