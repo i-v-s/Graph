@@ -96,13 +96,13 @@ function GPath()
 {
 	this.s = null; // 
 	this._p = null; // Массив точек пути {G, p}
-	this.sh = 7;
 	this.SP = {x:0, y:0};
 	this.rea = true; // Округлять внешние углы?
 	this.Draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         var shift = this.sh;
+        if(!shift) shift = CGPath.shift;
         ctx.lineWidth = 2 * Math.abs(shift);
         if(this.inv) shift = -shift;
         ctx.lineCap = "round";
@@ -159,20 +159,22 @@ function GPath()
         if(Type === "GCode") return;
         ctx.stroke();
         // Рисуем указатель начала
+        shift = this.sh;
+        if(!shift) shift = CGPath.shift;
         var p = p0;//this.s[0].p.pos();
         var v = this.s[1].g.vec(this.s[0].p);
 		if(this.Sel) ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
 		else ctx.fillStyle = Type ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(p.x - this.sh * v.y, p.y + this.sh * v.x);
+        ctx.moveTo(p.x - shift * v.y, p.y + shift * v.x);
         //p.x += this.sh * v.y; 
         //p.y -= this.sh * v.x;
-        this.SP.x = p.x + 2 * this.sh * v.x;
-        this.SP.y = p.y + 2 * this.sh * v.y;
-        ctx.lineTo(p.x + 2 * this.sh * v.x, p.y + 2 * this.sh * v.y);
-        p.x += this.sh * v.y; 
-        p.y -= this.sh * v.x;
+        this.SP.x = p.x + 2 * shift * v.x;
+        this.SP.y = p.y + 2 * shift * v.y;
+        ctx.lineTo(p.x + 2 * shift * v.x, p.y + 2 * shift * v.y);
+        p.x += shift * v.y; 
+        p.y -= shift * v.x;
         ctx.lineTo(p.x, p.y);       
         ctx.fill();
 	};
@@ -249,9 +251,11 @@ var CGPath =
 	stepZ:1,
 	topZ:10,
 	depthZ:20,
+	shift:7,
     ParamDlg:
 	{
 		title:"Параметры ЧПУ",
+		update:Main.Redraw,
 		data:
 		{
 			sizeX:"Длина рабочей области",
@@ -259,7 +263,8 @@ var CGPath =
 			safeZ:"Безопасная высота",
 			topZ:"Высота поверхности заготовки",
 			depthZ:"Толщина заготовки",
-			stepZ:"Шаг по высоте"
+			stepZ:"Шаг по высоте",
+			shift:"Радиус инструмента"
 		}
 	},
 	Scan:function(s, r)
