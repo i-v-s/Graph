@@ -193,42 +193,54 @@ function GPath()
     	}
     	return true;
     },
-	this.ToGCode = function(dx, dy, z, Gz, Prep)
+	this.ToGCode = function(dx, dy, z, safez, prec) // dx, dy: смещение, z - рабочая высота, safez - вертикальный заход
 	{
 		var old_ctx = ctx;
 		var R = [];
-		ctx = 
+		try
 		{
-			moveTo: function(x, y)
+			ctx = 
 			{
-				
-			},
-			lineTo: function(x, y)
-			{
-
-			},
-			arc: function(x, y, R, a1, a2, r)
-			{
-
+				beginPath: function(){},
+				moveTo: function(x, y) // Выход на начало работы
+				{
+					if(typeof safez === "number") 
+					{
+						R.push("G0 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec) + " Z" + safez.toFixed(prec));
+						R.push("G1 Z" + z);
+					}
+					else
+					{
+						R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec) + " Z" + z.toFixed(prec));
+					}
+				},
+				lineTo: function(x, y)
+				{
+					R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec));
+				},
+				arc: function(x, y, Rd, a1, a2, rev)
+				{
+					var r = rev ? "G3" : "G2";
+					var I = Rd * Math.cos(a1);
+					var J = Rd * Math.sin(a1);
+					var X = x + dx + I;
+					var Y = y + dy + J;
+					R.push("G1 X" + X.toFixed(prec) + " Y" + Y.toFixed(prec));
+					var X = x + dx + Rd * Math.cos(a2);
+					var Y = y + dy + Rd * Math.sin(a2);
+					R.push(r + " X" + X.toFixed(prec) + " Y" + Y.toFixed(prec) + " I" + I.toFixed(prec) + " J" + J.toFixed(prec));
+				}
 			}
+			this.Draw("GCode");
+		} catch(e)
+		{
+			ctx = old_ctx;
+			alert("Ошибка вывода G-Code: " + e.message);
+			return null;
 		}
-		this.Draw("GCode");
 
 		ctx = old_ctx;
         return R.join("\n");
-        
-        /*var p = this.s[0].p.pos();
-        var R = new Array(this.s.length);
-        R[0] = Gz + " X" + (p.x + dx) + " Y" + (p.y + dy) + " Z" + z + "\n" + Prep;
-        for(var x in this.s) if(x > 0)
-        {
-        	p = this.s[x].p.pos();
-        	if(this.s[x].g instanceof Line)
-        		R[x] = "G1 X" + (p.x + dx) + " Y" + (p.y + dy);
-        	else
-        		R[x] = "(??? X" + (p.x + dx) + " Y" + (p.y + dy) + ")";
-        }
-        return R.join("\n");*/
 	};
 	this.Reverse = function()
 	{
@@ -247,11 +259,11 @@ var CGPath =
 {
 	sizeX:324,
 	sizeY:224,
-	safeZ:0,
+	safeZ:-29,
 	stepZ:1,
-	topZ:10,
-	depthZ:20,
-	shift:7,
+	topZ:-30,
+	depthZ:5,
+	shift:2.5,
     ParamDlg:
 	{
 		title:"Параметры ЧПУ",
@@ -319,11 +331,24 @@ var CGPath =
 	},
 	GetGCode:function()
 	{
+		var safeZ = CGPath.safeZ;
+		var topZ = CGPath.topZ;
+		var stepZ = Math.abs(CGPath.stepZ);
+		var depthZ = CGPath.depthZ;
+		//if(safeZ > topZ) stepZ = -stepZ;
 		var R = [];
-		for(x in Items) if(Items[x].ToGCode)
+		for(var x in Items)
 		{
-			R.push(Items[x].ToGCode(CGPath.dx, CGPath.dy, Items[x].z ? Items[x].z : CGPath.defZ, "G1", ""));
-			R.push("G0 Z" + CGPath.safeZ);
+			var item = Items[x];
+			if(item.ToGCode) for(var dz = 0; dz <= depthZ; dz += stepZ)
+			{
+				var z = (safeZ > topZ) ? topZ - dz : topZ + dz;
+        		var closed = (item.s[0].p === item.s[item.s.length - 1].p);
+				var r = Items[x].ToGCode(0, 0, z, (closed && dz) ? null : safeZ, 3);
+				if(r === null) return;
+				R.push(r);
+				if(!closed) R.push("G0 Z" + safeZ.toFixed(3));
+			}
 		} 
 		document.getElementById("goutarea").value = R.join("\n");
 		showModal("goutdialog");
@@ -343,9 +368,18 @@ var CGPath =
 		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
 		Main.Redraw();
 	},
+	MainClear: null,
 	OnInit:function()
     {
     	Main.Ctors["GPath"] = GPath;
+    	CGPath.MainClear = Main.Clear;
+    	Main.Clear = function()
+    	{
+    		CGPath.MainClear();
+    	    ctx.strokeStyle = "#408040";
+	        ctx.lineWidth = 1.0;    		
+	        ctx.strokeRect(0, 0, CGPath.sizeX, CGPath.sizeY);
+    	};
     	CMenu.Add({
     		create:{
     			gpath: {label: "Путь ЧПУ", click: this.OnCreate}
