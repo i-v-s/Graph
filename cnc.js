@@ -355,7 +355,7 @@ var CGPath =
 				var r = Items[x].ToGCode(0, CGPath.sizeY, z, (closed && dz) ? null : safeZ, 3);
 				if(r === null) return;
 				R.push(r);
-				if(!closed) R.push("G0 Z" + safeZ.toFixed(3));
+				if(!closed || dz + stepZ > depthZ) R.push("G0 Z" + safeZ.toFixed(3));
 			}
 		} 
 		R.push("M2");
