@@ -206,28 +206,28 @@ function GPath()
 				{
 					if(typeof safez === "number") 
 					{
-						R.push("G0 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec) + " Z" + safez.toFixed(prec));
+						R.push("G0 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec) + " Z" + safez.toFixed(prec));
 						R.push("G1 Z" + z);
 					}
 					else
 					{
-						R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec) + " Z" + z.toFixed(prec));
+						R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec) + " Z" + z.toFixed(prec));
 					}
 				},
 				lineTo: function(x, y)
 				{
-					R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (y + dy).toFixed(prec));
+					R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec));
 				},
 				arc: function(x, y, Rd, a1, a2, rev)
 				{
 					var r = rev ? "G3" : "G2";
-					var I = Rd * Math.cos(a1);
+					var I = -Rd * Math.cos(a1);
 					var J = Rd * Math.sin(a1);
-					var X = x + dx + I;
-					var Y = y + dy + J;
+					var X = dx + x - I;
+					var Y = dy - y - J;
 					R.push("G1 X" + X.toFixed(prec) + " Y" + Y.toFixed(prec));
-					var X = x + dx + Rd * Math.cos(a2);
-					var Y = y + dy + Rd * Math.sin(a2);
+					var X = dx + x + Rd * Math.cos(a2);
+					var Y = dy - y - Rd * Math.sin(a2);
 					R.push(r + " X" + X.toFixed(prec) + " Y" + Y.toFixed(prec) + " I" + I.toFixed(prec) + " J" + J.toFixed(prec));
 				}
 			}
@@ -344,12 +344,14 @@ var CGPath =
 			{
 				var z = (safeZ > topZ) ? topZ - dz : topZ + dz;
         		var closed = (item.s[0].p === item.s[item.s.length - 1].p);
-				var r = Items[x].ToGCode(0, 0, z, (closed && dz) ? null : safeZ, 3);
+				var r = Items[x].ToGCode(0, CGPath.sizeY, z, (closed && dz) ? null : safeZ, 3);
 				if(r === null) return;
 				R.push(r);
 				if(!closed) R.push("G0 Z" + safeZ.toFixed(3));
 			}
 		} 
+		R.push("M2");
+		R.push("%");
 		document.getElementById("goutarea").value = R.join("\n");
 		showModal("goutdialog");
 	},
