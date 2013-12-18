@@ -197,6 +197,8 @@ function GPath()
 	{
 		var old_ctx = ctx;
 		var R = [];
+		var LastX = null;
+		var LastY = null;
 		try
 		{
 			ctx = 
@@ -216,19 +218,25 @@ function GPath()
 				},
 				lineTo: function(x, y)
 				{
-					R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec));
+					var X = (x + dx).toFixed(prec);
+					var Y = (dy - y).toFixed(prec);
+					if(LastX !== X || LastY !== Y) R.push("G1 X" + X + " Y" + Y);
+					LastX = X;
+					LastY = Y;
 				},
 				arc: function(x, y, Rd, a1, a2, rev)
 				{
 					var r = rev ? "G3" : "G2";
 					var I = -Rd * Math.cos(a1);
 					var J = Rd * Math.sin(a1);
-					var X = dx + x - I;
-					var Y = dy - y - J;
-					R.push("G1 X" + X.toFixed(prec) + " Y" + Y.toFixed(prec));
-					var X = dx + x + Rd * Math.cos(a2);
-					var Y = dy - y - Rd * Math.sin(a2);
-					R.push(r + " X" + X.toFixed(prec) + " Y" + Y.toFixed(prec) + " I" + I.toFixed(prec) + " J" + J.toFixed(prec));
+					var X = (dx + x - I).toFixed(prec);
+					var Y = (dy - y - J).toFixed(prec);
+					if(LastX !== X || LastY !== Y) R.push("G1 X" + X + " Y" + Y);
+					X = (dx + x + Rd * Math.cos(a2)).toFixed(prec);
+					Y = (dy - y - Rd * Math.sin(a2)).toFixed(prec);
+					R.push(r + " X" + X + " Y" + Y + " I" + I.toFixed(prec) + " J" + J.toFixed(prec));
+					LastX = X;
+					LastY = Y;
 				}
 			}
 			this.Draw("GCode");
