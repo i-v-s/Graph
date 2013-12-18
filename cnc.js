@@ -199,6 +199,7 @@ function GPath()
 		var R = [];
 		var LastX = null;
 		var LastY = null;
+		var feed = this.feed ? this.feed : CGPath.feed;
 		try
 		{
 			ctx = 
@@ -209,11 +210,11 @@ function GPath()
 					if(typeof safez === "number") 
 					{
 						R.push("G0 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec) + " Z" + safez.toFixed(prec));
-						R.push("G1 Z" + z);
+						R.push("G1 Z" + z + " F" + feed);
 					}
 					else
 					{
-						R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec) + " Z" + z.toFixed(prec));
+						R.push("G1 X" + (x + dx).toFixed(prec) + " Y" + (dy - y).toFixed(prec) + " Z" + z.toFixed(prec) + " F" + feed);
 					}
 				},
 				lineTo: function(x, y)
@@ -272,6 +273,7 @@ var CGPath =
 	topZ:-30,
 	depthZ:5,
 	shift:2.5,
+	feed:100,
     ParamDlg:
 	{
 		title:"Параметры ЧПУ",
@@ -284,7 +286,8 @@ var CGPath =
 			topZ:"Высота поверхности заготовки",
 			depthZ:"Толщина заготовки",
 			stepZ:"Шаг по высоте",
-			shift:"Радиус инструмента"
+			shift:"Радиус инструмента",
+			feed:"Подача, мм/мин"
 		}
 	},
 	Scan:function(s, r)
