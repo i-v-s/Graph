@@ -20,21 +20,22 @@
     <canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <!-- Главное меню -->
     <menu type="toolbar" class="hmenu" id="mainmenu">
-        <li id="menufile"> Файл </li>
+        <li> &#2384; </li>
+        <li id="menufile"> Проект </li>
         <li id="menuedit"> Правка </li>
-        <li> Вид 
-            <ul id="viewmenu">
+        <li id="menuview"> Вид 
+            <ul>
                 <li> Тема 
                     <ul>
-                        <li onclick="SetCSS('lite.css')"> Лёгкая </li>
+                        <li class="checked" onclick="SetCSS('lite.css')"> Лёгкая </li>
                         <li onclick="SetCSS('matrix.css')"> Матрица </li>
                     </ul>
-                </li>
-                
+                </li> 
             </ul>
         </li>
         <li id="menucreate"> Создать </li>
         <li id="menucnc"> ЧПУ </li>
+        <li> <div class="hand"></div> </li>
     </menu>
 <!-- Серый экран -->
     <div id='blocker' hidden="true"></div>

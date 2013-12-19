@@ -103,6 +103,22 @@ body {
 	min-width: 120px;
 }
 
+.hmenu li ul li
+{
+    padding-left: 3ex;
+}
+
+.hmenu li ul li.checked
+{
+    padding-left: 1ex;
+    min-width: calc(120px + 2ex);
+}
+
+.hmenu li ul li.checked:before
+{
+    content: "\2714";
+}
+
 .hmenu li ul li:hover
 {
     /*background: #C0EFEF; */

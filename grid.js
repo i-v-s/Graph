@@ -56,6 +56,17 @@ var Grid = {
             ctx.stroke();
         }
 
+    },
+    OnInit: function()
+    {
+        if(CMenu) CMenu.Add(
+        {
+            view:{grid: {label: "Линейка", 
+            _1:{label: "Решётка"},
+            _2:{label: "Точки"},
+            _3:{label: "Убрать"},
+            _4:{label: "Параметры"}
+        }}});
     }
 }
 
@@ -63,3 +74,4 @@ Main.Clear = Grid.Draw;
 Grid.MAM = Main.OnAlignedMove;
 Main.OnAlignedMove = Grid.OnAlignedMove;
 States.free.redraw = Grid.Redraw;
+Main.Modules.push(Grid);
