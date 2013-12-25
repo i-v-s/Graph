@@ -106,6 +106,20 @@ function Block(r)//x, y, w, h, Text)
         if(Memo.value !== "") this.text = Memo.value.split("\n");
         hideBlockDialog();
     }
+    this.AutoSize = function()
+    {
+        ctx.font = "20px monospace";
+        var l = this.text.length;
+        this.h = l * 20 + 20;
+        var mx = 10;
+        for(var x = 0; x < l; x++)
+        {
+            var w = ctx.measureText(this.text[x]).width;
+            if(w > mx) mx = w;
+        }
+        this.w = mx + 5;
+
+    }
     this.OnDblClick = function()
     {
         if(Dialogs) Dialogs.Create(

@@ -4,17 +4,6 @@ var SelRect = null;
 var ctx = null;
 var canvas = null;
 
-
-/*Array.prototype.remove = function(v)
-{
-    var o = 0;
-    for(var i = 0, e = this.length; i < e; i++)
-    {
-        var t = this[i];
-        if(t !== v) this[o++] = t;
-    }
-    this.length = o;
-};*/
 function RemoveFromArray(a, v)
 {
     var o = 0;
@@ -32,8 +21,6 @@ var Main = {
     OffsetY: 0.0,
     adm:3, // Допуск при выборе
     NeedRedraw: false,
-    MouseDown: null,
-    OnRightDown: null,
     PointAlign:true,
     MX: 0, MY: 0,
     Modules:[],
@@ -56,6 +43,7 @@ var Main = {
         //Main.OnCSS();
         Main.Clear();
         var left, top, right, bottom;
+        var err = [];
         if(SelRect)
         {
             left = SelRect.left();
@@ -70,33 +58,28 @@ var Main = {
             {
                 var t = 0;
                 if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
-                f.Draw(t);
+                try
+                { 
+                    f.Draw(t); 
+                } 
+                catch(e) 
+                {
+                    var t = Items[x];
+                    if(t) err.push("#" + x + " " + t.constructor.name);
+                    Items[x] = null;
+                }
             }
         }
         if(MouseObject) MouseObject.Draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();
-    },
-    TestRedraw: function()
-    {
-        Main.Clear();
-        var y = 0;
-        var err = [];
-        for(var x = 0; x < Items.length; x++)
+        if(err.length > 0)
         {
-            try
-            {
-                Items[x].Draw(0);
-                Items[y++] = Items[x];
-            }
-            catch(e) 
-            {
-                var t = Items[x];
-                if(t) err.push("#" + x + " " + Items[x].constructor.name);
-            }
+            var y = 0;
+            for(var x = 0; x < Items.length; x++) if(Items[x]) Items[y++] = Items[x];
+            Items.length = y;
+            alert("Ошибка отрисовки объектов: \n" + err.join("\n"));
         }
-        Items.length = y;
-        if(err.length > 0) alert("Ошибка отрисовки объектов: \n" + err.join("\n"));
     },
     DeleteAll: function()
     {
@@ -106,7 +89,7 @@ var Main = {
     Delete: function()
     {
         var x, y;
-        for(x = 0, y = 0, e = Items.length; x < e; x++)
+        for(var x = 0, y = 0, e = Items.length; x < e; x++)
         {
             var i = Items[x];
             if((i.GetPSel && !i.GetPSel()) || !i.Sel) Items[y++] = i;
@@ -122,7 +105,7 @@ var Main = {
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
-        for(x = 0; x < Items.length; x++)
+        for(var x = 0; x < Items.length; x++)
         {
             mo = Items[x].Hit(mx, my);
             if(mo) break;
@@ -132,7 +115,7 @@ var Main = {
     OnAlignedMove:function(mx, my) // Движение с привязкой к объектам
     {
         var mo = null;
-        for(x = 0; x < Items.length; x++)
+        for(var x = 0; x < Items.length; x++)
         {
             mo = Items[x].Hit(mx, my);
             if(mo)break;
@@ -185,13 +168,13 @@ var Main = {
         var x;
         if(!MouseObject.Sel)
         {
-            for(x = 0; x < Items.length; x++) Items[x].Sel = false;
+            for(var x = 0; x < Items.length; x++) Items[x].Sel = false;
             MouseObject.Sel = true;
         }
-        for(x = 0, e = Items.length; x < e; x++) if(Items[x].Sel && Items[x].MoveBy) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
+        for(var x = 0, e = Items.length; x < e; x++) if(Items[x].Sel && Items[x].MoveBy) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
         if(!MouseObject.Moved && MouseObject.MoveBy)
             MouseObject.MoveBy(dx, dy);
-        for(x = 0; x < Items.length; x++) Items[x].Moved = false;
+        for(var x = 0; x < Items.length; x++) Items[x].Moved = false;
         MouseObject.Moved = false;
         Main.NeedRedraw = true;
     },
@@ -268,10 +251,11 @@ var Main = {
     },
     OnProps: function()
     {
-        for(x in Items) if(Items[x].Sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
+        for(var x in Items) if(Items[x].Sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
     },
     Init: function()
     {
+        document.oncontextmenu = function (){return false};
         State = States.free;
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
@@ -320,7 +304,7 @@ var Main = {
                 }
             });
         }
-        for(x in Main.Modules)
+        for(var x in Main.Modules)
             if(Main.Modules[x].OnInit) Main.Modules[x].OnInit(canvas, ctx);
         Main.Redraw();
     }
