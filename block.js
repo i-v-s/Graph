@@ -1,5 +1,6 @@
 function Block(r)//x, y, w, h, Text)
 {
+    this.fsize = 10;
     for(x in r) if(r.hasOwnProperty(x)) this[x] = r[x];
     this._P = [
         {
@@ -34,7 +35,6 @@ function Block(r)//x, y, w, h, Text)
             pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h >> 1)}},
             MoveBy:function(x, y){this.o.w += x;}
         }
-
     ];
     var PtDraw = function(Type)
     {
@@ -71,7 +71,7 @@ function Block(r)//x, y, w, h, Text)
         ctx.fillRect(this.x, this.y, this.w, this.h);
         ctx.strokeRect(this.x, this.y, this.w, this.h);
         var step = 20;
-        var a = this.x + 3, b = this.y + (step >> 1);
+        var a = this.x + 3, b = this.y + step;// + (step >> 1);
         ctx.textBaseline = "top";
         ctx.fillStyle = "#000000";
         ctx.font = "20px monospace";
@@ -93,10 +93,34 @@ function Block(r)//x, y, w, h, Text)
             if(Math.abs(p.x - x) < 3 && Math.abs(p.y - y) < 3)
                 return this._P[i];
         }
+       
         if(x < this.x) return null;
         if(x > this.x + this.w) return null;
         if(y < this.y) return null;
         if(y > this.y + this.h) return null;
+        if(this.text)
+        {
+            var txt = this.text;
+            var step = 20;
+            var Y = Math.floor((y - this.y) / step);
+            var X = Math.floor((x - this.x) / step);
+            if(Y < txt.length && X < txt[Y].length)
+            {
+                var r = 
+                {
+                    o:this,
+                    x:X,
+                    y:Y,
+                    Draw: function(Type)
+                    {
+                        var x = this.o.x + this.x * step;
+                        var y = this.o.y + this.y * step;
+                        ctx.strokeRect(x, y, step, step);
+                    }
+                };
+                return r;
+            }
+        } 
         return this;
     }
     this.OnOk = function()
