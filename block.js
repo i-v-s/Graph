@@ -27,22 +27,23 @@ function Block(r)//x, y, w, h, Text)
             MoveBy:function(x, y){this.o.w += x; this.o.h += y;}
         },
         {
-            pos:function(){return {x:this.o.x + (this.o.w >> 1), y:this.o.y}},
+            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y}},
             MoveBy:function(x, y){this.o.y += y; this.o.h -= y;}
         },
         {
-            pos:function(){return {x:this.o.x + (this.o.w >> 1), y:this.o.y + this.o.h}},
+            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y + this.o.h}},
             MoveBy:function(x, y){this.o.h += y;}
         },
         {
-            pos:function(){return {x:this.o.x, y:this.o.y + (this.o.h >> 1)}},
+            pos:function(){return {x:this.o.x, y:this.o.y + (this.o.h / 2)}},
             MoveBy:function(x, y){this.o.x += x; this.o.w -= x;}
         },
         {
-            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h >> 1)}},
+            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h / 2)}},
             MoveBy:function(x, y){this.o.w += x;}
         }
     ];
+    this.exps = [];
     var PtDraw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -90,8 +91,22 @@ function Block(r)//x, y, w, h, Text)
         ctx.lineWidth = 1;
         ctx.strokeStyle = "#000";
         ctx.fillStyle = this.Sel ? "#FFE0E0" :/*(Type > 0 ? "#E0E0E0":*/ "#FFFFFF";//);// = Type ? "": ;
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-        ctx.strokeRect(this.x, this.y, this.w, this.h);
+        if(this.type && this.type === "if")
+        {
+            ctx.beginPath();
+            ctx.moveTo(this.x,              this.y + this.h / 2);
+            ctx.lineTo(this.x + this.w / 2, this.y             );
+            ctx.lineTo(this.x + this.w,     this.y + this.h / 2);
+            ctx.lineTo(this.x + this.w / 2, this.y + this.h);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        else
+        {
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.strokeRect(this.x, this.y, this.w, this.h);
+        }
         if(this.text)
         {
             var l = this.GetTextLayout();
@@ -104,6 +119,14 @@ function Block(r)//x, y, w, h, Text)
                 ctx.fillText(this.text[x], a, b);
         }
         if(this.Sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].Draw(1);
+        var y = 0;
+        for(var x in this.exps)
+        {
+            var e = this.exps[x];
+            if(e === MouseObject) this.exps[y++] = e;
+            else if(e._der && e._der.length > 0) { e.Draw(0); this.exps[y++] = e;}
+        }
+        this.exps.length = y;
     };
     this.OnLoad = function(Sel)
     {
@@ -164,6 +187,7 @@ function Block(r)//x, y, w, h, Text)
                         return {x: x, y: y}
                     }
                 };
+                this.exps.push(r);
                 return r;
             }
         } 
@@ -199,6 +223,7 @@ function Block(r)//x, y, w, h, Text)
             data:
             {
                 text:{name:"Текст", tag:"textarea"},
+                type:{name:"Тип", options:[""]},
                 x:"X",
                 y:"Y",
                 w:"Ширина",

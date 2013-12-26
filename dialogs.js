@@ -36,7 +36,7 @@ var Dialogs =
 
 			td = document.createElement("td");
 			var tag = "input";
-			if(typeof v === "object") tag = v.tag;
+			if(typeof v === "object" && v.tag) tag = v.tag;
 			var i = document.createElement(tag);
 			var val = Obj[x];
 			if(tag === "textarea") val = val ? val.join("\n") : "";

@@ -53,6 +53,16 @@ function Arrow(a)
             ctx.lineTo(X - xl * dx + dy, Y - xl * dy - dx);
         }
         ctx.stroke();
+        if(this.label)
+        {
+            var p = this.ps[0].pos();
+            if(this.x) p.x += +this.x;
+            if(this.y) p.y += +this.y;
+            ctx.font = "10px monospace";
+            ctx.textBaseline = "top";
+            ctx.fillStyle = "#000000";
+            ctx.fillText(this.label, p.x, p.y);
+        }
     };
     this.MoveBy = function(dx, dy)
     {
@@ -67,6 +77,29 @@ function Arrow(a)
     {
         var pr = 3;
         var p1 = this.ps[0].pos();
+        if(this.label)
+        {
+            var X = (this.x ? +this.x : 0) + p1.x;
+            var Y = (this.y ? +this.y : 0) + p1.y;
+            if(X < x && Y < y && Y + 10 > y)
+            {
+                ctx.font = "10px monospace";
+                if(Y + ctx.measureText(this.label).width > y) return this._lp =
+                {
+                    o: this,
+                    MoveBy: function(dx, dy) {this.o.x += dx; this.o.y += dy;},
+                    Draw: function(t) 
+                    {
+                        var p = this.o.ps[0].pos();
+                        if(typeof this.o.x  !== "number" || typeof this.o.y !== "number") {this.o.y = 0; this.o.x = 0;}
+                        p.x += this.o.x;
+                        p.y += this.o.y;
+                        ctx.lineWidth = 0.5;
+                        ctx.strokeRect(p.x, p.y + 1, ctx.measureText(this.o.label).width, 11);
+                    }
+                }
+            }
+        }
         for(var t = 0, e = this.ps.length - 1; t < e; t++)
         {
             var p = p1;
@@ -89,6 +122,20 @@ function Arrow(a)
         for(var t = 0, e = this.ps.length; t < e;t++)
             if(this.ps[t].Sel) return true;
         return  false;
+    };
+    this.OnDblClick = function()
+    {
+        if(Dialogs) Dialogs.Create(
+        {
+            title:"Свойства",
+            update:Main.Redraw,
+            data:
+            {
+                label:"Метка",
+                x:"Метка, X",
+                y:"Метка, Y",
+            }
+        }, this);        
     };
     this.Sel = false;
     this.Moved = false;
