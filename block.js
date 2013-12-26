@@ -1,6 +1,13 @@
 function Block(r)//x, y, w, h, Text)
 {
-    this.fsize = 10;
+    this.SetFontSize = function(s)
+    {
+        this.fsize = s;
+        this._font = s.toString() + "px monospace";
+        ctx.font = this._font;
+        this._dx = ctx.measureText("X").width;
+    }
+    this.SetFontSize(10);
     for(x in r) if(r.hasOwnProperty(x)) this[x] = r[x];
     this._P = [
         {
@@ -63,23 +70,38 @@ function Block(r)//x, y, w, h, Text)
             this.x += dx; this.y += dy;
             for(var x = this._P.length - 1; x >= 0; x--) this._P[x].Moved = true;
         };
+    };
+    this.GetTextLayout = function()
+    {
+        var step = this.fsize;
+        var l = this.text ? this.text.length : 0;
+        var y = this.y + (this.h >> 1) - (l * step >> 1);
+        return {
+            x: this.x + step,
+            y: y,
+            dx: this._dx,
+            dy: step
+        };
     }
     this.Draw = function(Type)
     {
         //var x = this._P[0].x, y = this._P[0].y;
-        ctx.fillStyle = this.Sel ? "#FFE0E0" :(Type > 0 ? "#E0E0E0": "#FFFFFF");// = Type ? "": ;
+        ctx.fillStyle = this.Sel ? "#FFE0E0" :/*(Type > 0 ? "#E0E0E0":*/ "#FFFFFF";//);// = Type ? "": ;
         ctx.fillRect(this.x, this.y, this.w, this.h);
         ctx.strokeRect(this.x, this.y, this.w, this.h);
-        var step = 20;
-        var a = this.x + 3, b = this.y + step;// + (step >> 1);
-        ctx.textBaseline = "top";
-        ctx.fillStyle = "#000000";
-        ctx.font = "20px monospace";
-        var x, e;
-        if(this.text)for(x = 0, e = this.text.length; x < e; x++, b += step)
-            ctx.fillText(this.text[x], a, b);
-        if(this.Sel || Type > 0) for(x = this._P.length - 1; x >= 0; x--) this._P[x].Draw(1);
-    };//ctx.strokeRect(this.P1.x, this.P1.y, this.w, this.h);};
+        if(this.text)
+        {
+            var l = this.GetTextLayout();
+            var a = l.x, b = l.y;
+            ctx.textBaseline = "top";
+            ctx.fillStyle = "#000000";
+            ctx.font = this._font;
+            var x, e;
+            for(x = 0, e = this.text.length; x < e; x++, b += l.dy)
+                ctx.fillText(this.text[x], a, b);
+        }
+        if(this.Sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].Draw(1);
+    };
     this.OnLoad = function(Sel)
     {
         if(this.x && this.y && this.w && this.h) return true;
@@ -101,21 +123,40 @@ function Block(r)//x, y, w, h, Text)
         if(this.text)
         {
             var txt = this.text;
+            var l = this.GetTextLayout();
             var step = 20;
-            var Y = Math.floor((y - this.y) / step);
-            var X = Math.floor((x - this.x) / step);
-            if(Y < txt.length && X < txt[Y].length)
+            var Y = Math.floor((y - l.y) / l.dy);
+            var X = Math.floor((x - l.x) / l.dx);
+            if(X >= 0 && Y >= 0 && Y < txt.length && X < txt[Y].length)
             {
+                var t = txt[Y];
+                var e = /\w/;
+                if(!e.test(t.charAt(X))) return this;
+                var minX = X;
+                while(minX > 0 && e.test(t.charAt(minX - 1))) minX--;
+                var maxX = X + 1;
+                while(maxX < t.length && e.test(t.charAt(maxX))) maxX++;
+                maxX--;
+
                 var r = 
                 {
                     o:this,
-                    x:X,
+                    x:minX,
+                    l:maxX - minX + 1,
                     y:Y,
                     Draw: function(Type)
                     {
-                        var x = this.o.x + this.x * step;
-                        var y = this.o.y + this.y * step;
-                        ctx.strokeRect(x, y, step, step);
+                        var l = this.o.GetTextLayout();
+                        var x = l.x + this.x * l.dx;
+                        var y = l.y + this.y * l.dy;
+                        ctx.strokeRect(x, y + 1, this.l * l.dx, l.dy + 1);
+                    },
+                    pos: function()
+                    {
+                        var l = this.o.GetTextLayout();
+                        var x = l.x + (this.x + this.l) * l.dx;
+                        var y = l.y + (this.y + 1) * l.dy + 2;
+                        return {x: x, y: y}
                     }
                 };
                 return r;
@@ -132,17 +173,17 @@ function Block(r)//x, y, w, h, Text)
     }
     this.AutoSize = function()
     {
-        ctx.font = "20px monospace";
+        ctx.font = this._font;
         var l = this.text.length;
-        this.h = l * 20 + 20;
+        var lay = this.GetTextLayout();
+        this.h = (l + 1) * lay.dy;
         var mx = 10;
         for(var x = 0; x < l; x++)
         {
             var w = ctx.measureText(this.text[x]).width;
             if(w > mx) mx = w;
         }
-        this.w = mx + 5;
-
+        this.w = mx + (lay.x - this.x) * 2;
     }
     this.OnDblClick = function()
     {
@@ -159,9 +200,6 @@ function Block(r)//x, y, w, h, Text)
                 h:"Высота"
             }
         }, this);        
-        /*var Memo = document.getElementById("blocktext");
-        Memo.value = this.text ? this.text.join("\n") : "";
-        showBlockDialog();*/
     }
 }
 
