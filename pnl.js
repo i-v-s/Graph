@@ -33,6 +33,7 @@ function Point(x, y)
         {
             Main.MX = this.x;
             Main.MY = this.y;
+            Main.hitPriority = 0;
             return this;
         } else return null;
     };
@@ -94,6 +95,7 @@ function Line(p1, p2)
     };
     this.Hit = function(x, y)
     {
+        if(Main.hitPriority <= 1) return null;
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
         var xx = x - Main.adm;
@@ -108,7 +110,8 @@ function Line(p1, p2)
         var m = (dx) * (y - p1.y) - (dy) * (x - p1.x);
         var l = Math.sqrt(dx * dx + dy * dy);
         m /= l;
-        return Math.abs(m) < Main.adm ? this : null;
+        if(Math.abs(m) < Main.adm) { Main.hitPriority = 1; return this;}
+        return  null;
     };
     this.RHit = function(l, t, r, b)
     {

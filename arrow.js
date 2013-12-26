@@ -100,6 +100,7 @@ function Arrow(a)
                 }
             }
         }
+        if(Main.hitPriority <= 1) return null;
         for(var t = 0, e = this.ps.length - 1; t < e; t++)
         {
             var p = p1;
@@ -112,7 +113,7 @@ function Arrow(a)
             var m = (dx) * (y - p.y) - (dy) * (x - p.x);
             var l = Math.sqrt(dx * dx + dy * dy);
             m /= l;
-            if(Math.abs(m) < pr) return this;
+            if(Math.abs(m) < pr) {Main.hitPriority = 1; return this;}
         }
         return null;
     };

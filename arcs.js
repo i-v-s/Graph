@@ -59,6 +59,7 @@ function Arc(p1, p2, A)
     };
     this.Hit = function(x, y)
     {
+        if(Main.hitPriority <= 1) return null;
         this.Update();
         var p = this._P.pos();
         var adm = Main.adm;

@@ -34,6 +34,7 @@ var Main = {
     Color: "#000",
     Back: "#FFF",
     font: '10px monospace',
+    hitPriority: 100,
     OnCSS: function()
     {
         var s = getComputedStyle(document.body);
@@ -111,20 +112,24 @@ var Main = {
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
+        Main.hitPriority = 100;
         for(var x = Items.length; x--;)
         {
-            mo = Items[x].Hit(mx, my);
-            if(mo) break;
+            var t = Items[x].Hit(mx, my);
+            if(t) mo = t;
+            //if(mo) break;
         }
         if(MouseObject != mo){MouseObject = mo; Main.NeedRedraw = true;}
     },
     OnAlignedMove:function(mx, my) // Движение с привязкой к объектам
     {
         var mo = null;
+        Main.hitPriority = 100;
         for(var x = Items.length; x--;)
         {
-            mo = Items[x].Hit(mx, my);
-            if(mo) break;
+            var t = Items[x].Hit(mx, my);
+            if(t) mo = t;
+            //if(mo) break;
         }
         if(Main.EveryRedraw || MouseObject != mo){MouseObject = mo; Main.NeedRedraw = true;}
     },
