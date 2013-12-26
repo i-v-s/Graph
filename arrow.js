@@ -58,7 +58,7 @@ function Arrow(a)
             var p = this.ps[0].pos();
             if(this.x) p.x += +this.x;
             if(this.y) p.y += +this.y;
-            ctx.font = "10px monospace";
+            ctx.font = Main.font;
             ctx.textBaseline = "top";
             ctx.fillStyle = "#000000";
             ctx.fillText(this.label, p.x, p.y);
@@ -83,7 +83,7 @@ function Arrow(a)
             var Y = (this.y ? +this.y : 0) + p1.y;
             if(X < x && Y < y && Y + 10 > y)
             {
-                ctx.font = "10px monospace";
+                ctx.font = Main.font;
                 if(Y + ctx.measureText(this.label).width > y) return this._lp =
                 {
                     o: this,

@@ -33,6 +33,7 @@ var Main = {
     Ctors:{},
     Color: "#000",
     Back: "#FFF",
+    font: '10px monospace',
     OnCSS: function()
     {
         var s = getComputedStyle(document.body);
