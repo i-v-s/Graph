@@ -2,7 +2,7 @@ var Grid = {
     MainClear: Main.Clear,
     MainRedraw: Main.Redraw,
     MAM: null,
-    Step:20,
+    Step:10,
     Draw: function()
     {
         Grid.MainClear();

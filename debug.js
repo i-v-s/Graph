@@ -65,6 +65,7 @@ var CDebug =
 				if((typeof v !== "object" && typeof v !== "function") || v === null) text += ": " + v;
 				var b = new Block({x:X, y:Y, w:300, h:45, text:text});
 				b.obj = v;
+				b.AutoSize();
 				Items.push(b);
 				Y += 60;
 			}
