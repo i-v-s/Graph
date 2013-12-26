@@ -15,6 +15,12 @@ function RemoveFromArray(a, v)
     a.length = o;
 }
 
+function PushDer(o, d) // Добавить к объекту o зависимый от него d
+{
+    if(o._der) o._der.push(d);
+    else o._der = [d];
+}
+
 var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
@@ -51,26 +57,25 @@ var Main = {
             right = SelRect.right();
             bottom = SelRect.bottom();
         }
+        var md = true;
         for(var x = 0; x < Items.length; x++)
         {
             var f = Items[x];
-            if(f !== MouseObject)
+            var t = 0;
+            if(f === MouseObject) {t = 1; md = false;} else
+            if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
+            try
+            { 
+                f.Draw(t); 
+            } 
+            catch(e) 
             {
-                var t = 0;
-                if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
-                try
-                { 
-                    f.Draw(t); 
-                } 
-                catch(e) 
-                {
-                    var t = Items[x];
-                    if(t) err.push("#" + x + " " + t.constructor.name);
-                    Items[x] = null;
-                }
+                var t = Items[x];
+                if(t) err.push("#" + x + " " + t.constructor.name);
+                Items[x] = null;
             }
         }
-        if(MouseObject) MouseObject.Draw(1);
+        if(md && MouseObject) MouseObject.Draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();
         if(err.length > 0)
@@ -105,7 +110,7 @@ var Main = {
     OnFreeMove:function(mx, my) // Свободное движение мыши
     {
         var mo = null;
-        for(var x = 0; x < Items.length; x++)
+        for(var x = Items.length; x--;)
         {
             mo = Items[x].Hit(mx, my);
             if(mo) break;
@@ -115,10 +120,10 @@ var Main = {
     OnAlignedMove:function(mx, my) // Движение с привязкой к объектам
     {
         var mo = null;
-        for(var x = 0; x < Items.length; x++)
+        for(var x = Items.length; x--;)
         {
             mo = Items[x].Hit(mx, my);
-            if(mo)break;
+            if(mo) break;
         }
         if(Main.EveryRedraw || MouseObject != mo){MouseObject = mo; Main.NeedRedraw = true;}
     },

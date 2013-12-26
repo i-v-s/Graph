@@ -12,7 +12,7 @@ function Point(x, y)
         if(Type > 0 || this.Sel || !this._der.length)
         {
             ctx.lineWidth = 1;
-            ctx.strokeRect(this.x - 2, this.y - 2, 5, 5);
+            ctx.strokeRect(this.x - 2, this.y - 2, 4, 4);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
     };
     this.MoveBy = function(dx, dy)
@@ -136,8 +136,8 @@ function Line(p1, p2)
         if(p === this.p2) return {x: -x, y: -y};
     }
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
-    if(typeof p1 === "object" ) p1._der.push(this);
-    if(typeof p2 === "object" ) p2._der.push(this);
+    if(typeof p1 === "object" ) PushDer(p1, this);
+    if(typeof p2 === "object" ) PushDer(p2, this);
     this.Sel = false;
     this.Moved = false;
 }
@@ -186,7 +186,7 @@ var CLine =
                 {
                     RemoveFromArray(CLine.Obj.p2._der, CLine.Obj);
                     CLine.Obj.p2 = point = MouseObject; // Выбираем вторую точку из под мыши
-                    point._der.push(CLine.Obj);
+                    PushDer(point, CLine.Obj);
                 }
                 else Items.push(point = CLine.Pt); // или предыдущюю
                 Items.push(CLine.Obj); // Отправляем линию. Теперь вторая точка используется как первая для новой линии.

@@ -49,7 +49,8 @@ function Block(r)//x, y, w, h, Text)
         var p = this.pos();
         if(Type > 0 || this.Sel)
         {
-            ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(p.x - 2, p.y - 2, 4, 4);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
     }
     var GetId = function(){ return '' + Items.indexOf(this.o) + '.' + this.x};
@@ -75,7 +76,7 @@ function Block(r)//x, y, w, h, Text)
     {
         var step = this.fsize;
         var l = this.text ? this.text.length : 0;
-        var y = this.y + (this.h >> 1) - (l * step >> 1);
+        var y = this.y + (this.h * 0.5) - (l * step / 2);
         return {
             x: this.x + step,
             y: y,
@@ -86,6 +87,8 @@ function Block(r)//x, y, w, h, Text)
     this.Draw = function(Type)
     {
         //var x = this._P[0].x, y = this._P[0].y;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#000";
         ctx.fillStyle = this.Sel ? "#FFE0E0" :/*(Type > 0 ? "#E0E0E0":*/ "#FFFFFF";//);// = Type ? "": ;
         ctx.fillRect(this.x, this.y, this.w, this.h);
         ctx.strokeRect(this.x, this.y, this.w, this.h);
@@ -149,6 +152,8 @@ function Block(r)//x, y, w, h, Text)
                         var l = this.o.GetTextLayout();
                         var x = l.x + this.x * l.dx;
                         var y = l.y + this.y * l.dy;
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = "#000";
                         ctx.strokeRect(x, y + 1, this.l * l.dx, l.dy + 1);
                     },
                     pos: function()
