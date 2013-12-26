@@ -271,6 +271,7 @@ var Main = {
         {
             canvas.height = canvas.clientHeight;
             canvas.width = canvas.clientWidth;
+            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
             Main.Redraw();
         }
         canvas.onmousedown = function(evt)
