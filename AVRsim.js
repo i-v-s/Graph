@@ -1,24 +1,32 @@
 function AVR(Model)
 {
-	var RAM, ROM;
-	if(Model == "ATtiny2313") 
+	var RAM = [], ROM, Data = [];
+	var C = 0, N = 0, Z = 0, I = 0, S = 0, V = 0, T = 0, H = 0; 	// Флаги
+	
+	
+	function Free()
 	{
-		RAM = new Array(32 + 64 + 128); // R + IO + RAM 
-		ROM = new Array(1024);
+		if(Model == "ATtiny2313") 
+		{
+			RAM = new Array(32 + 64 + 128); // R + IO + RAM 
+			for(var x = RAM.length; --x;) RAM[x] = 0;
+			ROM = new Array(1024);
+		}
+		C = 0, N = 0, Z = 0, I = 0, S = 0, V = 0, T = 0, H = 0;
+		var codetab = document.getElementById("code");
+		codetab.innerHTML = "";
 	}
-	else return null;
+	Free();
 	function Ins(Name, Code, Flag, Func)
 	{
 		return {N:Name, C:Code, F:Flag, E:Func};
 	}
 	var Ctr = 0; 			// Счётчик циклов
 	var PC = 0;		// Указатель на инструкцию
-	var C = 0, N = 0, Z = 0, I = 0, S = 0, V = 0, T = 0, H = 0; 	// Флаги
 	var Flags = "ITHSVNZC";
-	for(var x in RAM) RAM[x] = 0;
 	var SetF = function(Code)   
 	{
-		return Flags.charAt((Code >> 4) & 0x7) + (Code & 0x80) ? " = true;" : " = false;";
+		return Flags.charAt(7 - (Code >> 4) & 7) + ((Code & 0x80) ? " = false;" : " = true;");
 	};
 	function SetFlags(t)
 	{
@@ -60,25 +68,18 @@ function AVR(Model)
 		var m = 1 << (Code & 7);
 		return rSetRAM(a, (Code & 0x200) ? v + " | 0x" + m.toString(16) : (v + " & 0x" + (0xFF ^ m).toString(16)));
 	}
-	function EOR(Code)
-	{
-		var d = 0x1F & (Code >> 4);
-		var r = (Code & 0xF) | ((Code >> 5) & 0x10);
-		var o = "t = RAM[" + d + "] ^= RAM[" + r + "]; ";
-		o += "V = false; Z = !t; S = N = t > 0x80;";
-		//var F = RAM[0x5F];
-		//F &= 0x8;
-		//if(t) F &= ~2; else F |= 2;
-		//if(t & 0x80) F |= 0x14; else F &= ~0x14;
-		//RAM[0x5F] = F;
-		return o;
-	}
 	function BRxx(Code, Stack)
 	{
 		var o = 0x7F & (Code >> 3);
 		Stack.push(PC);
 		PC += o;
 		if(o & 0x40) PC -= 0x80;   
+		return "{PC = 0x" + PC.toString(16) + ";Ctr++; continue;}";
+	}
+	function Skip(Code, Stack)
+	{
+		Stack.push(PC);
+		PC++;		
 		return "{PC = 0x" + PC.toString(16) + ";Ctr++; continue;}";
 	}
 	var ISET = [
@@ -131,34 +132,33 @@ function AVR(Model)
 			}) 
 			 
 			]},
-		{Syntax: "O r, i", i:0x0F0F, r:0x00F0, Items:
+		{Syntax: "O R, i", i:0x0F0F, R:0x00F0, Items:
 			[
-			Ins("ldi", 0xE000, 0, "RAM[`16 | 0xF & (Code >> 4)`] = `Code & 0xF | 0xF0 & (Code >> 4)`;")
+			Ins("ldi", 0xE000, 0, "`R` = `i`;")
 			]},
 		{Syntax: "O p, r", p:0x060F, r:0x01F0, Items:
 			[
-			Ins("out", 0xB800, 0, "`rSetRAM(0x20 + (Code & 0xF | ((Code & 0x600) >> 5)), 'RAM[' + ((Code >> 4) & 0x1F) + ']')`")	
+			Ins("out", 0xB800, 0, "`rSetRAM(0x20 + p, r)`")	
 			]},
 		{Syntax: "O p, b", p:0x00F8, b:0x7, Items:
 			[
 			Ins("cbi", 0x9800, 0, SetBI),
 			Ins("sbi", 0x9A00, 0, SetBI)
 			]},
+		{Syntax: "O r, b", r:0x00F8, b:0x7, Items:
+			[
+			Ins("sbis", 0x9A00, 0, "if(`r` & 0x`(1 << b).toString(16)`)`Skip(Code, Stack)`;"), 
+			Ins("sbic", 0x9900, 0, "if(!(`r` & 0x`(1 << b).toString(16)`))`Skip(Code, Stack)`;")
+			]},	
 		{Syntax: "O d, r", d:0x1F0, r:0x20F, Items:
 			[
-			Ins("eor", 0x2400, 0, EOR)
+			Ins("eor", 0x2400, 0, "t = `d` ^= `r`; V = false; Z = !t; S = N = t > 0x7F;")
 			 
 			]},
 		{Syntax: "O r", r:0x1F0, Items:
 			[
 			Ins("inc", 0x9403, 0, function(Code){SetFlags(RAM[(Code >> 4) & 0x1F]++);}),
-			Ins("dec", 0x940A, 0, function(Code)
-				{
-					var a = (Code >> 4) & 0x1F; 
-					var r = "t = RAM[" + a + "] - 1; if(t < 0) t += 256; RAM[" + a + "] = t;"; 
-					r += "Z = !t; N = t > 0x80; V = t === 0x7F; S = N ^ V;";
-					return r;
-				})
+			Ins("dec", 0x940A, 0, "if((t = `r` - 1) < 0) t += 256; `r` = t;Z = !t; N = t > 0x80; V = t === 0x7F; S = N ^ V;")
 			]},
 		{Syntax: "O l", l:0x03F8, Items:
 			[
@@ -180,6 +180,7 @@ function AVR(Model)
 	this.GetCycles = function(){return Ctr;};
 	this.LoadIntelHex = function(Hex)
 	{
+		Free();
 		for(var i = 0, len = Hex.length; i < len; i++)
 		{
 			if(Hex.charAt(i) == ':')
@@ -204,17 +205,110 @@ function AVR(Model)
 			var c = Code & iset.m;
 			for(var j in iset.Items) 
 				if(iset.Items[j].C === c)
-					return iset.Items[j];
+					return {set:iset, op: iset.Items[j]};
 		}
 		return null;
 	};
-	this.Disasm = function(Addr)
+	function GetVal(Code, Mask, Signed)
+	{
+		var r = 0, x = 0;
+		while(Mask)
+		{
+			if(Mask & 1)
+				r |= (Code & 1) << x++;
+			Mask >>= 1;
+			Code >>= 1;
+		}
+		if(Signed && r > (1 << (x - 1))) r -= (1 << (x));
+		return r;
+	}
+	function CodeToAsm(Addr)
 	{
 		var Code = ROM[Addr];
-		
+		if(typeof Code != "number") return "<undefined>";
+		var op = null;
+		var iset = null;
+		cc:for(var i in ISET)
+		{
+			iset = ISET[i];
+			var c = Code & iset.m;
+			for(var j in iset.Items) 
+				if(iset.Items[j].C === c)
+				{
+					op = iset.Items[j];
+					break cc;
+				}
+		}		
+		if(!op) return "<0x" + Code.toString(16) + ">";
+		var Syntax = iset.Syntax;
+		var result = "", c;
+		for(i in Syntax) switch(c = Syntax[i])
+		{
+		case 'O': result += op.N; break; // Мнемоника инструкции
+		case 'l': result += "0x" + (Number(Addr) + GetVal(Code, iset.l, true) + 1).toString(16); break; // Метка для перехода
+		case 'r': result += "R" + GetVal(Code, iset.r); break; // регистр 0-31
+		case 'd': result += "R" + GetVal(Code, iset.d); break; // регистр 0-31
+		case 'R': result += "R" + (16 + GetVal(Code, iset.R)); break; // регистр 16-31
+		case 'i': result += "" + GetVal(Code, iset.i); break; // непосредственное значение
+		case 'b': result += "" + GetVal(Code, iset.b); break; // номер бита
+		case 'p': result += "0x" + GetVal(Code, iset.p).toString(16); break; // порт
+		default: result += c; break;
+		}
+		return result;
+	};
+	var ths = this;
+	var Run;
+	var LastPC = 0;
+	BuildRun = function()
+	{
+		var Text = "Run = function(){var t; main: while(1) switch(PC){\n";
+		Text += "default: return 0;\n"; // Отсутствует метка
+		Data[0].l = true;
+		for(var x in Data)
+		{
+			if(Data[x].l || PC == x) Text += "case 0x" + parseInt(x).toString(16) + ":";
+			if(Data[x].b) Text += "PC = 0x" + parseInt(x).toString(16) + "; return 1; "; // breakpoint 
+			if(Data[x].e) Text += Data[x].e + "\n";
+		}
+		Text += "PC = 0x" + LastPC.toString(16) + "; return 2;}}"; // end of code
+		eval(Text);
+		return Text;
+	};
+	var codetab = document.getElementById("code");
+	this.oncodeclick = function(a)
+	{
+		var i = a.target.innerHTML;
+		if(i !== "" && i != "○") return;
+		a.target.innerHTML = (i == "") ? "○" : "";
+		var adr = parseInt(a.target.nextSibling.innerHTML, 16);
+		Data[adr].b = i == "";
+		BuildRun();
+		return 0;
+	};
+	codetab.onclick = this.oncodeclick;
+	function AddToScreen(Addr, Code, Asm)
+	{
+		var tr = document.createElement("tr");
+		codetab.appendChild(tr);
+		var bp = document.createElement("td");
+		bp.style.minWidth = "10px";
+		tr.appendChild(bp);
+		//bp.onclick = 
+		var ad = document.createElement("td");
+		var cd = document.createElement("td");
+		var as = document.createElement("td");
+		as.style.width = "100%";
+		ad.innerHTML = parseInt(Addr).toString(16);
+		cd.innerHTML = Code.toString(16);
+		as.innerHTML = Asm;
+		tr.appendChild(ad);
+		tr.appendChild(cd);
+		tr.appendChild(as);
+		return tr;		
 	};
 	this.Build = function() // Строим JS функцию из массива ROM
 	{
+		LastPC = 0;
 		Data = [];
 		var Stack = [0];
 		var errors = [];
@@ -226,10 +320,23 @@ function AVR(Model)
 			var op, Code = ROM[PC++];
 			if(op = FindOp(Code)) // Если нашли код, то пытаемся собрать выражение для инструкции,
 			{
+				var set = op.set;
+				op = op.op;
 				var exp = "";
 				if(typeof op.E === "function") exp = op.E(Code); // вызывая функцию
 				else 
-				{ // или из строки.		
+				{ // или из строки.
+					var b, r, R, i, d;
+					for(var j in set) switch(j)
+					{
+					case 'b': b = GetVal(Code, set.b); continue;
+					case 'i': i = GetVal(Code, set.i); continue;
+					case 'p': p = GetVal(Code, set.p); continue;
+					case 'r': r = "RAM[" + GetVal(Code, set.r) + "]"; continue;
+					case 'd': d = "RAM[" + GetVal(Code, set.d) + "]"; continue;
+					case 'R': R = "RAM[" + (GetVal(Code, set.R) + 16) + "]"; continue;
+					}
+					
 					var y = 0, m = false;
 					for(var t = op.E, l = t.length, x = 0; x < l; x++)
 					{
@@ -247,7 +354,15 @@ function AVR(Model)
 					}
 					if(y < x) {var v = t.substring(y, x); exp += m ? eval(v) : v;}
 				}
-				if(!exp) {errors.push(pc.toString(16) + ": Code " + Code.toString(16) + " ("+ op.N + ") undefined exp!"); PC = null;continue;}
+				if(!exp) 
+				{
+					errors.push(pc.toString(16) + ": Code " + Code.toString(16) + " ("+ op.N + ") undefined exp!");
+					exp = "PC = 0x" + pc.toString(16) + "; return 2;";
+					if(!Data[pc]) Data[pc] = {l: false, e: exp};
+					else Data[pc].e = exp;
+					PC = null;
+					continue;
+				}
 				if(!Data[pc]) Data[pc] = {l: false, e: exp};
 				else Data[pc].e = exp;
 				//var text = pc.toString(16) + ": " + exp;
@@ -258,21 +373,28 @@ function AVR(Model)
 					else Data[PC].l = true;
 				}  
 			}
-			else {errors.push(pc.toString(16) + ": Code " + Code.toString(16) + " not found!"); PC = null;continue;}
+			else 
+			{
+				errors.push(pc.toString(16) + ": Code " + Code.toString(16) + " not found!");
+				var exp = "PC = 0x" + pc.toString(16) + "; return 2;";
+				if(!Data[pc]) Data[pc] = {l: false, e: exp};
+				else Data[pc].e = exp;
+				PC = null;
+				continue;
+			}
 			if(PC != null) Stack.push(PC);
 		}
-		var Text = "this.Runf = function(){var t; PC = 0; main: while(1) switch(PC){\n";
-		Data[0].l = true; 
-		for(var x in Data)
+		var Text = BuildRun();
+		for(var x in ROM) if(ROM[x] !== undefined)
 		{
-			if(Data[x].l) Text += "case 0x" + parseInt(x).toString(16) + ":";
-			if(Data[x].e) Text += Data[x].e + "\n";
+			var asm = CodeToAsm(x);
+			var d = AddToScreen(x, ROM[x], asm);
+			if(Data[x]) Data[x].d = d;
+			//Text += "/*" + asm + "*/ ";
 		}
-		Text += "break main;}}";
-		eval(Text);
 		return {e:errors ? errors : undefined, d:Data, t:Text};
 	};
-	this.DataRun = function(Data, Time)
+	this.DataRun = function(Time)
 	{
 		Ctr = 0;
 		PC = 0;
@@ -283,28 +405,72 @@ function AVR(Model)
 		}
 		
 	};
-	this.Run = function(Time)
+	var RegTD = Array(32);
+	var PCinp = document.getElementById("pc");
+	this.InitScreen = function()
 	{
-		//RAM[0x5F] = 0;
-		do
+		var table = document.getElementById("reg");
+		var rc = 8;
+		for(var x = 0; x < rc; x++)
 		{
-			var op, Code = ROM[PC];
-			if(op = FindOp(Code))
+			var tr = document.createElement("tr");
+			for(var y = 0; y < 32 / rc; y++)
 			{
-				Ctr++;
-				//document.body.appendChild(document.createElement("br"));
-				//document.body.appendChild(document.createTextNode("" + PC + " " + op.N));
-				PC++;
-				op.E(Code);
-				//for(var x = 0; x < 32; x++) if(RAM[x] !== undefined) document.body.appendChild(document.createTextNode(" R" + x + " = " + RAM[x].toString(16) + "  "));
-				//document.body.appendChild(document.createTextNode(" F = " + RAM[0x5F].toString(16) + "  "));
+				var td = document.createElement("td");tr.appendChild(td);
+				td.innerHTML = "R" + (x + y * rc);
+				var td = document.createElement("td");tr.appendChild(td);
+				var inp = document.createElement("input");td.appendChild(inp);
+				inp.type = "number";
+				inp.align = "right";
+				inp.max = 255;
+				inp.min = 0;
+				inp.style.width = "40px";
 				
+				RegTD[x + y * rc] = inp;
+				var r = RAM[x + y * rc];
+				inp.value = r ? r : "0";
 			}
-			else {PC--; return "Code " + Code.toString(16) + " not found!";}
-		} while(Time > Ctr);
-		return null;
+			table.appendChild(tr);
+		}
+		
 	};
-	return this;
+	this.UpdateScreen = function()
+	{
+		PCinp.value = PC.toString(16);
+		if(Data[PC] && Data[PC].d)Data[PC].d.className = "pc";
+		for(var x in RegTD) RegTD[x].value = RAM[x] ? RAM[x] : "0";
+	};
+	this.Reset = function()
+	{
+		if(PC && Data[PC] && Data[PC].d)Data[PC].d.className = "";
+		PC = 0;
+		for(var r in RAM) RAM[r] = 0;
+		this.UpdateScreen();
+	};
+	this.Step = function()
+	{
+		if(!(Data[PC] && Data[PC].d)) 
+		{
+			alert("PC находится в недоступной зоне ROM:0x" + PC.toString(16)); 
+			PC = 0; 
+			this.UpdateScreen();
+			return;
+		}
+		Data[PC].d.className = "";
+		Ctr++;
+		var exp = Data[PC++].e;
+		eval("do{" + exp + "}while(0);");
+		this.UpdateScreen();
+	};
+	this.OnRun = function()
+	{
+		if(typeof PC === "number" && Data[PC] && Data[PC].d)Data[PC].d.className = "";
+		var r;
+		while(!(r = Run())) 
+			Rebuild();
+		if(r == 2) {alert("PC находится в недоступной зоне ROM:0x" + PC.toString(16)); PC = 0;};
+		this.UpdateScreen();		
+	};
 }
 
 var hex = ":020000020000FC";
@@ -323,22 +489,30 @@ var avr = new AVR("ATtiny2313");
 avr.LoadIntelHex(hex);
 
 var b = avr.Build();
-if(b.e && b.e.length) 
-	for(i in b.e)
-		console.log(b.e[i]);
 if(b.t) console.log(b.t);
-avr.Runf();
+if(b.e && b.e.length) 
+	for(var i in b.e)
+		console.log(b.e[i]);
+
+avr.InitScreen();
+avr.Reset();
 console.log("Completed");
 
-//avr.DataRun(b.d, 5000000);
-//var e = avr.Run(5000000);
-//var ram = avr.GetRAM();
-
-/*for(var x = 0; x < ram.length; x++)
-	if(ram[x] !== undefined)
-	document.body.appendChild(document.createTextNode("R" + x + " = " + ram[x].toString(16) + "  "));
-if(e) document.body.appendChild(document.createTextNode(e + "  "));
-var text = "PC = " + avr.GetPC();
-text += ", Ctr = " + avr.GetCycles();
-document.body.appendChild(document.createTextNode(text));*/
+function processFiles(files) 
+{
+    var file = files[0];
+    var reader = new FileReader();
+    reader.onload = function (e) 
+    {
+        avr.LoadIntelHex(e.target.result);
+        var b = avr.Build();
+        if(b.t) console.log(b.t);
+        if(b.e && b.e.length) 
+        	for(var i in b.e)
+        		console.log(b.e[i]);
+        
+        avr.Reset();
+    };
+    reader.readAsText(file);
+}
 
