@@ -3,7 +3,7 @@ function Arc(p1, p2, A)
     this.p1 = p1;
     this.p2 = p2;
     this.a = A * Math.PI / 180;
-    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);}
+    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);};
     this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI, _:"Arc"};};
     this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180; return this.p1 && this.p2;},
     this._P =
@@ -22,7 +22,7 @@ function Arc(p1, p2, A)
             //console.log("a = " + (this.o.a * 180 / Math.PI) + ", AB = " + (ABd2 * 2) + ", M = " + ((ABy * x - ABx * y) / ABd2 * 0.5));
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
-        GetId: function(){ return '' + Main.GetId(this.o) + ".0"},
+        GetId: function(){ return '' + Main.GetId(this.o) + ".0";},
         Draw: function(Type)
         {
             ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -45,7 +45,7 @@ function Arc(p1, p2, A)
         this.R = Math.sqrt(rx * rx + ry * ry);
         this.a1 = Math.atan2(-ry, -rx);
         this.a2 = Math.atan2(p2.y - this.cy, p2.x - this.cx);
-    }
+    };
     if(p1) this.Update();
     this.Draw = function(Type)
     {
@@ -83,7 +83,7 @@ function Arc(p1, p2, A)
         if(P === this.p1) return {x: (this.cy - p.y) / this.R, y: (p.x - this.cx) / this.R};
         if(P === this.p2) return {x: (p.y - this.cy) / this.R, y: (this.cx - p.x) / this.R};
         return null;
-    }
+    };
     this.MoveBy = function(dx, dy)
     {
         if(!this.Moved)
@@ -150,6 +150,6 @@ var CArc =
         label: "Дугу",
         click:null
     }]
-}
+};
 
 Main.Modules.push(CArc);

@@ -93,6 +93,6 @@ var CDebug =
     		}
     	});
 	}
-}
+};
 
 Main.Modules.push(CDebug);

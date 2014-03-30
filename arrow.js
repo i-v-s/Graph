@@ -10,7 +10,7 @@ function Arrow(a)
             if(++x < e) r += ",";
         }
         return r + "]";
-    }
+    };
     this.OnLoad = function()
     {
         if(!this.ps || this.ps.length < 2) return false;
@@ -21,7 +21,7 @@ function Arrow(a)
             this.ps[x] = v;
         }
         return true;
-    }
+    };
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;
@@ -97,7 +97,7 @@ function Arrow(a)
                         ctx.lineWidth = 0.5;
                         ctx.strokeRect(p.x, p.y + 1, ctx.measureText(this.o.label).width, 11);
                     }
-                }
+                };
             }
         }
         if(Main.hitPriority <= 1) return null;
@@ -201,9 +201,9 @@ var CArrow =
                 CArrow.Pt = null;
                 Main.Pop();
             }
-        }
+        };
         CMenu.Add({create:{_: {label: "Стрелку", click: this.OnCreate}}});
     }
-}
+};
 
 Main.Modules.push(CArrow);

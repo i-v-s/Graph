@@ -68,7 +68,7 @@ var Grid = {
             _4:{label: "Параметры"}
         }}});
     }
-}
+};
 
 Main.Clear = Grid.Draw;
 Grid.MAM = Main.OnAlignedMove;

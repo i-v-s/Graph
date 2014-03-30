@@ -4,8 +4,8 @@ function Point(x, y)
     this.x = x;
     this.y = y;
     this._der = [];
-    this.Serialize = function() {return this.x.toString() + "," + this.y;}
-    this.pos = function() {return {x:this.x, y:this.y};}
+    this.Serialize = function() {return this.x.toString() + "," + this.y;};
+    this.pos = function() {return {x:this.x, y:this.y};};
     this.Draw = function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -24,7 +24,7 @@ function Point(x, y)
             this.Moved = true;
             if(this.Owner) this.Owner.OnPtMoveBy(this, dx, dy);
         }
-    }
+    };
     this.Hit = function(x, y)
     {
         var dx = Math.abs(this.x - x);
@@ -54,7 +54,7 @@ function Point(x, y)
             }
         }, this);
     };
-    this.GetPSel = function() {return this.Sel;}
+    this.GetPSel = function() {return this.Sel;};
     this.Sel = false;
     this.Moved = false;
 }
@@ -63,7 +63,7 @@ function Line(p1, p2)
 {
     this.p1 = p1;
     this.p2 = p2;
-    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);}
+    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);};
     this.OnLoad = function() 
     { 
         this.p1 = Main.ById(this.p1);
@@ -118,7 +118,7 @@ function Line(p1, p2)
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
         return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
-    }
+    };
 
     this.del = function()
     {
@@ -137,7 +137,7 @@ function Line(p1, p2)
         if(l > 0.000000001) {x /= l; y /= l;}
         if(p === this.p1) return {x: x, y: y};
         if(p === this.p2) return {x: -x, y: -y};
-    }
+    };
     this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
     if(typeof p1 === "object" ) PushDer(p1, this);
     if(typeof p2 === "object" ) PushDer(p2, this);
@@ -199,6 +199,6 @@ var CLine =
         };
         CMenu.Add({create:{_: {label: "Линию", click: this.OnCreate}}});
     }
-}
+};
 
 Main.Modules.push(CLine);

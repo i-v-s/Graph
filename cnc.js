@@ -239,7 +239,7 @@ function GPath()
 					LastX = X;
 					LastY = Y;
 				}
-			}
+			};
 			this.Draw("GCode");
 		} catch(e)
 		{
@@ -259,9 +259,9 @@ function GPath()
 			this.s[x].g = this.s[x - 1].g;
 		}
 		this.s[0].g = null;
-		this.inv = !this.inv
-	}
-}
+		this.inv = !this.inv;
+	};
+};
 
 
 var CGPath = 
@@ -407,6 +407,6 @@ var CGPath =
 
     	});
     }
-}
+};
 
 Main.Modules.push(CGPath);

@@ -43,6 +43,6 @@ var Navi =
             canvas.addEventListener("DOMMouseScroll", Navi.OnMouseWheel, false);
         }else canvas.attachEvent("onmousewheel", Navi.OnMouseWheel);
     }
-}
+};
 
 Main.Modules.push(Navi);

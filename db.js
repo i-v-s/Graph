@@ -289,5 +289,5 @@ var DB =
             DB.LastLocal = true;
         }       
     }
-}
+};
 Main.Modules.push(DB);

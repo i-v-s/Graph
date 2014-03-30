@@ -218,9 +218,8 @@ var Main = {
     {
         if(typeof state === "string") state = States[state];
         var NewState = {}; // Новое состояние - комбинация предущего и требуемого
-        var x;
-        for(x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
-        for(x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
+        for(var x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
+        for(var x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
         if(state.leftdown && !state.leftup) NewState.leftup = undefined;
         else if(state.leftup && !state.leftdown) NewState.leftdown = undefined;
         if(state.rightdown && !state.rightup) NewState.rightup = undefined;
@@ -241,14 +240,14 @@ var Main = {
     GetMousePos: function(evt)
     {
         var box = canvas.getBoundingClientRect();
-        var body = document.body
-        var docElem = document.documentElement
-        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
-        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
-        var clientTop = docElem.clientTop || body.clientTop || 0
-        var clientLeft = docElem.clientLeft || body.clientLeft || 0
-        var top  = box.top +  scrollTop - clientTop
-        var left = box.left + scrollLeft - clientLeft
+        var body = document.body;
+        var docElem = document.documentElement;
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
+        var clientTop = docElem.clientTop || body.clientTop || 0;
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
+        var top  = box.top +  scrollTop - clientTop;
+        var left = box.left + scrollLeft - clientLeft;
         return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
     },
     OnMouse: function(evt, method)
@@ -266,7 +265,7 @@ var Main = {
     },
     Init: function()
     {
-        document.oncontextmenu = function (){return false};
+        document.oncontextmenu = function (){return false;};
         State = States.free;
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
@@ -279,7 +278,7 @@ var Main = {
             canvas.width = canvas.clientWidth;
             ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
             Main.Redraw();
-        }
+        };
         canvas.onmousedown = function(evt)
         {
             var b = evt.button;
@@ -300,12 +299,12 @@ var Main = {
             Main.MouseDown = null;
         };
         canvas.onmousemove = function(evt) {Main.OnMouse(evt, State.move);};
-        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();}
+        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
         {
             alert("kd");
 
-        }
+        };
         if(window.CMenu)
         {
             CMenu.Add({
@@ -344,9 +343,9 @@ function SimpleRect(x, y, w, h)
     this.y = y;
     this.w = w;
     this.h = h;
-    this.left = function() {return this.w > 0 ? this.x : this.x + this.w;}
-    this.top = function() {return this.h > 0 ? this.y : this.y + this.h;}
-    this.right = function() {return this.w < 0 ? this.x : this.x + this.w;}
-    this.bottom = function() {return this.h < 0 ? this.y : this.y + this.h;}
-    this.Stroke = function() {ctx.strokeRect(this.x, this.y, this.w, this.h);}
+    this.left = function() {return this.w > 0 ? this.x : this.x + this.w;};
+    this.top = function() {return this.h > 0 ? this.y : this.y + this.h;};
+    this.right = function() {return this.w < 0 ? this.x : this.x + this.w;};
+    this.bottom = function() {return this.h < 0 ? this.y : this.y + this.h;};
+    this.Stroke = function() {ctx.strokeRect(this.x, this.y, this.w, this.h);};
 }

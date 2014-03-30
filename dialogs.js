@@ -55,7 +55,7 @@ var Dialogs =
 				if(this.type === "textarea") v = v.split("\n");
 				this.__obj[this.__var] = v;
 				if(this.__upd) this.__upd();
-			}
+			};
 			td.appendChild(i);
 			tr.appendChild(td);
 			tb.appendChild(tr);
@@ -90,4 +90,4 @@ var Dialogs =
 		document.body.appendChild(d);
 		return d;
 	}
-}
+};
