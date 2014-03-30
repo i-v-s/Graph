@@ -75,8 +75,9 @@ function Line(p1, p2)
     },
     this.Draw = function(Type)
     {
-        ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
-        ctx.lineWidth = 1;
+    	var color = this.color ? this.color : "#000000";
+        ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": color);
+        ctx.lineWidth = this.width ? this.width : 0.5;
         ctx.beginPath();
         var p = this.p1.pos();
         ctx.moveTo(p.x, p.y);

@@ -10,7 +10,7 @@ var Grid = {
         ctx.beginPath();
         var x;
         var os = 1 / Main.Scale;
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.2;
         var step = Grid.Step;
         for(x = Math.ceil(-Main.OffsetX / (step * Main.Scale)) * step; x * Main.Scale + Main.OffsetX < w; x += step)
         {
