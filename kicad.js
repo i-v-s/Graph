@@ -1,56 +1,3 @@
-function Cnn(x, y)
-{
-    this.x = x;
-    this.y = y;
-    this._der = [];
-    this.Serialize = function() {return this.x.toString() + "," + this.y;};
-    this.pos = function() {return {x:this.x, y:this.y};};
-
-    this.MoveBy = function(dx, dy)
-    {
-        if(!this.Moved)
-        {
-            this.x += dx;
-            this.y += dy;
-            this.Moved = true;
-            if(this.Owner) this.Owner.OnPtMoveBy(this, dx, dy);
-        }
-    };
-    this.Hit = function(x, y)
-    {
-        var dx = Math.abs(this.x - x);
-        var dy = Math.abs(this.y - y);
-        if(dx < Main.adm && dy < Main.adm)
-        {
-            Main.MX = this.x;
-            Main.MY = this.y;
-            Main.hitPriority = 0;
-            return this;
-        } else return null;
-    };
-    this.RHit = function(l, t, r, b)
-    {
-        return l < this.x && t < this.y && r > this.x && b > this.y;
-    };
-    this.OnDblClick = function()
-    {
-        if(Dialogs) Dialogs.Create(
-        {
-            title:"Свойства",
-            update:Main.Redraw,
-            data:
-            {
-                x:"X",
-                y:"Y"
-            }
-        }, this);
-    };
-    this.GetPSel = function() {return this.Sel;};
-    this.Sel = false;
-    this.Moved = false;
-}
-
-
 var KiCAD = new function()
 {
 	var Km = 0.05;
@@ -114,18 +61,34 @@ var KiCAD = new function()
 			}
 		}
 		var Pins = {};
-		function PinPos()
+		function GetPinPos(n)
 		{
-			var p = Def.pin[this.p];
-			return {x:x + p.x, y:y - p.y};
+			var p = Def.pin[n];
+			return {x:x + M[0] * p.x + M[1] * p.y, y:y - M[3] * p.y - M[2] * p.x};			
 		}
-		if(Def)for(var t in Def.pin) Pins[t] = {/*o:this, */p:t, pos:PinPos};
+		var th = this;
+	    this.MoveBy = function(dx, dy)
+	    {
+	        if(!th.Moved)
+	        {
+	            x += dx;
+	            y += dy;
+	            for(var t in Fields) {Fields[t].x += dx; Fields[t].y += dy;}
+	            th.Moved = true;
+	        }
+	    };
+		if(Def)for(var t in Def.pin) Pins[t] = 
+		{
+			p:t, 
+			pos:function(){return GetPinPos(this.p);},
+			MoveBy:this.MoveBy
+		};
 		this.GetPinPts = function(pts) // Вернуть текущие координаты всех точек в виде KiCAD
 		{
 			if(Def) for(var t in Def.pin)
 			{
-				var p = Def.pin[t];
-				var n = ((x + p.x) / Km).toString() + " " + ((y - p.y) / Km).toString();
+				var p = GetPinPos(t);
+				var n = (p.x / Km).toString() + " " + (p.y / Km).toString();
 				pts[n] = Pins[t]; 
 			}
 		};
@@ -133,32 +96,32 @@ var KiCAD = new function()
 		{
 			if(!Def) return null;
 			X -= x; Y -= y;
-			if(X > Def.l && X < Def.r && Y > Def.t && Y < Def.b) return this;
+    		var d = M[0] * M[3] - M[1] * M[2];
+    		var A = X * d * M[3] + Y * -d * M[1];
+    		var B = X * -d * M[2] + Y * d * M[0];
+    		if(A > Def.l && A < Def.r && B > Def.t && B < Def.b) return this;
 			return null;
 		};
-	    this.MoveBy = function(dx, dy)
-	    {
-	        if(!this.Moved)
-	        {
-	            x += dx;
-	            y += dy;
-	            this.Moved = true;
-	        }
-	    };
+		this.RHit = function(l, t, r, b)
+		{
+			if(!Def) return false;
+			var a = Def.l * M[0] + Def.t * M[1] + x;
+			if(a < l || a > r) return false; 
+			a = Def.r * M[0] + Def.b * M[1] + x;
+			if(a < l || a > r) return false; 
+
+			var a = y - (Def.l * M[2] + Def.t * M[3]);
+			if(a < t || a > b) return false; 
+			a = y - (Def.r * M[2] + Def.b * M[3]);
+			if(a < t || a > b) return false; 
+			return true;
+		};
 	    this.Draw = function(Type)
 	    {
 	    	var color = (Type > 0 || this.Sel) ? "#F00000" : "#800000";
 	    	ctx.fillStyle = color;
 	    	ctx.strokeStyle = color;
-	    	
-	    	if(Def)for(var t in Def.pin)
-	    	{
-	    		var p = Def.pin[t];
-				ctx.beginPath();
-	            ctx.arc(x + p.x, y - p.y, 1, 0, 2 * Math.PI, false);
-				ctx.closePath(); ctx.stroke();
-	    	}
-	    	
+
 	    	if(Def) 
 	    	{
 	    		ctx.transform(M[0], M[1], M[2], M[3], x, y);
@@ -174,13 +137,21 @@ var KiCAD = new function()
 	    		ctx.font = f.s.toString() + "px monospace";
 	    		if(f.v) 
 	    		{
-	    			ctx.rotate(-Math.PI * 0.5);
-	    			ctx.fillText(f.t, f.x, f.y);
-	    			ctx.rotate(Math.PI * 0.5);
+	    			//ctx.rotate(-Math.PI * 0.5);
+		    		ctx.transform(0, -1.0, 1.0, 0, f.x, f.y);
+	    			ctx.fillText(f.t, 0, 0);
+		            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
 	    		}
 	    		else ctx.fillText(f.t, f.x, f.y);
 	    	}
 	    };
+		this.GetInfo = function(){return {
+			CmpName: CmpName,
+			Name:Name,
+			Def:Def,
+			Fields:Fields,
+			Pins:Pins
+		};};
 	    this.GetPSel = function() {return this.Sel;};
 	    this.Sel = false;
 	}	
@@ -286,14 +257,16 @@ var KiCAD = new function()
 						if(w === 0.0) w = defw;
 						Draw.push("ctx.beginPath(); ctx.lineWidth = " + w.toString());
 						var n = parseInt(s[1]);
-						var A = (parseInt(s[5]) * Km).toString();
-						var B = (parseInt(s[6]) * Km).toString();
+						var A = parseInt(s[5]) * Km;
+						var B = parseInt(s[6]) * Km;
+						SetB(A, B);
 						Draw.push("ctx.moveTo(" + A.toString() + "," + B.toString() + ");");
 						var X, Y, t = 7;
 						while(--n)
 						{
-							X = (parseInt(s[t++]) * Km).toString();
-							Y = (parseInt(s[t++]) * Km).toString();
+							X = parseInt(s[t++]) * Km;
+							Y = parseInt(s[t++]) * Km;
+							SetB(X, Y);
 							Draw.push("ctx.lineTo(" + X.toString() + "," + Y.toString() + ");");							
 						}
 						if((A == X && B == Y) || s[t] == "F") Draw.push("ctx.closePath();");
@@ -302,12 +275,12 @@ var KiCAD = new function()
 							
 						break;
 					case 'X': // Контакт X имя номер x y длина направление ШрифтИмени ШрифтНомера
-						Draw.push("ctx.beginPath(); ctx.lineWidth = " + defw.toString());
 						var X = parseInt(s[3]) * Km;
 						var Y = parseInt(s[4]) * Km;
-						var L = parseInt(s[5]) * Km;
-						if(!L) L = Km * 40;
 						obj.pin[s[2]] = {x:X, y:Y};
+						var L = parseInt(s[5]) * Km;
+						if(!L) break;//L = Km * 40;
+						Draw.push("ctx.beginPath(); ctx.lineWidth = " + defw.toString());
 						Draw.push("ctx.moveTo(" + X.toString() + "," + Y.toString() + ");");
 						switch(s[6])
 						{
