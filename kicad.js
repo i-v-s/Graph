@@ -45,7 +45,7 @@ var KiCAD = new function()
 			case 'F': 
 				Fields[parseInt(f[1])] = 
 				{
-					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]),
+					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]), hp: f[8],
 					s: Km * parseInt(f[6]), v: f[3] == "V", h:parseInt(f[7]) == 1 
 				}; 
 				break;
@@ -56,9 +56,14 @@ var KiCAD = new function()
 					y = parseInt(f[2]) * Km;
 				}
 				else
-					M = [parseFloat(f[0]), parseFloat(f[1]), parseFloat(f[2]), parseFloat(f[3])];
+					M = [parseFloat(f[0]), parseFloat(f[1]), -parseFloat(f[2]), -parseFloat(f[3])];
 				break;
 			}
+		}
+		for(var t in Fields)
+		{
+			Fields[t].x -= x;
+			Fields[t].y -= y;			
 		}
 		var Pins = {};
 		function GetPinPos(n)
@@ -73,7 +78,7 @@ var KiCAD = new function()
 	        {
 	            x += dx;
 	            y += dy;
-	            for(var t in Fields) {Fields[t].x += dx; Fields[t].y += dy;}
+	            //for(var t in Fields) {Fields[t].x += dx; Fields[t].y += dy;}
 	            th.Moved = true;
 	        }
 	    };
@@ -135,14 +140,22 @@ var KiCAD = new function()
 	    		var f = Fields[t];
 	    		if(!f.t || f.h) continue;
 	    		ctx.font = f.s.toString() + "px monospace";
-	    		if(f.v) 
+	    		ctx.textBaseline = "middle";// top, bottom
+	    		
+	    		if(f.hp == 'C')	ctx.textAlign =  "center";
+	    		else if(f.hp == 'L') ctx.textAlign =  "left";
+	    		else if(f.hp == 'R') ctx.textAlign =  "right";
+	    		
+	    		var fx = x + f.x * M[0] + f.y * M[1];
+	    		var fy = y - f.x * M[2] - f.y * M[3];
+	    		if(f.v ^ (M[0] === 0.0)) 
 	    		{
 	    			//ctx.rotate(-Math.PI * 0.5);
-		    		ctx.transform(0, -1.0, 1.0, 0, f.x, f.y);
+		    		ctx.transform(0, -1.0, 1.0, 0, fx, fy);
 	    			ctx.fillText(f.t, 0, 0);
 		            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
 	    		}
-	    		else ctx.fillText(f.t, f.x, f.y);
+	    		else ctx.fillText(f.t, fx, fy);
 	    	}
 	    };
 		this.GetInfo = function(){return {
@@ -265,14 +278,14 @@ var KiCAD = new function()
 						Draw.push("ctx.beginPath(); ctx.lineWidth = " + w.toString());
 						var n = parseInt(s[1]);
 						var A = parseInt(s[5]) * Km;
-						var B = parseInt(s[6]) * Km;
+						var B = -parseInt(s[6]) * Km;
 						SetB(A, B);
 						Draw.push("ctx.moveTo(" + A.toString() + "," + B.toString() + ");");
 						var X, Y, t = 7;
 						while(--n)
 						{
 							X = parseInt(s[t++]) * Km;
-							Y = parseInt(s[t++]) * Km;
+							Y = -parseInt(s[t++]) * Km;
 							SetB(X, Y);
 							Draw.push("ctx.lineTo(" + X.toString() + "," + Y.toString() + ");");							
 						}
@@ -283,25 +296,34 @@ var KiCAD = new function()
 						break;
 					case 'X': // Контакт X имя номер x y длина направление ШрифтИмени ШрифтНомера
 						var X = parseInt(s[3]) * Km;
-						var Y = parseInt(s[4]) * Km;
+						var Y = -parseInt(s[4]) * Km;
 						obj.pin[s[2]] = {x:X, y:Y};
 						var L = parseInt(s[5]) * Km;
 						if(!L) break;//L = Km * 40;
 						Draw.push("ctx.beginPath(); ctx.lineWidth = " + defw.toString());
 						Draw.push("ctx.moveTo(" + X.toString() + "," + Y.toString() + ");");
+						var Xn = X, Yn = Y;
 						switch(s[6])
 						{
-						case 'U': Y += L; break;
-						case 'D': Y -= L; break;
-						case 'L': X -= L; break;
-						case 'R': X += L; break;
+						case 'D': Y += L; Yn += L/2; break;
+						case 'U': Y -= L; Yn -= L/2; break;
+						case 'L': X -= L; Xn -= L/2; break;
+						case 'R': X += L; Xn += L/2; break;
 						}
 						Draw.push("ctx.lineTo(" + X.toString() + "," + Y.toString() + ");");
 						Draw.push("ctx.stroke();");
+						if(s[1] != "~")
+						{
+							if(s[2] !== "" && s[2] !== s[1])
+							{
+								Draw.push("ctx.textBaseline = 'bottom';");
+								Draw.push("ctx.fillText('" + s[2] + "'," + Xn.toString() + "," + Yn.toString() + ");");
+							}
+						}
 						break;
 					case 'C': // Окружность C x y R
 						var X = parseInt(s[1]) * Km;
-						var Y = parseInt(s[2]) * Km;
+						var Y = -parseInt(s[2]) * Km;
 						var R = parseInt(s[3]) * Km;
 						SetB(X + R, Y + R); SetB(X - R, Y - R);
 						Draw.push("ctx.beginPath();");
@@ -310,9 +332,9 @@ var KiCAD = new function()
 						break;
 					case 'S': // Прямоугольник S X1 Y1 X2 Y2 0 1 0 F
 						var X = parseInt(s[1]) * Km;
-						var Y = parseInt(s[2]) * Km;
+						var Y = -parseInt(s[2]) * Km;
 						var W = parseInt(s[3]) * Km;
-						var H = parseInt(s[4]) * Km;
+						var H = -parseInt(s[4]) * Km;
 						SetB(X, Y); SetB(W, H);
 						W -= X; H -= Y;
 						X = X.toString();
@@ -323,12 +345,12 @@ var KiCAD = new function()
 						if(w === 0.0) w = defw;
 						Draw.push("ctx.lineWidth = " + w +";"); 
 						if(s[8] == "F")
-							Draw.push("ctx.fillRect(" + X + "," + Y + ", " + W + ", " + H +");"); 
+							Draw.push("ctx.fillRect(" + X + "," + Y + ", " + W + ", " + H +");");
 						Draw.push("ctx.strokeRect(" + X + "," + Y + ", " + W + ", " + H +");"); 
 						break;
 					case 'T':// Текст T 0 x y size 0 0 0 текст вид 0 С С
 						var X = (parseInt(s[2]) * Km).toString();
-						var Y = (parseInt(s[3]) * Km).toString();
+						var Y = -(parseInt(s[3]) * Km).toString();
 						var S = (parseInt(s[3]) * Km).toString();
 						var t = s[8];
 			    		Draw.push("ctx.font = '" + S + "px monospace';");
