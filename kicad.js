@@ -170,7 +170,10 @@ var KiCAD = new function()
     };
 	function loadSch(e)
 	{
-		var data = e.target.result.split('\n');
+		var data = e.target.result;
+		var sep = '\n';
+		if(data.search("\r\n") !== -1) sep = "\r\n";
+		data = data.split(sep);
 		var pts = {};
 		function GetPt(a, b)
 		{
@@ -214,7 +217,11 @@ var KiCAD = new function()
 	};
 	function loadLib(e)
 	{
-		var data = e.target.result.split('\n');
+		var data = e.target.result;
+		var sep = '\n';
+		if(data.search("\r\n") !== -1) sep = "\r\n";
+		data = data.split(sep);
+
 		for(var x = 0, l = data.length; x < l; x++)
 		{
 			var d = data[x];
