@@ -43,7 +43,9 @@ var KiCAD = new function()
 				Name = f[2]; 
 				break;
 			case 'F': 
-				Fields[parseInt(f[1])] = 
+				var i = parseInt(f[1]);
+				//if(Def) i = 
+				Fields[i] = 
 				{
 					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]), hp: f[8],
 					s: Km * parseInt(f[6]), v: f[3] == "V", h:parseInt(f[7]) == 1 
@@ -86,7 +88,8 @@ var KiCAD = new function()
 		{
 			p:t, 
 			pos:function(){return GetPinPos(this.p);},
-			MoveBy:this.MoveBy
+			MoveBy:this.MoveBy,
+			_enode:null // Электрический узел
 		};
 		this.GetPinPts = function(pts) // Вернуть текущие координаты всех точек в виде KiCAD
 		{
@@ -227,6 +230,7 @@ var KiCAD = new function()
 			}
 		}
 		pts = null;	
+		Main.Redraw();
 	};
 	function loadLib(e)
 	{
@@ -379,7 +383,6 @@ var KiCAD = new function()
 			reader.onload = loadSch;
 			reader.readAsText(files[x]);
 		}
-		
 	};
 	this.OnImport = function()
 	{
