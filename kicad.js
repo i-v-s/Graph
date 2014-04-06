@@ -201,7 +201,7 @@ var KiCAD = new function()
 			}
 			return pts[pn];
 		}
-		for(var x = 0, l = data.length; x < l; x++) if(data[x] == "$Comp")
+		for(var x in data) if(data[x] == "$Comp")
 		{
 			var d = [];
 			for(x++; data[x] != "$EndComp"; x++) d.push(data[x]);
@@ -209,7 +209,8 @@ var KiCAD = new function()
 			comp.GetPinPts(pts);
 			Items.push(comp);
 		}
-		for(var x = 0, l = data.length; x < l; x++)
+        var Lines = [];
+		for(var x in data)
 		{
 			var s = data[x];
 			if(s == "Wire Wire Line" || s == "Entry Wire Line" || s == "Wire Bus Line")
@@ -220,15 +221,39 @@ var KiCAD = new function()
 				var L = new Line(P1, P2);
 				if(s == "Entry Wire Line") L.color = "#008000";
 				else if(s == "Wire Bus Line") L.color = "#000080";
-				Items.push(L);
-			}
-			else
-			if(s.substr(0, 10) == "Connection")
-			{
-				var c = split(s.substr(13));
-				var P = GetPt(c[0], c[1]);//new Cnn(parseInt(c[0]) * Km, parseInt(c[1]) * Km);
+				Lines.push(L);
 			}
 		}
+        for(var x in data) if(data[x].substr(0, 10) == "Connection")
+		{
+			var c = split(data[x].substr(13));
+			var P = GetPt(c[0], c[1]);//new Cnn(parseInt(c[0]) * Km, parseInt(c[1]) * Km);
+            for(var l in Lines) // Если соединение находится на какой-либо линии, то её следует разорвать
+            {
+                var L = Lines[l];
+                if(L.p1 === P || L.p2 === P) continue; // Уже соединена
+                var p1 = L.p1.pos();
+                var p2 = L.p2.pos();
+                var e = 0.0001;
+                var p = P.pos();
+                var xx = p.x - e, yy = p.y - e;
+                if((xx > p1.x && xx > p2.x) || (yy > p1.y && yy > p2.y)) continue;
+                xx = p.x + e; yy = p.y + e;
+                if((xx < p1.x && xx < p2.x) || (yy < p1.y && yy < p2.y)) continue;
+                var dx = p2.x - p1.x, dy = p2.y - p1.y;
+                var m = dx * (p.y - p1.y) - dy * (p.x - p1.x);
+                var l = Math.sqrt(dx * dx + dy * dy);
+                m /= l;
+                if(Math.abs(m) < e) 
+                { 
+                    var L1 = new Line(P, L.p2);
+                    L.setP2(P);
+                    if(L.color) L1.color = L.color;
+                    Lines.push(L1);
+                }
+            }
+		}
+        Items = Items.concat(Lines);
 		pts = null;	
 		Main.Redraw();
 	};

@@ -120,13 +120,22 @@ function Line(p1, p2)
         var p2 = this.p2.pos();
         return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
     };
-
+    this.setP2 = function(P)
+    {
+        RemoveFromArray(this.p2._der, this);
+        this.p2 = P;
+        PushDer(P, this);
+    }
+    this.setP1 = function(P)
+    {
+        RemoveFromArray(this.p1._der, this);
+        this.p1 = P;
+        PushDer(P, this);
+    }    
     this.del = function()
     {
         RemoveFromArray(this.p1._der, this);
         RemoveFromArray(this.p2._der, this);
-        /*if(this.p1 && (typeof this.p1 === "object")) this.p1._der.remove(this);
-        if(this.p2 && (typeof this.p2 === "object")) this.p2._der.remove(this);*/
     };
     this.vec = function(p)
     {
