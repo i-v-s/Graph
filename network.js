@@ -162,15 +162,10 @@ function Network()
 			var d = Devices[t];
 			if(d.M.AddI || d.M.AddY) Devices[l++] = d;
 			else continue;
-			d.AddY = d.M.AddY;
-			d.AddI = d.M.AddI;
+			if(d.M.AddY) d.AddY = d.M.AddY;
+			if(d.M.AddI) d.AddI = d.M.AddI;
 			d.M.ctor(d, d.item);
-			for(var k in d.pins) 
-            {
-                var n = d.pins[k]._enode;
-                if(n === GND) n = null;
-                d.N[k] = n;
-			}
+			for(var k in d.pins) d.N[k] = d.pins[k]._enode;
 			for(var b in d.M.branches)
 			{
 				var B = d.M.branches[b];
@@ -193,7 +188,7 @@ function Network()
 		// Инициализируем проводимости
 		for(var n in Nodes) Nodes[n].y = 0.0;
 		for(var b in Branches) Branches[b].y = 0.0;
-		for(var d in Devices) Devices[d].AddY();
+		for(var d in Devices) if(Devices[d].AddY) Devices[d].AddY();
 		
 		Y = null;
 		var Size = Nodes.length + Branches.length * 2;
@@ -202,7 +197,7 @@ function Network()
 		for(var n in Nodes) if(!Nodes[n].T) // Заполняем Y из узлов
 		{
 			var N = Nodes[n];
-			N.YList = YList[y] = {Node: N, y: -N.y};
+			N.YList = YList[y] = {Node: N, y: N.y};
 			N.bc = 0;
 			N.Mark = 0;
 			y++;
@@ -231,27 +226,21 @@ function Network()
 
 		for(var B in Branches)  // Заполняем Y из ветвей
 		{
-			var b = Branches[B];
-			var p = b.p;
-			var q = b.q;
-			var pYpq = null, pYqp = null;
-			if(p && !p.T)
+			var b = Branches[B]
+            if(b.y === 0) continue;
+            var p = b.p, q = b.q;
+			if(p && p.YList)
 			{
-				var l = AddBranch(p, q);
+				AddBranch(p, q).y -= b.y;;
 				//l->AddBranch(b->pYpq);
-				pYpq = l;//&l->y;
+                p.YList.y += b.y;
 			}
-			if(q && !q.T)
+			if(q && q.YList)
 			{
-				var l = AddBranch(q, p);
+				AddBranch(q, p).y -= b.y;
 				//l->AddBranch(b->pYqp);
-				pYqp = l;//&l->y;
+                q.YList.y += b.y; // Диагональ
 			}
-
-			if(p && p.YList) p.YList.y -= b.y;
-			if(q && q.YList) q.YList.y -= b.y;
-			if(pYpq) pYpq.y += b.y;
-			if(pYqp) pYqp.y += b.y;
 		}
         FreeY = YList[y];
 		if(y < Size)
@@ -613,9 +602,13 @@ function Network()
     function Test()
     {
 		// Инициализируем проводимости
-		for(var n in Nodes) Nodes[n].y = 0.0;
+		for(var n in Nodes) {Nodes[n].y = 0.0; Nodes[n].I = 0;}
 		for(var b in Branches) Branches[b].y = 0.0;
-		for(var d in Devices) Devices[d].AddY();
+		for(var d in Devices)
+        {
+            if(Devices[d].AddY) Devices[d].AddY();
+            if(Devices[d].AddI) Devices[d].AddI();
+        }
         // Проверяем уравнение Y * V = I
         var I = Array(Nodes.length);
         for(var i = Nodes.length; i--;) I[i] = 0.0;
@@ -623,18 +616,18 @@ function Network()
         for(var b in Branches)
         {
             var B = Branches[b];
-            var Vp = b.p ? b.p.V : 0.0;
-            var Vq = b.q ? b.q.V : 0.0;
-            var p = Nodes.indexOf(b.p);
-            var q = Nodes.indexOf(b.q);
-            var dI = (Vq - Vp) * B.Y;
+            var Vp = B.p ? B.p.V : 0.0;
+            var Vq = B.q ? B.q.V : 0.0;
+            var p = Nodes.indexOf(B.p);
+            var q = Nodes.indexOf(B.q);
+            var dI = (Vp - Vq) * B.y;
             if(p >= 0)
                 I[p] += dI;
             if(q >= 0)
                 I[q] -= dI;
         }
         for(var n in Nodes) 
-            if(I[n] != Nodes[n].I) 
+            if(!Nodes[n].T && I[n] != Nodes[n].I) 
                 console.log("В узле " + n + " не совпадают задающие токи. Задано " + Nodes[n].I + ", получено " + I[n]);
     };
 	this.Solve = function () 
@@ -643,28 +636,30 @@ function Network()
 	    PrepareYList();
 	    TriangulateYList();
 
+        for(var n in Nodes) Nodes[n].I = 0.0;
+        for(var d in Devices) if(Devices[d].AddI) Devices[d].AddI();
         for(var n in Nodes) if(!Nodes[n].T) Nodes[n].V = Nodes[n].I;
         
-
 	    var Node = 0;
 	    var iNode = Nodes[Node].Original;
+	    // Прямой ход решения
 	    for(var ilu in LU) 
         {
 	        var lu = LU[ilu];
 	        var jNode = lu.Node;
-	        if(jNode) 
-	            jNode.V -= iNode.V * lu.U;
+	        if(jNode) jNode.V -= iNode.V * lu.U;
 	        else 
-	            iNode = Nodes[++Node].Original;
+            {
+                var n = Nodes[++Node];
+                iNode = n ? n.Original : null;
+            }
 	    }
-	    //_ASSERTE(Node == &Base->SData);
 	    // Обратный ход решения
 	    for(var ilu = LU.length - 1; ilu >= 0; ilu--) 
         {
 	        var lu = LU[ilu];
 	        var jNode = lu.Node;
-	        if (jNode) 
-	            iNode.V -= jNode.V * lu.L;
+	        if(jNode) iNode.V -= jNode.V * lu.L;
 	        else 
             {
 	            iNode = Nodes[--Node].Original;
@@ -675,12 +670,17 @@ function Network()
 	    Dump();
         Test();
 	};
+	Models.GND = { // Земля
+		nodes: {1:{T:2, V:0.0}}
+	};
+	Models["+5V"] = { // +5В
+		nodes: {1:{T:2, V:5.0}}
+	};
 	Models.R = { // Резистор
-		AddI: function(I, V){},
+		//AddI: function(I, V){},
 		AddY: function()
 		{
-			this.B[0].y += this.y;// Здесь устройство должно ввести поправки в матрицу проводимости(куда именно?)
-			//B[0](1.0 / R); // Или так
+			this.B[0].y += this.y;
 		},
 		ctor: function(dev, item)
 		{
@@ -690,12 +690,27 @@ function Network()
 		nodes: {1:null, 2:null},
 		branches: [{p:1, q: 2}]
 	};	
-	Models.GND = { // Земля
-		nodes: {1:{T:2, V:0.0}}
-	};
-	Models["+5V"] = { // +5В
-		nodes: {1:{T:2, V:5.0}}
-	};
+    Models.INDUCTOR = { // Индуктивность
+        AddI:function()
+        { // Ток вытекает из узла 2 в узел 1
+            this.N[1].I += this.I;
+            this.N[2].I -= this.I;
+        },
+        f:function()
+        {
+            var V1 = this.N[1].V;
+            var V2 = this.N[2].V;
+            this.dI = (V2 - V1 - this.I * this.R) * oL;
+        },
+        ctor: function(dev, item)
+        {
+            dev.I = 1.0;
+            dev.R = 0;
+			dev.oL = 1.0 / parseFloat(item.GetInfo().Fields[1].t);
+        },
+		nodes: {1:null, 2:null}, // Два узла, ветвей нет
+        intvars: "I"
+    }
 }
 
 var Net = new Network();
