@@ -89,6 +89,7 @@ var KiCAD = new function()
 			p:t, 
 			pos:function(){return GetPinPos(this.p);},
 			MoveBy:this.MoveBy,
+            GetId:function(){ return '' + Items.indexOf(th) + '.' + this.p;},
 			_enode:null // Электрический узел
 		};
 		this.GetPinPts = function(pts) // Вернуть текущие координаты всех точек в виде KiCAD

@@ -6,10 +6,10 @@ function Network()
 	var Devices = []; // Устройства
 	var Errors = [];
 	var YList = []; // Матрица проводимости в виде связного списка
+    var FreeY = null; // Указатель на свободный элемент в YList
 	var LU = []; // Триангулированная матрица cplx L, U; // L = Yij, Yii для V; U = Yji, 0 для I
 	//CNode * Node;
 	//CYArray * Y;
-
 	function Node(pin) // Создаёт новый узел и привязывает к объекту
 	{
 		var pins = [];
@@ -20,9 +20,10 @@ function Network()
 		}
 		this.Original = null;
 		this.Sorted = null;
-		this.T = false;
-		this.V = 0.0;
-		this.y = 0.0;
+		this.T = false; // Тип
+		this.V = 0.0; // Напряжение (относительно земли)
+        this.I = 0.0; // Задающий (втекающий) ток
+		this.y = 0.0; // Проводимость (относительно земли)
 		this.bc = 0;
 		this.Drop = function() {pins = null;};
 		this.Add = function(pin) 
@@ -33,6 +34,7 @@ function Network()
 		this.GetPins = function() {return pins;};
 		this.Join = function(node) // сливает два узла в один
 		{
+            if(node === this) return;
 			if(node.T)
 			{
 				if(this.T && this.V !== node.V)
@@ -55,8 +57,11 @@ function Network()
 		};
 		Nodes.push(this);
 	}
+	(new Node(null)).T = true;
+	var GND = Nodes.pop();
 	function NodeByV(V, pin) // Ищет узел с заданным напряжением. Если такого нет, создаёт новый 
 	{
+		if(V === 0.0) {GND.Add(pin); return GND;} // GND
 		if(typeof V === "number") for(t in Nodes)
 			if(Nodes[t].T && Nodes[t].V === V)
 			{
@@ -68,7 +73,30 @@ function Network()
 		n.V = V;
 		return n;
 	}
-	(new Node(null)).T = true;
+    /*function DumpNodes()
+    {
+        console.log("----");
+        var r = "GND";
+        var p = GND.GetPins();
+        for(var P in p)
+        {
+            r += " объект: " + Main.GetId(p[P]);
+            if(p[P]._enode !== GND) r += "!";
+        }
+        console.log(r);
+        for(var n in Nodes)
+        {
+            var r = "Узел " + n;
+            if(Nodes[n].T) r += " V = " + Nodes[n].V;
+            var p = Nodes[n].GetPins();
+            for(var P in p)
+            {
+                r += " объект: " + Main.GetId(p[P]);
+                if(p[P]._enode !== Nodes[n]) r += "!";
+            }
+            console.log(r);
+        }
+    }*/
 	function Load(Items)
 	{
 		for(var i in Items) if(Items[i].GetInfo)
@@ -79,12 +107,15 @@ function Network()
 			if(info.Def)
 			{
 				var N = info.Def.N;
-				for(var n in N) 
-					if(Model = Models[N[n]])
+				for(var n in N)
+                {
+                    Model = Models[N[n]];
+					if(Model)
 					{
 						ModelName = N[n];
 						break;
 					}
+                }
 			}
 			if(!Model) 
 			{
@@ -112,6 +143,8 @@ function Network()
 		}
 		else if(Items[i].p1 && Items[i].p2)
 		{
+            /*DumpNodes();
+            console.log("Соединение " + Main.GetId(Items[i].p1) + " - "+ Main.GetId(Items[i].p2));*/
 			// Линия
 			var p1 = Items[i].p1;
 			var p2 = Items[i].p2;
@@ -132,15 +165,19 @@ function Network()
 			d.AddY = d.M.AddY;
 			d.AddI = d.M.AddI;
 			d.M.ctor(d, d.item);
-			for(var k in d.pins)
-				d.N[k] = d.pins[k]._enode;
+			for(var k in d.pins) 
+            {
+                var n = d.pins[k]._enode;
+                if(n === GND) n = null;
+                d.N[k] = n;
+			}
 			for(var b in d.M.branches)
 			{
 				var B = d.M.branches[b];
 				if(!d.B) d.B = [];
 				var p = d.N[B.p];
 				var q = d.N[B.q];
-				if(!(p && q)) Errors.push("Ветвь в модели задана не верно");
+				if(p === undefined || q === undefined) Errors.push("Ветвь в модели задана не верно");
 				var br = {p:p, q:q, y: 0.0};
 				d.B.push(br);
 				Branches.push(br);
@@ -157,25 +194,12 @@ function Network()
 		for(var n in Nodes) Nodes[n].y = 0.0;
 		for(var b in Branches) Branches[b].y = 0.0;
 		for(var d in Devices) Devices[d].AddY();
-
-	
-		// Если ветвь соединена с землёй, её проводимость добавляется узлу
-		var N0 = Nodes[0];
-		for(var b in Branches)
-		{
-			var B = Branches[b];
-			if(B.p === N0) B.q.y += B.y;
-			if(B.q === N0) B.p.y += B.y;
-		}
-
 		
 		Y = null;
 		var Size = Nodes.length + Branches.length * 2;
 		YList = Array(Size + 1);
-		var y = 1; //YList;
-		FreeY = 0;
-		var n = 1;//Nodes;
-		for(var n = 1, e = Nodes.length; n < e; n++) if(!Nodes[n].T) // Заполняем Y из узлов
+		var y = 0; //YList;
+		for(var n in Nodes) if(!Nodes[n].T) // Заполняем Y из узлов
 		{
 			var N = Nodes[n];
 			N.YList = YList[y] = {Node: N, y: -N.y};
@@ -192,6 +216,7 @@ function Network()
 		/*CYList * */ function AddBranch(N, AdjacentNode)
 		{
 			var Last = N.YList;
+			if(AdjacentNode === null) return n;
 			for(var List = Last; List; List = List.Next) 
 				if(List.Node === AdjacentNode)
 					return List;
@@ -207,33 +232,29 @@ function Network()
 		for(var B in Branches)  // Заполняем Y из ветвей
 		{
 			var b = Branches[B];
-			//b->pYpq = 0;
-			//b->pYqp = 0;
-			//_ASSERTE(b->ip >= 0 && b->ip < NodeCount);
-			//_ASSERTE(b->iq >= 0 && b->iq < NodeCount);
 			var p = b.p;
 			var q = b.q;
 			var pYpq = null, pYqp = null;
-			if(!p.T)
+			if(p && !p.T)
 			{
 				var l = AddBranch(p, q);
 				//l->AddBranch(b->pYpq);
 				pYpq = l;//&l->y;
 			}
-			if(!q.T)
+			if(q && !q.T)
 			{
 				var l = AddBranch(q, p);
 				//l->AddBranch(b->pYqp);
 				pYqp = l;//&l->y;
 			}
 
-			//b->Apply<true>(&p->YList->y, &q->YList->y, pYpq, pYqp);
-			if(p.YList) p.YList.y -= y;
-			if(q.YList) q.YList.y -= y;
-			if(pYpq) pYpq.y += y;
-			if(pYqp) pYqp.y += y;
+			if(p && p.YList) p.YList.y -= b.y;
+			if(q && q.YList) q.YList.y -= b.y;
+			if(pYpq) pYpq.y += b.y;
+			if(pYqp) pYqp.y += b.y;
 		}
-		if(y < Size) 
+        FreeY = YList[y];
+		if(y < Size)
 		{
 			var t = Size - 1;
 			YList[t] = {Next: null};
@@ -252,6 +273,7 @@ function Network()
 	var UseBestDiagonal = false;
 	var MinimalNorm = 0.0000001;
 	
+    function norm(x){return x * x;}	
 	//! Метод исключения узла
 	function ExcludeNode(Node)
 	{
@@ -277,7 +299,7 @@ function Network()
 			//_ASSERTE(deb_bc--);
 			var jNode = j.Node;
 			jNode.bc--;
-			var lu = LU[ilu] = {L: Diag * j.y, Node: jNode};
+			var lu = LU[ilu] = {L: Diag * j.y, U:0.0, Node: jNode};
 			/*if(UseFastTriangulation) 
 			{
 				j->FillSources(LUIndex);//&lu->L);
@@ -289,11 +311,7 @@ function Network()
 				else
 					lu->Y = 0;
 			}*/
-			if(jNode.T) 
-			{
-				lu.U = 0.0;
-				continue;
-			}
+			if(jNode.T) continue;
 	/*#ifdef _DEBUG
 			int f = 1;
 			int deb_bc1 = Node->BranchCount;
@@ -315,7 +333,10 @@ function Network()
 						}
 					}*/
 					k = Prev;
-					DeleteNextElement(Prev, FreeY);
+	                var t = FreeY;
+	                FreeY = Prev.Next;
+	                Prev.Next = FreeY.Next;
+	                FreeY.Next = t;
 				}
 				else
 				{ // Отмечаем в узле k узел j и связь, приведшую от него в k.
@@ -355,7 +376,7 @@ function Network()
 			if(MinBranchCount >= bc)
 			{
 				var d = norm(jNode.YList.y);
-				if(d > ((MinBranchCount > bc) ? MinimalDiagonalNorm : maxd))
+				if(d > ((MinBranchCount > bc) ? MinimalNorm : maxd))
 				{
 					maxd = d;
 					Result = jNode;
@@ -366,7 +387,7 @@ function Network()
 		//_ASSERTE(!deb_bc);
 		/*if(UseFastTriangulation)
 			pLU.Last->Last = plu - 1;*/
-		LU[ilu] = {Node: null, Y: Y + (Yii - YList - 1), L: Diag};
+		LU[ilu] = {L: Diag, Node: null/*, Y: Y + (Yii - YList - 1),*/ };
 		//Node.pY = &lu->Y->Yij;
 		//Yii->FillSources(LUIndex++);//&lu->L);
 		// Освобождаем элементы Yij для экономии памяти
@@ -377,7 +398,6 @@ function Network()
 
 	function TriangulateYList()
 	{	
-		function norm(x){return x * x;}
 		//LU.Reset();
 		//LUIndex = 1;
 		//pLU.Reset();
@@ -528,11 +548,6 @@ function Network()
 				}
 				
 				r += " " + f + ": " + v;
-				/*var p = n.GetPins();
-				if(n.T) r += " V = " + n.V;
-				if(p === null) r += " обнулён";
-				else r += " контактов " + p.length;
-				r += " y = " + n.y;*/
 			}
 			console.log(r);			
 		}
@@ -540,8 +555,10 @@ function Network()
 		{
 			var b = Branches[t];
 			var r = "Ветвь";
-			for(var n in Nodes) if(Nodes[n] === b.p) {r += " p:" + n; break;} 
-			for(var n in Nodes) if(Nodes[n] === b.q) {r += " q:" + n; break;}
+			if(b.p === null) r += " p:GND";
+			else for(var n in Nodes) if(Nodes[n] === b.p) {r += " p:" + n; break;} 
+			if(b.q === null) r += " q:GND";
+			else for(var n in Nodes) if(Nodes[n] === b.q) {r += " q:" + n; break;}
 			r += " y = " + b.y;
 			console.log(r);
 		}
@@ -555,12 +572,16 @@ function Network()
 				r += " модель " + mm;
 				break;
 			}
-			for(var n in d.N) for(var t in Nodes) if(Nodes[t] === d.N[n])	
-			{
-				r += " пин " + n + ":" +t;
-				break;
+			for(var n in d.N) 
+            {
+                var dnn = d.N[n];
+                if(dnn === null) r += " пин " + n + ":GND";
+                else for (var t in Nodes) if (Nodes[t] === dnn) 
+                {
+			        r += " пин " + n + ":" + t;
+			        break;
+			    }
 			}
-			
 			console.log(r);
 		}
 		for(var t in YList)
@@ -573,53 +594,86 @@ function Network()
 				if(k == "Next") for(y in YList) if(YList[y] === v) v = "YList[" + y + "]";
 				r += " " + k + ": " + v; 
 			}
-			console.log(r);			
+			console.log(r);
 		}
+        for(var t in LU)
+        {
+            var r = "LU[" + t + "]";
+            for(k in LU[t])
+            {
+                var v = LU[t][k];
+                if(k === "Node") for(n in Nodes) if(Nodes[n] === v) v = "Nodes[" + n + "]";
+                r += " " + k + ": " + v;
+            }
+			console.log(r);
+        }
 		if(Errors.length) for(var e in Errors) console.log(Errors[e]);
 		
 	}
-	this.Solve = function()
-	{
-		Load(Items);
-		PrepareYList();
-		TriangulateYList();
-		var Node = 0;
-		var iNode = Nodes[Node].Original;
-		for(var ilu in LU)
-		{
-			var lu = LU[ilu];
-			var jNode = lu.Node;
-			if(jNode)
-			{
-				//_ASSERTE(Node < &Base->SData);
-				jNode.V -= iNode.V * lu.U;
-			}
-			else 
-			{
-				Node++;
-				iNode = Nodes[Node].Original;
-			}
-		}
-		//_ASSERTE(Node == &Base->SData);
-		// Обратный ход решения
-		for(var ilu = LU.length - 1; ilu--;)
-		{
-			var lu = LU[ilu];
-			var jNode = lu.Node;
-			if(jNode)
-			{
-				//_ASSERTE(Node >= &Nodes->SData);
-				iNode.V -= jNode.V * lu.L;
-			}
-			else 
-			{
-				Node--;
-				iNode = Nodes[Node].Original;
-				iNode.V *= lu.L;
-			}
-		}
+    function Test()
+    {
+		// Инициализируем проводимости
+		for(var n in Nodes) Nodes[n].y = 0.0;
+		for(var b in Branches) Branches[b].y = 0.0;
+		for(var d in Devices) Devices[d].AddY();
+        // Проверяем уравнение Y * V = I
+        var I = Array(Nodes.length);
+        for(var i = Nodes.length; i--;) I[i] = 0.0;
+        for(var n in Nodes) I[n] -= Nodes[n].y * Nodes[n].V;
+        for(var b in Branches)
+        {
+            var B = Branches[b];
+            var Vp = b.p ? b.p.V : 0.0;
+            var Vq = b.q ? b.q.V : 0.0;
+            var p = Nodes.indexOf(b.p);
+            var q = Nodes.indexOf(b.q);
+            var dI = (Vq - Vp) * B.Y;
+            if(p >= 0)
+                I[p] += dI;
+            if(q >= 0)
+                I[q] -= dI;
+        }
+        for(var n in Nodes) 
+            if(I[n] != Nodes[n].I) 
+                console.log("В узле " + n + " не совпадают задающие токи. Задано " + Nodes[n].I + ", получено " + I[n]);
+    };
+	this.Solve = function () 
+    {
+	    Load(Items);
+	    PrepareYList();
+	    TriangulateYList();
 
-		Dump();
+        for(var n in Nodes) if(!Nodes[n].T) Nodes[n].V = Nodes[n].I;
+        
+
+	    var Node = 0;
+	    var iNode = Nodes[Node].Original;
+	    for(var ilu in LU) 
+        {
+	        var lu = LU[ilu];
+	        var jNode = lu.Node;
+	        if(jNode) 
+	            jNode.V -= iNode.V * lu.U;
+	        else 
+	            iNode = Nodes[++Node].Original;
+	    }
+	    //_ASSERTE(Node == &Base->SData);
+	    // Обратный ход решения
+	    for(var ilu = LU.length - 1; ilu >= 0; ilu--) 
+        {
+	        var lu = LU[ilu];
+	        var jNode = lu.Node;
+	        if (jNode) 
+	            iNode.V -= jNode.V * lu.L;
+	        else 
+            {
+	            iNode = Nodes[--Node].Original;
+	            iNode.V *= lu.L;
+	        }
+	    }
+
+	    Dump();
+        Test();
 	};
 	Models.R = { // Резистор
 		AddI: function(I, V){},
