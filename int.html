@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Тестирование интеграторов</title></head>
+<body>
+<canvas id="canvas" width="800" height="500"></canvas>
+<script type="text/javascript">
+var canvas = document.getElementById("canvas");
+var pps = 500; // �������� �� �������
+var T = (canvas.width - 1) / pps;
+var cy = canvas.height / 2;
+var ctx = canvas.getContext('2d');
+var Samples = 
+[
+ 	{ // Затухающая синусоида
+		X0 = {x1:1, x2:1}, T:4,
+		f:function(t, x)
+		{
+			return {
+				x1: x.x2,
+				x2: -7 * x.x1 - 0.5 * x.x2
+		};
+	},
+	{ // Жесткая задача Капса
+		X0 = {x1:1, x2:1}, u = 10, T:1,
+		f:function(t, x)
+		{
+			return {
+				x1:x.x2,
+				x2:this.u * (1 - x.x1 * x.x1) * (x.x1 + x.x2)
+				};
+		}
+ 	},
+	{ // Локально-неустойчивая задача
+		X0 = {x1:2, x2:0}, u = 10, T:3,
+		f:function(t, x)
+		{
+			return {
+				x1:-(this.u + 2) * x.x1 + this.u * x.x2 * x.x2,
+				x2:x.x1 - x.x2 - x.x2 * x.x2
+				};
+		}
+	} 
+];
+
+
+var u = 10;
+var X = {};
+var dr = "x1";
+var drm = 100;
+
+var f = f1;
+
+function Trapez(h)
+{
+	for(var t = 0; t < T;)
+	{
+		var dX1 = f(t, X);
+		function Trap(X, h, t)
+		{
+			var Xn = {};
+			for(var x in X) Xn[x] = X[x] + dX1[x];
+			for(var i = 0; i < 10; i++)
+			{
+				var dX2 = f(t + h, Xn);
+				for(var x in X) Xn[x] = X[x] + h/2 * (dX1[x] + dX2[x]);
+			}
+			return Xn;
+		}
+		var Xn1 = Trap(X, h, t);
+		var Xn2 = Trap(X, h/2, t);
+		var Xn2 = Trap(Xn2, h/2, t + h/2);
+		var e = 0;
+		for(var x in X) if(Math.abs(Xn1[x] - Xn2[x]) > e) e = Math.abs(Xn1[x] - Xn2[x]);
+		if(e > 1E-4) { h /= 2; continue;}
+		for(var x in X) X[x] = Xn2[x];
+		t += h;
+		ctx.lineTo(t * pps, drm * X[dr] + cy);
+		if(e < 1E-6) { h *= 2; continue;}
+	}
+}
+
+function RK4r(X, h, t)
+{
+	var k2 = {}, k3 = {}, k4 = {}, R = {};
+	var k1 = f(t, X);
+	for(var x in k1) k2[x] = X[x] + k1[x] * h / 2;
+	k2 = f(t + h / 2, k2);
+	for(var x in k2) k3[x] = X[x] + k2[x] * h / 2;
+	k3 = f(t + h / 2, k3);
+	for(var x in k3) k4[x] = X[x] + k3[x] * h;
+	k4 = f(t + h, k4);
+
+	for(var x in X) R[x] = X[x] + (k1[x] + 2 * k2[x] + 2 * k3[x] + k4[x]) * h / 6;
+	return R
+}
+
+function RK4(h)
+{
+	for(var t = 0; t < T;)
+	{
+		X = RK4r(X, h, t);
+		t += h;
+		ctx.lineTo(t * pps, drm * X[dr] + cy);
+	}
+}
+var Rtol = 0.001, Atol = 1E-10;
+function RK5(h)
+{
+	var delta = {}, DX = {};
+	for(var t = 0; t < T; )
+	{
+		var Xh = RK4r(X, h, t);
+		var Xh2 = RK4r(X, h/2, t);
+		var Xh2t = RK4r(X, h/2, t + h/2);
+		for(var x in X) delta[x] = (Xh2[x] - Xh[x]) / 15;
+		for(var x in X) DX[x] = X[x];
+		for(var x in X) X[x] = Xh2t[x] + delta[x];
+		for(var x in X) DX[x] -= X[x];
+
+		var err = 0;
+		for(var x in X)
+		{
+			var e = Math.abs(delta[x]) / ((Math.abs(X[x]) + Math.abs(DX[x])) * Rtol + Atol);
+			if(e > err) e = err;
+		}
+		
+		h = 0.85 * h * err;
+		if(h < 1E-6) h = 1E-6;
+		if(h > 1) h = 1;
+		t += h;
+		ctx.lineTo(t * pps, drm * X[dr] + cy);
+	}
+}
+
+
+function Run(m, h, color)
+{
+	for(var x in X0) X[x] = X0[x];
+	ctx.beginPath();
+	ctx.moveTo(0, drm * X[dr] + cy);
+	ctx.strokeStyle = color;
+	m(h);
+	ctx.stroke();
+}
+var h = 0.00010;
+u = 10000;
+Run(RK4, 0.000001, "rgba(100, 100, 100, 0.5)");
+//Run(Euler,  h, "rgba(255, 0, 0, 0.5)");
+Run(RK4,    h, "rgba(0, 0, 255, 0.5)");
+Run(Trapez, h, "rgba(0, 255, 0, 0.5)");
+//Run(RK5, h, "#00FF00");
+
+function Euler(X, h, f)
+{
+	for(var t = 0; t < T;)
+	{
+		var dX = f(t, X);
+		for(var x in X) X[x] += dX[x] * h;
+		t += h;
+		ctx.lineTo(t * pps, drm * X[dr] + cy);
+	}
+}
+
+
+var Integrators = 
+[
+ 	{
+ 		Name: "Euler",
+ 		Method: Euler,
+ 		h: 0.001
+ 	}
+ 
+ 
+ 
+]
+
+var Etalon = 
+{
+	Method:Euler,
+	h: 0.00001
+}
+
+function Test()
+{
+	var R = [];
+	var printh = 0.001;
+	Etalon.printh = printh; 
+	
+	for(var s in Samples)
+	{
+		var sample = Samples[s];
+		var Data = Float64Array(sample.T / printh);
+		Etalon.Method();
+	
+	
+	}
+
+}
+
+
+
+
+
+
+</script></body></html>
