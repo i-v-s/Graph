@@ -1,3 +1,5 @@
+"use strict";
+
 function getXmlHttp()
 {
 	if(window.XMLHttpRequest) return new XMLHttpRequest();

@@ -1,188 +1,64 @@
+"use strict";
+
 var Models = {};
+var Net = null;
 
-
-function Network()
+function Network(Devices, Nodes, Branches)
 {
-	var Nodes = []; // Узлы
-	var Branches = [];
-	var Models = {}; // Математические модели
-	var Devices = []; // Устройства
+	// Параметры сети
+	var UseFastTriangulation = false;
+	var UseBestDiagonal = false;
+	var MinimalNorm = 0.0000001;
+
+	//var Nodes = []; // Узлы
+	//var Branches = [];
+	//var Models = {}; // Математические модели
+	//var Devices = []; // Устройства
 	var Errors = [];
 	var YList = []; // Матрица проводимости в виде связного списка
     var FreeY = null; // Указатель на свободный элемент в YList
 	var LU = []; // Триангулированная матрица cplx L, U; // L = Yij, Yii для V; U = Yji, 0 для I
+	 
 	//CNode * Node;
 	//CYArray * Y;
-	function Node(pin) // Создаёт новый узел и привязывает к объекту
+	// Пересоздадим узлы:
+	for(var n in Nodes) Nodes[n] = {
+		V:Nodes[n].V,
+		I:0,
+		y:0,
+		T:Nodes[n].T,
+		bc:0,
+		YList:null,
+		Original:null, 
+		Sorted: null
+	};
+	var GND = {V:0, T:true, y:0, I:0}; 
+	// Пересоздадим ветви:
+	for(var n in Branches)
 	{
-		var pins = [];
-		if(pin) 
-		{
-			pin._enode = this;
-			pins.push(pin);
-		}
-		this.Original = null;
-		this.Sorted = null;
-		this.T = false; // Тип
-		this.V = 0.0; // Напряжение (относительно земли)
-        this.I = 0.0; // Задающий (втекающий) ток
-		this.y = 0.0; // Проводимость (относительно земли)
-		this.bc = 0;
-		this.Drop = function() {pins = null;};
-		this.Add = function(pin) 
-		{// Добавляет объект к узлу. Если объект привязан к другому узлу, то сливает узлы в один
-			if(pin._enode) this.Join(pin._enode);
-			else {pin._enode = this; pins.push(pin);}
+		var b = Branches[n];
+		Branches[n] = {
+			p: (b.p !== null) ? Nodes[b.p] : null,
+			q: (b.q !== null) ? Nodes[b.q] : null,
+			y: b.y ? b.y : 0.0
 		};
-		this.GetPins = function() {return pins;};
-		this.Join = function(node) // сливает два узла в один
-		{
-            if(node === this) return;
-			if(node.T)
-			{
-				if(this.T && this.V !== node.V)
-				{
-					throw("Замыкание между шинами питания " + this.V + "В и " + node.V + "В");
-					//Errors.push("Замыкание между шинами питания " + this.V + "В и " + node.V + "В");
-					return;
-				}
-				node.Join(this);
-				return;
-			}
-			var p = node.GetPins();
-			for(var t in p)
-			{
-				var pt = p[t];
-				pins.push(pt);
-				pt._enode = this;
-			}
-			node.Drop();
-		};
-		Nodes.push(this);
 	}
-	(new Node(null)).T = true;
-	var GND = Nodes.pop();
-	function NodeByV(V, pin) // Ищет узел с заданным напряжением. Если такого нет, создаёт новый 
+	// Пересоздадим устройства:
+	for(var n in Devices)
 	{
-		if(V === 0.0) {GND.Add(pin); return GND;} // GND
-		if(typeof V === "number") for(t in Nodes)
-			if(Nodes[t].T && Nodes[t].V === V)
-			{
-				Nodes[t].Add(pin);
-				return Nodes[t];
-			}
-		var n = new Node(pin);
-		n.T = true;
-		n.V = V;
-		return n;
+		var d = Devices[n];
+		var nodes = {};
+		for(var t in d.n)
+			nodes[t] = (d.n[t] === null) ? GND : Nodes[d.n[t]];
+		var brs = [];
+		for(var t in d.b)
+			brs[t] = Branches[d.b[t]];
+		var id = d.i;
+		d = new Models[d.m].ctor(d.f, nodes, brs);
+		d.i = id;
+		Devices[n] = d; 
 	}
-    /*function DumpNodes()
-    {
-        console.log("----");
-        var r = "GND";
-        var p = GND.GetPins();
-        for(var P in p)
-        {
-            r += " объект: " + Main.GetId(p[P]);
-            if(p[P]._enode !== GND) r += "!";
-        }
-        console.log(r);
-        for(var n in Nodes)
-        {
-            var r = "Узел " + n;
-            if(Nodes[n].T) r += " V = " + Nodes[n].V;
-            var p = Nodes[n].GetPins();
-            for(var P in p)
-            {
-                r += " объект: " + Main.GetId(p[P]);
-                if(p[P]._enode !== Nodes[n]) r += "!";
-            }
-            console.log(r);
-        }
-    }*/
-	function Load(Items)
-	{
-		for(var i in Items) if(Items[i].GetInfo)
-		{
-			var info = Items[i].GetInfo();
-			var Model = null;
-			var ModelName = "";
-			if(info.Def)
-			{
-				var N = info.Def.N;
-				for(var n in N)
-                {
-                    Model = Models[N[n]];
-					if(Model)
-					{
-						ModelName = N[n];
-						break;
-					}
-                }
-			}
-			if(!Model) 
-			{
-				Errors.push("Не найдена модель для компонента '" + info.Name + "', тип " + info.CmpName);
-				continue;
-			}
-			// Нашли модель, создаём устройство
-			var pins = info.Pins;
-			var mpins = Model.nodes;
-			var item = Items[i];
-			var dev = {M:Model, Name:info.Name, N:[], item:item, pins:pins};
-			//var DefPins = info.Def.pin;
-			Devices.push(dev);
-			for(var t in mpins) // Проходим по узлам модели
-			{
-				var p = pins[t];
-				if(!p && t[0] !== '_') Errors.push("Узел " + t + " мат. модели " + ModelName + " не существует.");
-				if(mpins[t] && mpins[t].T) // Узел с заданным напряжением
-				{
-					NodeByV(mpins[t].V, p); // Ищем такой же, если не нашли - добавляем
-					continue;
-				}			
-				new Node(p);			
-			}			
-		}
-		else if(Items[i].p1 && Items[i].p2)
-		{
-            /*DumpNodes();
-            console.log("Соединение " + Main.GetId(Items[i].p1) + " - "+ Main.GetId(Items[i].p2));*/
-			// Линия
-			var p1 = Items[i].p1;
-			var p2 = Items[i].p2;
-			if(!p1._enode) new Node(p1);
-			p1._enode.Add(p2);
-		}
-		// Чистим узлы:
-		var l = 0;
-		for(var t = 0, e = Nodes.length; t < e; t++) if(Nodes[t].GetPins()) Nodes[l++] = Nodes[t];
-		Nodes.length = l;
-		// Чистим устройства, создаём ветви и инициализируем контакты
-		l = 0;
-		for(var t = 0, e = Devices.length; t < e; t++)
-		{
-			var d = Devices[t];
-			if(d.M.AddI || d.M.AddY) Devices[l++] = d;
-			else continue;
-			if(d.M.AddY) d.AddY = d.M.AddY;
-			if(d.M.AddI) d.AddI = d.M.AddI;
-			d.M.ctor(d, d.item);
-			for(var k in d.pins) d.N[k] = d.pins[k]._enode;
-			for(var b in d.M.branches)
-			{
-				var B = d.M.branches[b];
-				if(!d.B) d.B = [];
-				var p = d.N[B.p];
-				var q = d.N[B.q];
-				if(p === undefined || q === undefined) Errors.push("Ветвь в модели задана не верно");
-				var br = {p:p, q:q, y: 0.0};
-				d.B.push(br);
-				Branches.push(br);
-			}
-		}
-		Devices.length = l;
-	}
+	
 	var Y = null;
 
 	//! Метод формирования матрицы проводимостей Y в виде связного списка Y
@@ -229,7 +105,7 @@ function Network()
 
 		for(var B in Branches)  // Заполняем Y из ветвей
 		{
-			var b = Branches[B]
+			var b = Branches[B];
             if(b.y === 0) continue;
             var p = b.p, q = b.q;
 			if(p && p.YList)
@@ -261,9 +137,6 @@ function Network()
 			YisValid = false;
 		}*/
 	}
-	var UseFastTriangulation = false;
-	var UseBestDiagonal = false;
-	var MinimalNorm = 0.0000001;
 	
     function norm(x){return x * x;}	
 	//! Метод исключения узла
@@ -591,7 +464,7 @@ function Network()
         for(var t in LU)
         {
             var r = "LU[" + t + "]";
-            for(k in LU[t])
+            for(var k in LU[t])
             {
                 var v = LU[t][k];
                 if(k === "Node") for(n in Nodes) if(Nodes[n] === v) v = "Nodes[" + n + "]";
@@ -635,7 +508,6 @@ function Network()
     };
 	this.Solve = function () 
     {
-	    Load(Items);
 	    PrepareYList();
 	    TriangulateYList();
 
@@ -670,50 +542,9 @@ function Network()
 	        }
 	    }
 
-	    Dump();
+	    //Dump();
         Test();
 	};
-	Models.GND = { // Земля
-		nodes: {1:{T:2, V:0.0}}
-	};
-	Models["+5V"] = { // +5В
-		nodes: {1:{T:2, V:5.0}}
-	};
-	Models.R = { // Резистор
-		//AddI: function(I, V){},
-		AddY: function()
-		{
-			this.B[0].y += this.y;
-		},
-		ctor: function(dev, item)
-		{
-			var R = parseFloat(item.GetInfo().Fields[1].t);
-			dev.y = 1.0 / R;
-		},
-		nodes: {1:null, 2:null},
-		branches: [{p:1, q: 2}]
-	};	
-    Models.INDUCTOR = { // Индуктивность
-        AddI:function()
-        { // Ток вытекает из узла 2 в узел 1
-            this.N[1].I += this.I;
-            this.N[2].I -= this.I;
-        },
-        f:function()
-        {
-            var V1 = this.N[1].V;
-            var V2 = this.N[2].V;
-            this.dI = (V2 - V1 - this.I * this.R) * oL;
-        },
-        ctor: function(dev, item)
-        {
-            dev.I = 1.0;
-            dev.R = 0;
-			dev.oL = 1.0 / parseFloat(item.GetInfo().Fields[1].t);
-        },
-		nodes: {1:null, 2:null}, // Два узла, ветвей нет
-        intvars: "I"
-    };
 }
 
 
@@ -721,7 +552,15 @@ function Network()
 
 
 
+function toFunc(text, name)
+{
+	var x, y, e = text.length;
+	for(x = 0; text[x] !== '('; x++){if(x >= e) return null;}
+	for(y = x; text[y] !== ')'; y++){if(y >= e) return null;}
+	var p = text.substr(x + 1, y - x - 1).split(',');
+	return new Function(p[0], p[1], p[2], text.substr(y + 1));
 
+}
 
 self.addEventListener("message", function(e)
 {
@@ -729,17 +568,19 @@ self.addEventListener("message", function(e)
 	if(data.Models) for(var m in data.Models)
 	{
 		var model = data.Models[m];
-		var t = "var f = function " + m + model.ctor.substr(8);
-		eval(t);
-		model.ctor = f;
+		model.ctor = toFunc(model.ctor, m);
 		Models[m] = model;
+	}
+	if(data.Devices || data.Nodes || data.Branches)
+	{
+		Net = new Network(data.Devices, data.Nodes, data.Branches);
 		
-		//var dev = new model.ctor([0, {t:"1"}], [], []);
-		//dev++;
 	}
 	switch(data.cmd)
 	{
-	case 'loadnet':
+	case 'solve':
+		Net.Solve();
+		self.postMessage(result);
 		break;
 	
 	

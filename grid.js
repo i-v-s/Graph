@@ -1,8 +1,11 @@
+"use strict";
+
 var Grid = {
     MainClear: Main.Clear,
     MainRedraw: Main.Redraw,
     MAM: null,
     Step:10,
+    Style:"#808080",
     Draw: function()
     {
         Grid.MainClear();
@@ -22,7 +25,7 @@ var Grid = {
             ctx.moveTo(-Main.OffsetX * os, x);
             ctx.lineTo((w - Main.OffsetX) * os, x);
         }
-        ctx.strokeStyle = "#808080";
+        ctx.strokeStyle = Grid.Style;
         ctx.stroke();
         ctx.lineWidth = 1.0;
         //ctx.clearRect(0, 0, canvas.width, canvas.height);

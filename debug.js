@@ -1,8 +1,10 @@
+"use strict";
+
 var CDebug =
 {
 	Dump:function()
 	{
-		for(i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i].Sel)
 		{
 			console.log(Items[i]);
 
@@ -11,14 +13,14 @@ var CDebug =
 	},
 	JSON:function()
 	{
-		for(i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i].Sel)
 		{
 			console.log("" + i + ": " + DB.ItemToJSON(Items[i]));
 		}
 	},
 	der:function()
 	{
-		for(i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i].Sel)
 		{
 			console.log("" + i + " .der: ");
 			for(d in Items[i]._der)

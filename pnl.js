@@ -1,3 +1,4 @@
+"use strict";
 
 function Point(x, y)
 {
@@ -75,7 +76,7 @@ function Line(p1, p2)
     },
     this.Draw = function(Type)
     {
-    	var color = this.color ? this.color : "#000000";
+    	var color = this.color ? this.color : Main.Color;
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": color);
         ctx.lineWidth = this.width ? this.width : 0.5;
         ctx.beginPath();

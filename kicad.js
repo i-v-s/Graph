@@ -1,3 +1,5 @@
+"use strict";
+
 var KiCAD = new function()
 {
 	var Km = 0.05;
@@ -174,7 +176,7 @@ var KiCAD = new function()
 	}	
     function ConnDraw(Type)
     {
-    	ctx.fillStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000");
+    	ctx.fillStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
         if(Type > 0 || this.Sel || this._der.length === 0 || this._der.length > 2)
         {
             ctx.lineWidth = 1;
@@ -260,23 +262,26 @@ var KiCAD = new function()
 	};
 	function loadLib(e)
 	{
+		var obj;
+		function SetB(x, y) {if(x > obj.r) obj.r = x; if(y > obj.b) obj.b = y; if(x < obj.l) obj.l = x; if(y < obj.t) obj.t = y;};
 		var data = e.target.result;
 		var sep = '\n';
 		if(data.search("\r\n") !== -1) sep = "\r\n";
 		data = data.split(sep);
 
+		var menu = {label:"Компонент"};//{label: "Импорт", click: KiCAD.OnImport}
+		
 		for(var x = 0, l = data.length; x < l; x++)
 		{
 			var d = data[x];
 			if(d == "" || d[0] == "#") continue;
 			var s = split(d);
-			var obj;
-			function SetB(x, y) {if(x > obj.r) obj.r = x; if(y > obj.b) obj.b = y; if(x < obj.l) obj.l = x; if(y < obj.t) obj.t = y;};
 			if(s[0] === "DEF")
 			{
 				var Name = s[1].toUpperCase();
 				if(Name == "~GND") Name = "GND";
 				obj = Lib[Name] = {F:[], N:[Name], pin:{}, l:0,r:0,t:0,b:0}; // F:поля, N:имена, lrtb:ограничивающий прямоугольник
+				menu[Name] = {label:Name, click: KiCAD.OnCreate};
 			}
 			else if(s[0] === "ALIAS")
 			{
@@ -392,7 +397,7 @@ var KiCAD = new function()
 			}
 			
 		}
-		
+		CMenu.Add({create:{kicad:menu}});
 	};
 	function processFiles(evt) 
 	{
@@ -409,6 +414,13 @@ var KiCAD = new function()
 			reader.onload = loadSch;
 			reader.readAsText(files[x]);
 		}
+	};
+	this.OnCreate = function(e)
+	{
+		var m = Lib[e.target.innerText];
+		var comp = new Component(d);
+		Items.push(comp);		
+		
 	};
 	this.OnImport = function()
 	{

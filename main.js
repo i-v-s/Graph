@@ -1,3 +1,4 @@
+"use strict";
 var Items = [];
 var MouseObject = null;
 var SelRect = null;
@@ -35,11 +36,22 @@ var Main = {
     Back: "#FFF",
     font: '10px monospace',
     hitPriority: 100,
-    OnCSS: function()
+    OnCSS: function(f)
     {
-        var s = getComputedStyle(document.body);
-        Main.Color = s.color;
-        Main.Back = s.background;
+    	switch(f)
+    	{
+    	case "lite.css":
+    	default:
+    		Grid.Style = "#808080";
+            Main.Color = "#000";
+    		Main.Back = "#FFF";
+    		break;
+    	case "matrix.css":
+    		Grid.Style = "#2A8106";
+            Main.Color = "#76E215";
+    		Main.Back = "#FFF";
+    		break;
+    	}
         Main.Redraw();
     },
     Clear: function()
@@ -50,6 +62,9 @@ var Main = {
     {
         //Main.OnCSS();
         Main.Clear();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        
         var left, top, right, bottom;
         var err = [];
         if(SelRect)
@@ -60,23 +75,28 @@ var Main = {
             bottom = SelRect.bottom();
         }
         var md = true;
-        for(var x = 0; x < Items.length; x++)
+        var Selected = [];
+        var Touched = [];
+        for(var x in Items)
         {
             var f = Items[x];
-            var t = 0;
-            if(f === MouseObject) {t = 1; md = false;} else
-            if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
-            try
-            { 
-                f.Draw(t); 
-            } 
-            catch(e) 
-            {
-                var t = Items[x];
-                if(t) err.push("#" + x + " " + t.constructor.name);
-                Items[x] = null;
-            }
+            if(f === MouseObject) {(f.Sel ? Selected : Touched).push(f); md = false; continue;}
+            if(f.Sel) {Selected.push(f); continue;}
+            if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) {Touched.push(f); continue;}
+            
+            try {f.Draw(0);} 
+            catch(e) {if(Items[x]) err.push("#" + x + " " + Items[x].constructor.name); Items[x] = null;}
         }
+        for(var x in Selected)
+        {
+            try {Selected[x].Draw(0);} 
+            catch(e) {if(Selected[x]) err.push("#" + x + " " + Selected[x].constructor.name); /*Items[x] = null;*/}
+        }
+        for(var x in Touched)
+        {
+            try {Touched[x].Draw(1);} 
+            catch(e) {if(Touched[x]) err.push("#" + x + " " + Touched[x].constructor.name); /*Items[x] = null;*/}
+        }        
         if(md && MouseObject) MouseObject.Draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();

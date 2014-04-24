@@ -1,3 +1,5 @@
+"use strict";
+
 function Block(r)//x, y, w, h, Text)
 {
     this.SetFontSize = function(s)
@@ -150,7 +152,6 @@ function Block(r)//x, y, w, h, Text)
         {
             var txt = this.text;
             var l = this.GetTextLayout();
-            var step = 20;
             var Y = Math.floor((y - l.y) / l.dy);
             var X = Math.floor((x - l.x) / l.dx);
             if(X >= 0 && Y >= 0 && Y < txt.length && X < txt[Y].length)

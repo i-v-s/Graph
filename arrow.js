@@ -1,3 +1,5 @@
+"use strict";
+
 function Arrow(a)
 {
     this.ps = a;

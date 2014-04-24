@@ -1,3 +1,5 @@
+"use strict";
+
 var Navi =
 {
     OnMove: function(mx, my)

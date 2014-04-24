@@ -1,3 +1,4 @@
+"use strict";
 
 function LineArcCross(cx, cy, R, p, v) // Центр дуги x, y; Радиус R; Начало отрезка p; Вектор направления v
 {
@@ -105,8 +106,6 @@ function GPath()
         if(!shift) shift = CGPath.shift;
         ctx.lineWidth = 2 * Math.abs(shift);
         if(this.inv) shift = -shift;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
         ctx.beginPath();
         var sl = this.s.length - 1;
 
@@ -274,6 +273,7 @@ var CGPath =
 	depthZ:5,
 	shift:2.5,
 	feed:100,
+	showArea:false,
     ParamDlg:
 	{
 		title:"Параметры ЧПУ",
@@ -368,17 +368,17 @@ var CGPath =
 	},
 	Inverse: function()
 	{
-		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].inv = !Items[x].inv;
+		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].inv = !Items[x].inv;
 		Main.Redraw();
 	},
 	chRound: function()
 	{
-		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].rea = !Items[x].rea;
+		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].rea = !Items[x].rea;
 		Main.Redraw();
 	},
 	Reverse: function()
 	{
-		for(x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
+		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
 		Main.Redraw();
 	},
 	MainClear: null,
@@ -389,9 +389,12 @@ var CGPath =
     	Main.Clear = function()
     	{
     		CGPath.MainClear();
-    	    ctx.strokeStyle = "#408040";
-	        ctx.lineWidth = 1.0;    		
-	        ctx.strokeRect(0, 0, CGPath.sizeX, CGPath.sizeY);
+    		if(CGPath.showArea)
+    		{
+    			ctx.strokeStyle = "#408040";
+    			ctx.lineWidth = 1.0;    		
+    			ctx.strokeRect(0, 0, CGPath.sizeX, CGPath.sizeY);
+    		}
     	};
     	CMenu.Add({
     		create:{

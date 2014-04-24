@@ -1,3 +1,4 @@
+"use strict";
 
 var Dialogs = 
 {
@@ -24,7 +25,7 @@ var Dialogs =
 		tb.width = "100%";
 		tb.cellspacing = "0";
 		tb.cellpadding = "4";
-		for(x in Dlg.data) 
+		for(var x in Dlg.data) 
 		{
 			var v = Dlg.data[x];
 

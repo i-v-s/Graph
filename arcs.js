@@ -1,3 +1,5 @@
+"use strict";
+
 function Arc(p1, p2, A)
 {
     this.p1 = p1;
