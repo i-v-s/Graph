@@ -111,7 +111,7 @@ var DB =
     LocalList: function()
     {
         var r = [];
-        for(x in localStorage)
+        for(var x in localStorage)
             if(x.substr(0, 6) == "graph_") r.push(x.substr(6));
         return r;
     },
