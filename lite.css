@@ -9,7 +9,7 @@ body {
 
 /************ Цвета и тени меню *************************/
 
-.hmenu, .hmenu li ul, .dialog, .combobox ul
+.hmenu, .hmenu li ul, .dialog, .combobox ul, .group
 {
     cursor: pointer;
     color: #222;/*#79FF00;*/
@@ -38,6 +38,17 @@ body {
 #blocker
 {
     background: rgba(255, 255, 255, 0.5);
+}
+
+/************** Параметры групп *******************/
+
+.group {
+    /*padding: .4em 1em .4em;*/
+    display: block;
+	border-radius: 10px;
+    font-family: sans-serif;
+    font-size: 12pt;
+    margin: 5px;
 }
 
 /************** Параметры меню ********************/
@@ -140,18 +151,18 @@ body {
     border-radius: 10px 10px 10px 10px;
 }
 
-.dialog > div
+.dialog > div, .group > div
 {
     padding: 10px;  
 }
 
-.dialog h1
+.dialog h1, .group h1
 {
     border-radius: 10px 10px 0px 0px;
     background: linear-gradient(to top, rgba(153, 191, 195, 0.7), rgba(207, 248, 240, 0.7));
     text-align: center;
     margin: 0;
-    font: 12px;
+    font-size: 20px;
 }
 
 

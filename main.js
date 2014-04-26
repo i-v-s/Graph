@@ -1,3 +1,4 @@
+"use strict";
 var Items = [];
 var MouseObject = null;
 var SelRect = null;
@@ -25,7 +26,7 @@ var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
-    adm:3, // Допуск при выборе
+    adm:1, // Допуск при выборе
     NeedRedraw: false,
     PointAlign:true,
     MX: 0, MY: 0,
@@ -35,11 +36,22 @@ var Main = {
     Back: "#FFF",
     font: '10px monospace',
     hitPriority: 100,
-    OnCSS: function()
+    OnCSS: function(f)
     {
-        var s = getComputedStyle(document.body);
-        Main.Color = s.color;
-        Main.Back = s.background;
+    	switch(f)
+    	{
+    	case "lite.css":
+    	default:
+    		Grid.Style = "#808080";
+            Main.Color = "#000";
+    		Main.Back = "#FFF";
+    		break;
+    	case "matrix.css":
+    		Grid.Style = "#2A8106";
+            Main.Color = "#76E215";
+    		Main.Back = "#FFF";
+    		break;
+    	}
         Main.Redraw();
     },
     Clear: function()
@@ -50,6 +62,9 @@ var Main = {
     {
         //Main.OnCSS();
         Main.Clear();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        
         var left, top, right, bottom;
         var err = [];
         if(SelRect)
@@ -60,23 +75,28 @@ var Main = {
             bottom = SelRect.bottom();
         }
         var md = true;
-        for(var x = 0; x < Items.length; x++)
+        var Selected = [];
+        var Touched = [];
+        for(var x in Items)
         {
             var f = Items[x];
-            var t = 0;
-            if(f === MouseObject) {t = 1; md = false;} else
-            if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) t = 1;
-            try
-            { 
-                f.Draw(t); 
-            } 
-            catch(e) 
-            {
-                var t = Items[x];
-                if(t) err.push("#" + x + " " + t.constructor.name);
-                Items[x] = null;
-            }
+            if(f === MouseObject) {(f.Sel ? Selected : Touched).push(f); md = false; continue;}
+            if(f.Sel) {Selected.push(f); continue;}
+            if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) {Touched.push(f); continue;}
+            
+            try {f.Draw(0);} 
+            catch(e) {if(Items[x]) err.push("#" + x + " " + Items[x].constructor.name); Items[x] = null;}
         }
+        for(var x in Selected)
+        {
+            try {Selected[x].Draw(0);} 
+            catch(e) {if(Selected[x]) err.push("#" + x + " " + Selected[x].constructor.name); /*Items[x] = null;*/}
+        }
+        for(var x in Touched)
+        {
+            try {Touched[x].Draw(1);} 
+            catch(e) {if(Touched[x]) err.push("#" + x + " " + Touched[x].constructor.name); /*Items[x] = null;*/}
+        }        
         if(md && MouseObject) MouseObject.Draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();
@@ -218,9 +238,8 @@ var Main = {
     {
         if(typeof state === "string") state = States[state];
         var NewState = {}; // Новое состояние - комбинация предущего и требуемого
-        var x;
-        for(x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
-        for(x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
+        for(var x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
+        for(var x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
         if(state.leftdown && !state.leftup) NewState.leftup = undefined;
         else if(state.leftup && !state.leftdown) NewState.leftdown = undefined;
         if(state.rightdown && !state.rightup) NewState.rightup = undefined;
@@ -241,14 +260,14 @@ var Main = {
     GetMousePos: function(evt)
     {
         var box = canvas.getBoundingClientRect();
-        var body = document.body
-        var docElem = document.documentElement
-        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
-        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
-        var clientTop = docElem.clientTop || body.clientTop || 0
-        var clientLeft = docElem.clientLeft || body.clientLeft || 0
-        var top  = box.top +  scrollTop - clientTop
-        var left = box.left + scrollLeft - clientLeft
+        var body = document.body;
+        var docElem = document.documentElement;
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
+        var clientTop = docElem.clientTop || body.clientTop || 0;
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
+        var top  = box.top +  scrollTop - clientTop;
+        var left = box.left + scrollLeft - clientLeft;
         return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
     },
     OnMouse: function(evt, method)
@@ -266,7 +285,7 @@ var Main = {
     },
     Init: function()
     {
-        document.oncontextmenu = function (){return false};
+        document.oncontextmenu = function (){return false;};
         State = States.free;
         Main.OnMouseMove = Main.OnFreeMove;
         canvas = document.getElementById("canvas");
@@ -279,7 +298,7 @@ var Main = {
             canvas.width = canvas.clientWidth;
             ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
             Main.Redraw();
-        }
+        };
         canvas.onmousedown = function(evt)
         {
             var b = evt.button;
@@ -300,12 +319,12 @@ var Main = {
             Main.MouseDown = null;
         };
         canvas.onmousemove = function(evt) {Main.OnMouse(evt, State.move);};
-        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();}
+        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
         {
             alert("kd");
 
-        }
+        };
         if(window.CMenu)
         {
             CMenu.Add({
@@ -344,9 +363,9 @@ function SimpleRect(x, y, w, h)
     this.y = y;
     this.w = w;
     this.h = h;
-    this.left = function() {return this.w > 0 ? this.x : this.x + this.w;}
-    this.top = function() {return this.h > 0 ? this.y : this.y + this.h;}
-    this.right = function() {return this.w < 0 ? this.x : this.x + this.w;}
-    this.bottom = function() {return this.h < 0 ? this.y : this.y + this.h;}
-    this.Stroke = function() {ctx.strokeRect(this.x, this.y, this.w, this.h);}
+    this.left = function() {return this.w > 0 ? this.x : this.x + this.w;};
+    this.top = function() {return this.h > 0 ? this.y : this.y + this.h;};
+    this.right = function() {return this.w < 0 ? this.x : this.x + this.w;};
+    this.bottom = function() {return this.h < 0 ? this.y : this.y + this.h;};
+    this.Stroke = function() {ctx.strokeRect(this.x, this.y, this.w, this.h);};
 }

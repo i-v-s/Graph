@@ -1,3 +1,5 @@
+"use strict";
+
 function Block(r)//x, y, w, h, Text)
 {
     this.SetFontSize = function(s)
@@ -6,40 +8,40 @@ function Block(r)//x, y, w, h, Text)
         this._font = s.toString() + "px monospace";
         ctx.font = this._font;
         this._dx = ctx.measureText("X").width;
-    }
+    };
     this.SetFontSize(10);
     for(x in r) if(r.hasOwnProperty(x)) this[x] = r[x];
     this._P = [
         {
-            pos:function(){return {x:this.o.x, y:this.o.y}},
+            pos:function(){return {x:this.o.x, y:this.o.y};},
             MoveBy:function(x, y){this.o.x += x; this.o.y += y; this.o.w -= x; this.o.h -= y;}
         },
         {
-            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y}},
+            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y};},
             MoveBy:function(x, y){this.o.w += x; this.o.y += y; this.o.h -= y;}
         },
         {
-            pos:function(){return {x:this.o.x, y:this.o.y + this.o.h}},
+            pos:function(){return {x:this.o.x, y:this.o.y + this.o.h};},
             MoveBy:function(x, y){this.o.x += x; this.o.h += y; this.o.w -= x;}
         },
         {
-            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + this.o.h}},
+            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + this.o.h};},
             MoveBy:function(x, y){this.o.w += x; this.o.h += y;}
         },
         {
-            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y}},
+            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y};},
             MoveBy:function(x, y){this.o.y += y; this.o.h -= y;}
         },
         {
-            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y + this.o.h}},
+            pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y + this.o.h};},
             MoveBy:function(x, y){this.o.h += y;}
         },
         {
-            pos:function(){return {x:this.o.x, y:this.o.y + (this.o.h / 2)}},
+            pos:function(){return {x:this.o.x, y:this.o.y + (this.o.h / 2)};},
             MoveBy:function(x, y){this.o.x += x; this.o.w -= x;}
         },
         {
-            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h / 2)}},
+            pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h / 2)};},
             MoveBy:function(x, y){this.o.w += x;}
         }
     ];
@@ -53,8 +55,8 @@ function Block(r)//x, y, w, h, Text)
             ctx.lineWidth = 1;
             ctx.strokeRect(p.x - 2, p.y - 2, 4, 4);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
-    }
-    var GetId = function(){ return '' + Items.indexOf(this.o) + '.' + this.x};
+    };
+    var GetId = function(){ return '' + Items.indexOf(this.o) + '.' + this.x;};
     for(var x = this._P.length - 1; x >= 0; x--)
     {
         this._P[x].o = this;
@@ -64,7 +66,7 @@ function Block(r)//x, y, w, h, Text)
     }
 
     if(this.text) this.text = this.text.split("\n");
-    this.Child = function(c) {return this._P[c];}
+    this.Child = function(c) {return this._P[c];};
     this.MoveBy = function(dx, dy)
     {
         if(!this.Moved)
@@ -84,7 +86,7 @@ function Block(r)//x, y, w, h, Text)
             dx: this._dx,
             dy: step
         };
-    }
+    };
     this.Draw = function(Type)
     {
         //var x = this._P[0].x, y = this._P[0].y;
@@ -150,7 +152,6 @@ function Block(r)//x, y, w, h, Text)
         {
             var txt = this.text;
             var l = this.GetTextLayout();
-            var step = 20;
             var Y = Math.floor((y - l.y) / l.dy);
             var X = Math.floor((x - l.x) / l.dx);
             if(X >= 0 && Y >= 0 && Y < txt.length && X < txt[Y].length)
@@ -184,7 +185,7 @@ function Block(r)//x, y, w, h, Text)
                         var l = this.o.GetTextLayout();
                         var x = l.x + (this.x + this.l) * l.dx;
                         var y = l.y + (this.y + 1) * l.dy + 2;
-                        return {x: x, y: y}
+                        return {x: x, y: y};
                     }
                 };
                 this.exps.push(r);
@@ -192,14 +193,14 @@ function Block(r)//x, y, w, h, Text)
             }
         } 
         return this;
-    }
+    };
     this.OnOk = function()
     {
         var Memo = document.getElementById("blocktext");
         this.text = undefined;
         if(Memo.value !== "") this.text = Memo.value.split("\n");
         hideBlockDialog();
-    }
+    };
     this.AutoSize = function()
     {
         ctx.font = this._font;
@@ -213,7 +214,7 @@ function Block(r)//x, y, w, h, Text)
             if(w > mx) mx = w;
         }
         this.w = mx + (lay.x - this.x) * 2;
-    }
+    };
     this.OnDblClick = function()
     {
         if(Dialogs) Dialogs.Create(
@@ -230,7 +231,7 @@ function Block(r)//x, y, w, h, Text)
                 h:"Высота"
             }
         }, this);        
-    }
+    };
 }
 
 var CBlock =
@@ -286,6 +287,6 @@ var CBlock =
         };
         CMenu.Add({create:{_: {label: "Блок", click: this.OnCreate}}});
     }
-}
+};
 
 Main.Modules.push(CBlock);

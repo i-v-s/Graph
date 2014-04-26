@@ -1,3 +1,4 @@
+"use strict";
 
 var Dialogs = 
 {
@@ -24,7 +25,7 @@ var Dialogs =
 		tb.width = "100%";
 		tb.cellspacing = "0";
 		tb.cellpadding = "4";
-		for(x in Dlg.data) 
+		for(var x in Dlg.data) 
 		{
 			var v = Dlg.data[x];
 
@@ -55,7 +56,7 @@ var Dialogs =
 				if(this.type === "textarea") v = v.split("\n");
 				this.__obj[this.__var] = v;
 				if(this.__upd) this.__upd();
-			}
+			};
 			td.appendChild(i);
 			tr.appendChild(td);
 			tb.appendChild(tr);
@@ -90,4 +91,4 @@ var Dialogs =
 		document.body.appendChild(d);
 		return d;
 	}
-}
+};

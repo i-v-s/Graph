@@ -1,11 +1,10 @@
+"use strict";
+
 function Arc(p1, p2, A)
 {
     this.p1 = p1;
     this.p2 = p2;
     this.a = A * Math.PI / 180;
-    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);}
-    this.toJSON = function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI, _:"Arc"};};
-    this.OnLoad = function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180; return this.p1 && this.p2;},
     this._P =
     {
         o: this,
@@ -22,7 +21,7 @@ function Arc(p1, p2, A)
             //console.log("a = " + (this.o.a * 180 / Math.PI) + ", AB = " + (ABd2 * 2) + ", M = " + ((ABy * x - ABx * y) / ABd2 * 0.5));
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
-        GetId: function(){ return '' + Main.GetId(this.o) + ".0"},
+        GetId: function(){ return '' + Main.GetId(this.o) + ".0";},
         Draw: function(Type)
         {
             ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
@@ -30,8 +29,16 @@ function Arc(p1, p2, A)
             if(Type > 0 || this.Sel) ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
         }
     };
-    this.Child = function(c) {return this._P;};
-    this.Update = function()
+    if(p1) this.Update();
+}
+
+Arc.prototype = 
+{
+    serialize: function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);},
+    toJSON: function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI, _:"Arc"};},
+    OnLoad: function() {this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2); this.a *=  Math.PI / 180; return this.p1 && this.p2;},
+    Child: function(c) {return this._P;},
+    Update: function()
     {
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
@@ -45,9 +52,8 @@ function Arc(p1, p2, A)
         this.R = Math.sqrt(rx * rx + ry * ry);
         this.a1 = Math.atan2(-ry, -rx);
         this.a2 = Math.atan2(p2.y - this.cy, p2.x - this.cx);
-    }
-    if(p1) this.Update();
-    this.Draw = function(Type)
+    },
+    Draw: function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
@@ -56,8 +62,8 @@ function Arc(p1, p2, A)
         ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2);
         ctx.stroke();
         if(this.Sel || Type > 0) this._P.Draw(1);
-    };
-    this.Hit = function(x, y)
+    },
+    Hit: function(x, y)
     {
         if(Main.hitPriority <= 1) return null;
         this.Update();
@@ -70,21 +76,21 @@ function Arc(p1, p2, A)
         var a = Math.atan2(dy, dx);
         if(this.a2 > this.a1) return (a > this.a2 || a < this.a1) ? null : this;
         else return (a > this.a2 && a < this.a1) ? null : this;
-    };
-    this.RHit = function(l, t, r, b)
+    },
+    RHit: function(l, t, r, b)
     {
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
         return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
-    };
-    this.vec = function(P)
+    },
+    vec: function(P)
     {
         var p = P.pos();
         if(P === this.p1) return {x: (this.cy - p.y) / this.R, y: (p.x - this.cx) / this.R};
         if(P === this.p2) return {x: (p.y - this.cy) / this.R, y: (this.cx - p.x) / this.R};
         return null;
-    }
-    this.MoveBy = function(dx, dy)
+    },
+    MoveBy: function(dx, dy)
     {
         if(!this.Moved)
         {
@@ -92,8 +98,8 @@ function Arc(p1, p2, A)
             this.p2.MoveBy(dx, dy);
             this.Moved = true;
         }
-    };
-}
+    }
+};
 
 var CArc =
 {
@@ -150,6 +156,6 @@ var CArc =
         label: "Дугу",
         click:null
     }]
-}
+};
 
 Main.Modules.push(CArc);

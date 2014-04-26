@@ -11,11 +11,12 @@
         {
             var css = document.getElementById('CSS');
             css.href = f;
-            css.onload = Main.OnCSS;
+            Main.OnCSS(f);
         }
     </script>
 </head>
 <body>
+	<input id="import" type="file" style="display:none" multiple>
 <!-- Канва -->
     <canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <!-- Главное меню -->
@@ -96,10 +97,11 @@
 <script src="block.js"></script>
 <script src="arcs.js"></script>
 <script src="cnc.js"></script>
-<script src="user.js"></script>
 <script src="db.js"></script>
 <script src="dialogs.js"></script>
 <script src="debug.js"></script>
+<script src="kicad.js"></script>
+<script src="network.js"></script>
 <script>Main.Init()</script>
 </body>
 </html>

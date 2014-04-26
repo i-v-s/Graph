@@ -1,3 +1,5 @@
+"use strict";
+
 var CMenu =
 {
     Root:null,
@@ -29,7 +31,7 @@ var CMenu =
                 var ul = li.getElementsByTagName('ul')[0];
                 if(!ul)
                 {
-                    var ul = document.createElement("ul");
+                    ul = document.createElement("ul");
                     li.appendChild(ul);
                 }
                 this.Add(o2, ul);
@@ -41,6 +43,6 @@ var CMenu =
 
     }
 
-}
+};
 
 CMenu.Root = document.getElementById("mainmenu");

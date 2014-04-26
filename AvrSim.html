@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>AVR simulator</title>
+	<link rel="stylesheet" href="graph.css" media="screen">
+    <link id="CSS" rel="stylesheet" href="lite.css" media="screen">
+    <link rel="alternate" type="application/rss+xml" 
+     title="Статьи с сайта htmlbook.ru" href="/avrxml/ATtiny2313.xml">
+	<style>
+		table#code > tr:hover
+		{
+			background: rgba(160, 231, 255, 0.6);
+		}
+		table#code > tr.pc
+		{
+			background: rgba(255, 231, 160, 0.6);
+		}
+		table#code td
+		{
+ 		   padding: 0px 10px; /* Поля вокруг текста */ 
+    		/*border: 1px solid #a52a2a; /* Граница вокруг ячеек */ 
+		}
+		.code
+		{
+			font-family: monospace;
+		}
+	</style>
+</head>
+<body>
+
+<div class="group" id="mainmenu" style="width:100%"><div>
+	<input id="fileInput" type="file" size="50" onchange="processFiles(this.files)">
+	<!-- <button>Открыть</button> -->
+	<button onclick="avr.OnRun()">Пуск</button>
+	<button onclick="avr.Step()">Шаг</button>
+</div></div>
+<table style="width:100%;height:70%"><tr>
+<td width="50%">
+	<div class="group">
+		<h1>Дизассемблер</h1>
+		<!-- <table style="font-family: monospace;">
+			<tr>
+				<th> Адрес </th>
+				<th> Код </th>
+				<th> Дизассемблер </th>
+			</tr>
+		</table> -->
+		<div class="code" style="height:300px;overflow:auto;margin:10px">
+			<table id="code" onclick="avr.oncodeclick()">
+			</table>
+		</div>
+	</div>
+	<div class="group">
+		<h1>Память</h1>
+		<div><table id="code" style="border-spacing:50px">
+			<tr>
+
+		
+			</tr>
+		</table></div>	
+	</div>
+
+</td>
+
+<td>
+	<div class="group">
+		<h1>Регистры</h1>
+		<div class="code">
+			<table id="reg"></table>
+		Флаги I T H S V N Z C
+		<br>
+		PC<input id="pc" style="width:40px"> SP<input style="width:40px;">
+		</div>
+	</div>
+	<div class="group">
+		<h1>Периферия</h1>
+		<div class="code">
+			<table></table>
+		</div>
+	</div>
+</td>
+</tr></table>
+<script type="text/javascript" src="avrxml/ATtiny2313.js"></script>
+<script type="text/javascript" src="AVRsim.js"></script>
+
+</body>
+</html>

@@ -1,8 +1,11 @@
+"use strict";
+
 var Grid = {
     MainClear: Main.Clear,
     MainRedraw: Main.Redraw,
     MAM: null,
     Step:10,
+    Style:"#808080",
     Draw: function()
     {
         Grid.MainClear();
@@ -10,7 +13,7 @@ var Grid = {
         ctx.beginPath();
         var x;
         var os = 1 / Main.Scale;
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.2;
         var step = Grid.Step;
         for(x = Math.ceil(-Main.OffsetX / (step * Main.Scale)) * step; x * Main.Scale + Main.OffsetX < w; x += step)
         {
@@ -22,7 +25,7 @@ var Grid = {
             ctx.moveTo(-Main.OffsetX * os, x);
             ctx.lineTo((w - Main.OffsetX) * os, x);
         }
-        ctx.strokeStyle = "#808080";
+        ctx.strokeStyle = Grid.Style;
         ctx.stroke();
         ctx.lineWidth = 1.0;
         //ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -68,7 +71,7 @@ var Grid = {
             _4:{label: "Параметры"}
         }}});
     }
-}
+};
 
 Main.Clear = Grid.Draw;
 Grid.MAM = Main.OnAlignedMove;
