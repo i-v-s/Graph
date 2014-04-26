@@ -5,9 +5,15 @@ function Point(x, y)
     this.x = x;
     this.y = y;
     this._der = [];
-    this.Serialize = function() {return this.x.toString() + "," + this.y;};
-    this.pos = function() {return {x:this.x, y:this.y};};
-    this.Draw = function(Type)
+    this.Sel = false;
+    this.Moved = false;
+}
+
+Point.prototype = 
+{
+    serialize: function() {return this.x.toString() + "," + this.y;},
+    pos: function() {return {x:this.x, y:this.y};},
+    Draw: function(Type)
     {
         ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
         if(Type > 0 || this.Sel || !this._der.length)
@@ -15,8 +21,8 @@ function Point(x, y)
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x - 2, this.y - 2, 4, 4);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
-    };
-    this.MoveBy = function(dx, dy)
+    },
+    MoveBy: function(dx, dy)
     {
         if(!this.Moved)
         {
@@ -25,8 +31,8 @@ function Point(x, y)
             this.Moved = true;
             if(this.Owner) this.Owner.OnPtMoveBy(this, dx, dy);
         }
-    };
-    this.Hit = function(x, y)
+    },
+    Hit: function(x, y)
     {
         var dx = Math.abs(this.x - x);
         var dy = Math.abs(this.y - y);
@@ -37,12 +43,9 @@ function Point(x, y)
             Main.hitPriority = 0;
             return this;
         } else return null;
-    };
-    this.RHit = function(l, t, r, b)
-    {
-        return l < this.x && t < this.y && r > this.x && b > this.y;
-    };
-    this.OnDblClick = function()
+    },
+    RHit: function(l, t, r, b) {return l < this.x && t < this.y && r > this.x && b > this.y;},
+    OnDblClick: function()
     {
         if(Dialogs) Dialogs.Create(
         {
@@ -54,18 +57,25 @@ function Point(x, y)
                 y:"Y"
             }
         }, this);
-    };
-    this.GetPSel = function() {return this.Sel;};
-    this.Sel = false;
-    this.Moved = false;
-}
+    },
+    GetPSel: function() {return this.Sel;}
+};
 
 function Line(p1, p2)
 {
     this.p1 = p1;
     this.p2 = p2;
-    this.Serialize = function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);};
-    this.OnLoad = function() 
+    if(typeof p1 === "object" ) PushDer(p1, this);
+    if(typeof p2 === "object" ) PushDer(p2, this);
+    this.Sel = false;
+    this.Moved = false;
+}
+
+
+Line.prototype = 
+{
+    serialize: function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);},
+    OnLoad: function()
     { 
         this.p1 = Main.ById(this.p1);
         this.p2 = Main.ById(this.p2);
@@ -74,9 +84,9 @@ function Line(p1, p2)
         this.p2._der.push(this);
         return  true;
     },
-    this.Draw = function(Type)
+    Draw: function(Type)
     {
-    	var color = this.color ? this.color : Main.Color;
+        var color = this.color ? this.color : Main.Color;
         ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": color);
         ctx.lineWidth = this.width ? this.width : 0.5;
         ctx.beginPath();
@@ -85,8 +95,8 @@ function Line(p1, p2)
         p = this.p2.pos();
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
-    };
-    this.MoveBy = function(dx, dy)
+    },
+    MoveBy: function(dx, dy)
     {
         if(!this.Moved)
         {
@@ -94,8 +104,8 @@ function Line(p1, p2)
             this.p2.MoveBy(dx, dy);
             this.Moved = true;
         }
-    };
-    this.Hit = function(x, y)
+    },
+    Hit: function(x, y)
     {
         if(Main.hitPriority <= 1) return null;
         var p1 = this.p1.pos();
@@ -114,31 +124,31 @@ function Line(p1, p2)
         m /= l;
         if(Math.abs(m) < Main.adm) { Main.hitPriority = 1; return this;}
         return  null;
-    };
-    this.RHit = function(l, t, r, b)
+    },
+    RHit: function(l, t, r, b)
     {
         var p1 = this.p1.pos();
         var p2 = this.p2.pos();
         return (p1.x > l && p1.y > t && p1.x < r && p1.y < b) && (p2.x > l && p2.y > t && p2.x < r && p2.y < b);
-    };
-    this.setP2 = function(P)
+    },
+    setP2: function(P)
     {
         RemoveFromArray(this.p2._der, this);
         this.p2 = P;
         PushDer(P, this);
-    }
-    this.setP1 = function(P)
+    },
+    setP1: function(P)
     {
         RemoveFromArray(this.p1._der, this);
         this.p1 = P;
         PushDer(P, this);
-    }    
-    this.del = function()
+    },   
+    del: function()
     {
         RemoveFromArray(this.p1._der, this);
         RemoveFromArray(this.p2._der, this);
-    };
-    this.vec = function(p)
+    },
+    vec: function(p)
     {
         var a = this.p1.pos();
         var b = this.p2.pos();
@@ -148,13 +158,9 @@ function Line(p1, p2)
         if(l > 0.000000001) {x /= l; y /= l;}
         if(p === this.p1) return {x: x, y: y};
         if(p === this.p2) return {x: -x, y: -y};
-    };
-    this.GetPSel = function() {return this.Sel || this.p1.Sel || this.p2.Sel;};
-    if(typeof p1 === "object" ) PushDer(p1, this);
-    if(typeof p2 === "object" ) PushDer(p2, this);
-    this.Sel = false;
-    this.Moved = false;
-}
+    },
+    GetPSel: function() {return this.Sel || this.p1.Sel || this.p2.Sel;}
+};
 
 var CLine =
 {
