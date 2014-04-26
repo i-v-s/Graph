@@ -1,7 +1,56 @@
 "use strict";
+/*
+Система дифференциальных уравнений:
 
+	X(0) = X0;
+
+	X' = <dX> = f(X, t);
+
+	где X - вектор переменных состояния,
+		dX - вектор производных переменных состояния,
+		f - функция расчёта производных X по времени,
+		t - время, с.
+
+Принцип работы явных методов интегрирования:
+
+	X(t + h) = Метод(X(t), X(t - h) .., f)
+
+	где h - шаг времени.
+
+Система уравнений узловых потенциалов:
+
+	Y * V = I
+
+	где Y - матрица проводимостей,
+		V - вектор напряжений в узлах. Некоторые элементы V заданы постоянными, остальные неизвестны. 
+			Некоторые не могут быть вычислены.
+		I - вектор задающих токов в узлах 
+
+Функция расчёта производных f(X, t):
+
+	Дано: X, t, Vc(некоторые напряжения заданы жёстко)
+	0. 							(при необходимости сформировать матрицу проводимостей Y, используя методы addY)
+	1. X => I, Vc               (используются методы устройств addI())
+	2. V = Y^(-1) * I			(решение системы уравнений узловых потенциалов) 
+	3. X, V, t => dX			(используются методы устройств f())
+	
+Функция съёма данных для визуализации Result(X, t):
+
+	Шаги до 3 совпадают с f(X, t). Функция Result должны вызываться сразу после запуска f(X, t), где X и t
+	соответствуют текущему состоянию. 
+ 
+Могут происходить события, в результате которых матрица проводимостей Y будет изменена
+*/
 var Models = {};
 var Net = null;
+
+function createVec(n)
+{
+	if(Float64Array) return new Float64Array(n);
+	var r = Array(n); 
+	while(n--) r[n] = 0.0;
+	return r;
+}
 
 function Network(Devices, Nodes, Branches)
 {
@@ -43,7 +92,14 @@ function Network(Devices, Nodes, Branches)
 			y: b.y ? b.y : 0.0
 		};
 	}
+	// Создадим вектор переменных состояния в начальный момент
+	var xc = 0;
+	for(var n in Devices) if(Models[Devices[n].m].sc) xc += Models[Devices[n].m].sc;
+	this.X0 = createVec(xc);
 	// Пересоздадим устройства:
+	xc = 0;
+	var dev_f = []; // Устройства с методом f
+	var dev_I = []; // Устройства с методом addI
 	for(var n in Devices)
 	{
 		var d = Devices[n];
@@ -53,10 +109,13 @@ function Network(Devices, Nodes, Branches)
 		var brs = [];
 		for(var t in d.b)
 			brs[t] = Branches[d.b[t]];
-		var id = d.i;
-		d = new Models[d.m].ctor(d.f, nodes, brs);
-		d.i = id;
-		Devices[n] = d; 
+		var m = Models[d.m];
+		var nd = new m.ctor(d.f, nodes, brs, this.X0, xc);
+		if(m.sc) xc += m.sc;
+		nd.i = d.i;
+		if(nd.f) dev_f.push(nd);
+		if(nd.addI) dev_I.push(nd);
+		Devices[n] = nd; 
 	}
 	
 	var Y = null;
@@ -67,7 +126,7 @@ function Network(Devices, Nodes, Branches)
 		// Инициализируем проводимости
 		for(var n in Nodes) Nodes[n].y = 0.0;
 		for(var b in Branches) Branches[b].y = 0.0;
-		for(var d in Devices) if(Devices[d].AddY) Devices[d].AddY();
+		for(var d in Devices) if(Devices[d].addY) Devices[d].addY();
 		
 		Y = null;
 		var Size = Nodes.length + Branches.length * 2;
@@ -263,6 +322,7 @@ function Network(Devices, Nodes, Branches)
 
 	function TriangulateYList()
 	{	
+		LU.length = 0;
 		//LU.Reset();
 		//LUIndex = 1;
 		//pLU.Reset();
@@ -475,15 +535,15 @@ function Network(Devices, Nodes, Branches)
 		if(Errors.length) for(var e in Errors) console.log(Errors[e]);
 		
 	}
-    function Test()
+    function Test(X, t)
     {
 		// Инициализируем проводимости
 		for(var n in Nodes) {Nodes[n].y = 0.0; Nodes[n].I = 0;}
 		for(var b in Branches) Branches[b].y = 0.0;
 		for(var d in Devices)
         {
-            if(Devices[d].AddY) Devices[d].AddY();
-            if(Devices[d].AddI) Devices[d].AddI();
+            if(Devices[d].addY) Devices[d].addY();
+            if(Devices[d].addI) Devices[d].addI(X, t);
         }
         // Проверяем уравнение Y * V = I
         var I = Array(Nodes.length);
@@ -503,16 +563,27 @@ function Network(Devices, Nodes, Branches)
                 I[q] -= dI;
         }
         for(var n in Nodes) 
-            if(!Nodes[n].T && I[n] != Nodes[n].I) 
+            if(!Nodes[n].T && Math.abs(I[n] - Nodes[n].I) > 1E-6) 
                 console.log("В узле " + n + " не совпадают задающие токи. Задано " + Nodes[n].I + ", получено " + I[n]);
     };
-	this.Solve = function () 
+    this.GetResult = function()
     {
+    	var Result = [];
+    	for(var d in Devices)
+    	{
+    		var dev = Devices[d];
+    		if(!dev.Get) continue;
+    		Result[d] = dev.Get();
+    	}
+    	return Result;
+    };
+	this.f = function(dX, X, t) 
+    {// Следует получить вектор производных dY из вектора Y и из вектора постоянных напряжений в узлах
 	    PrepareYList();
 	    TriangulateYList();
 
         for(var n in Nodes) Nodes[n].I = 0.0;
-        for(var d in Devices) if(Devices[d].AddI) Devices[d].AddI();
+        for(var d in dev_I) dev_I[d].addI(X, t);
         for(var n in Nodes) if(!Nodes[n].T) Nodes[n].V = Nodes[n].I;
         
 	    var Node = 0;
@@ -543,27 +614,50 @@ function Network(Devices, Nodes, Branches)
 	    }
 
 	    //Dump();
-        Test();
+        Test(X, t);
+        for(var d in dev_f) dev_f[d].f(dX, X, t);
+	};
+
+}
+
+
+function Euler(Devices, Net, cb)
+{
+	var h = 0.00000001;
+	var X = Net.X0;
+	var dX = createVec(X.length);
+	var d = +new Date() + 100; 
+	this.Run = function()
+	{
+		var c = 0;
+		for(var t = 0; t < 0.01; t += h)
+		{
+			Net.f(dX, X, t);
+			if(c++ > 100)
+			{
+				if(+new Date() >= d)
+				{
+					cb(Net.GetResult());
+					d = +new Date() + 100;
+				}
+				c = 0;
+			}
+			for(var x in X) X[x] += dX[x] * h;
+		}
 	};
 }
 
 
-
-
-
-
-function toFunc(text, name)
-{
-	var x, y, e = text.length;
-	for(x = 0; text[x] !== '('; x++){if(x >= e) return null;}
-	for(y = x; text[y] !== ')'; y++){if(y >= e) return null;}
-	var p = text.substr(x + 1, y - x - 1).split(',');
-	return new Function(p[0], p[1], p[2], text.substr(y + 1));
-
-}
-
 self.addEventListener("message", function(e)
 {
+	function toFunc(text, name)
+	{
+		var x, y, e = text.length;
+		for(x = 0; text[x] !== '('; x++){if(x >= e) return null;}
+		for(y = x; text[y] !== ')'; y++){if(y >= e) return null;}
+		var p = text.substr(x + 1, y - x - 1).split(',');
+		return new Function(p[0], p[1], p[2], p[3], p[4], text.substr(y + 1));
+	}
 	var data = e.data;
 	if(data.Models) for(var m in data.Models)
 	{
@@ -578,12 +672,14 @@ self.addEventListener("message", function(e)
 	}
 	switch(data.cmd)
 	{
-	case 'solve':
-		Net.Solve();
-		self.postMessage(result);
+	case 'static':
+		Net.f(createVec(Net.X0.length), Net.X0, 0);
+		self.postMessage(Net.GetResult());
 		break;
-	
-	
+	case 'start':
+		var int = new Euler(data.Devices, Net, self.postMessage);
+		int.Run();
+		break;
 	}
 
 }, false);

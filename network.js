@@ -151,7 +151,7 @@ function Network()
 			if(!d.M.ctor) continue;
 			//var t = d.M.ctor.toString();
 			d = new d.M.ctor(d.info.Fields, dN, dB);
-			if(d.AddI || d.AddY) Devices[l++] = d;
+			if(d.addI || d.addY) Devices[l++] = d;
 		}
 		Devices.length = l;
 	}
@@ -163,7 +163,7 @@ function Network()
 		// Инициализируем проводимости
 		for(var n in Nodes) Nodes[n].y = 0.0;
 		for(var b in Branches) Branches[b].y = 0.0;
-		for(var d in Devices) if(Devices[d].AddY) Devices[d].AddY();
+		for(var d in Devices) if(Devices[d].addY) Devices[d].addY();
 		
 		Y = null;
 		var Size = Nodes.length + Branches.length * 2;
@@ -580,8 +580,8 @@ function Network()
 		for(var b in Branches) Branches[b].y = 0.0;
 		for(var d in Devices)
         {
-            if(Devices[d].AddY) Devices[d].AddY();
-            if(Devices[d].AddI) Devices[d].AddI();
+            if(Devices[d].addY) Devices[d].addY();
+            if(Devices[d].addI) Devices[d].addI();
         }
         // Проверяем уравнение Y * V = I
         var I = Array(Nodes.length);
@@ -611,7 +611,7 @@ function Network()
 	    TriangulateYList();
 
         for(var n in Nodes) Nodes[n].I = 0.0;
-        for(var d in Devices) if(Devices[d].AddI) Devices[d].AddI();
+        for(var d in Devices) if(Devices[d].addI) Devices[d].addI();
         for(var n in Nodes) if(!Nodes[n].T) Nodes[n].V = Nodes[n].I;
         
 	    var Node = 0;
@@ -654,7 +654,7 @@ function Network()
 		ctor: function(fields, nodes, brs)
 		{
 			var y = 1.0 / parseFloat(fields[1].t);
-			this.AddY = function()
+			this.addY = function()
 			{
 				brs[0].y += y;
 			};
@@ -670,7 +670,7 @@ function Network()
             var R = 0;
 			var oL = 1.0 / parseFloat(fields[1].t);
 			
-	        this.AddI = function()
+	        this.addI = function()
 	        { // Ток вытекает из узла 2 в узел 1
 	            nodes[1].I += this.I;
 	            nodes[2].I -= this.I;
@@ -727,14 +727,12 @@ function NetLoader()
                 else r += " пин " + n + ":" + dnn;
 			}
 			console.log(r);
-		}
-		if(Errors.length) for(var e in Errors) console.log(Errors[e]);
-		
+		}	
 	}
 
 	function Load(Items)
 	{
-		var Devices = [], Nodes = [], Branches = [];
+		var Devices = [], Nodes = [], Branches = [], DevMap = [];
 		
 		var GND = {T:true, V:0, pins:[]};
 		function Add(n, pin) 
@@ -782,7 +780,6 @@ function NetLoader()
 			this.V = 0.0; // Напряжение (относительно земли)
 			Nodes.push(this);
 		}
-		
 		for(var i in Items) if(Items[i].GetInfo)
 		{
 			var info = Items[i].GetInfo();
@@ -800,10 +797,11 @@ function NetLoader()
 			// Нашли модель, создаём устройство
 			var pins = info.Pins;
 			var mpins = Model.nodes;
-			var dev = {i:info.Name, m:ModelName, n:pins, b:null, f:{v:info.Fields[1].t}};
+			var dev = {i:info.Name, m:ModelName, n:[], b:null, f:{v:info.Fields[1].t}};
 			for(var t in mpins) // Проходим по узлам модели
 			{
 				var p = pins[t];
+				dev.n[t] = p;
 				if(!p && t[0] !== '_') Errors.push("Узел " + t + " мат. модели " + ModelName + " не существует.");
 				if(mpins[t] && mpins[t].T) // Узел с заданным напряжением
 				{
@@ -813,6 +811,7 @@ function NetLoader()
 				new Node(p);			
 			}			
 			Devices.push(dev);
+			DevMap.push(Items[i]);
 		}
 		else if(Items[i].p1 && Items[i].p2)
 		{
@@ -826,11 +825,7 @@ function NetLoader()
 		}
 		// Чистим узлы:
 		var l = 0;
-		for(var t = 0, e = Nodes.length; t < e; t++) if(Nodes[t].pins) 
-		{
-			Nodes[l++] = Nodes[t];
-			delete Nodes[t].pins;
-		}
+		for(var t = 0, e = Nodes.length; t < e; t++) if(Nodes[t].pins) Nodes[l++] = Nodes[t];
 		Nodes.length = l;
 		// Чистим устройства, создаём ветви и инициализируем контакты
 		var l = 0;
@@ -841,7 +836,7 @@ function NetLoader()
 			{
 				var node = d.n[k]._enode;
 				if(node === GND) d.n[k] = null;
-				else for(var n in Nodes) if(Nodes[n] === node) {d.n[k] = parseInt(n); break;}
+				else for(var n in Nodes) if(Nodes[n] === node) {d.n[k] = parseInt(n); break;}			
 			}
 			var dB = [];
 			var br = Models[d.m].branches;
@@ -856,24 +851,42 @@ function NetLoader()
 				Branches.push(br);
 			}
 			d.b = dB;
-			if(Models[d.m].ctor) Devices[l++] = Devices[t];
+			if(Models[d.m].ctor) 
+			{
+				Devices[l] = Devices[t];
+				DevMap[l++] = DevMap[t];
+			}
 		}
 		Devices.length = l;
-		// Чистим экранные элементы
-		for(var i in Items) if(Items[i]._enode) Items[i]._enode = null; 
-		return {Devices: Devices, Nodes:Nodes, Branches:Branches};
+		DevMap.length = l;
+		// Снова чистим узлы
+		for(var t in Nodes)
+		{
+			var p = Nodes[t].pins;
+			for(var x in p) p[x]._enode = undefined;
+			delete Nodes[t].pins;
+		}
+		for(var x in GND.pins) GND.pins[x]._enode = undefined;
+		return {Devices: Devices, Nodes:Nodes, Branches:Branches, DevMap:DevMap};
 	}
 	function StoreModel(Model)
 	{
-		var r = {ctor :Model.ctor.toString()};
-		if(Model.nodes) r.nodes = Model.nodes;
-		if(Model.branches) r.branches = Model.branches;
+		var r = {};
+		for(var t in Model) r[t] = Model[t];  
+		if(r.ctor) r.ctor = r.ctor.toString();
 		return r;
 	}
+	var DevMap;
 	function onMessage(e)
 	{
-		
-		
+		for(var x in e.data)
+		{
+			var d = e.data[x];
+			var i = DevMap[x].GetInfo();
+			for(var f in d.Fields) 
+				i.Fields[f].t = d.Fields[f];
+		}
+		Main.Redraw();
 	}
 	this.Run = function()
 	{
@@ -886,10 +899,12 @@ function NetLoader()
 		for(var x in Models) if(Models[x].ctor) models[x] = StoreModel(Models[x]);
 		// Загружаем схему
 		var Sh = Load(Items);
-		//Dump(Sh.Devices, Sh.Nodes, Sh.Branches);
+		DevMap = Sh.DevMap;
+		if(Errors.length) for(var e in Errors) console.log(Errors[e]);
+		Dump(Sh.Devices, Sh.Nodes, Sh.Branches);
 		// Загружаем узлы
 		var data = {Models:models, Devices:Sh.Devices, Nodes: Sh.Nodes, Branches:Sh.Branches};
-		data.cmd = "solve";
+		data.cmd = "start";
 		worker.addEventListener('message', onMessage);
 		worker.postMessage(data);
 	};
@@ -904,7 +919,7 @@ function NetLoader()
 		{
 			var y = 1.0 / parseFloat(fields.v);
 			var br = brs[0];
-			this.AddY = function()
+			this.addY = function()
 			{
 				br.y += y;
 			};
@@ -912,34 +927,37 @@ function NetLoader()
 		nodes: {1:null, 2:null},
 		branches: [{p:1, q: 2}]
 	};
-	Models.Probe = {
-			ctor: function(fields, nodes, brs)
-			{
-				
-			},
-			nodes: {1:null}
-	};
-	Models.INDUCTOR = { // Индуктивность
+	Models.TST = {
 		ctor: function(fields, nodes, brs)
 		{
-			this.I = 1.0;
-	        this.dI = 0.0;
+			var n = nodes[1];
+			this.Get = function()
+			{
+				return {Fields:{1:n.V.toPrecision(3) + "В"}};
+			};
+		},
+		nodes: {1:null}
+	};
+	Models.INDUCTOR = { // Индуктивность
+		ctor: function(fields, nodes, brs, X0, o)
+		{
+			X0[o] = 0.0;
 	        var R = 0;
 			var oL = 1.0 / parseFloat(fields.v);
 			var n1 = nodes[1], n2 = nodes[2];
 				
-		    this.AddI = function()
+		    this.addI = function(X)
 		    { // Ток вытекает из узла 2 в узел 1
-		        n1.I += this.I;
-		        n2.I -= this.I;
+		        n1.I += X[o];
+		        n2.I -= X[o];
 		    };
-		    this.f = function()
+		    this.f = function(dX, X)
 		    {
-		        this.dI = (n2.V - n1.V - this.I * R) * oL;
+		        dX[o] = (n2.V - n1.V - X[o] * R) * oL;
 		    };
 	    },
 		nodes: {1:null, 2:null}, // Два узла, ветвей нет
-	    intvars: "I"
+	    sc: 1 // число переменных состояния
 	};
 }
 

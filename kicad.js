@@ -26,14 +26,42 @@ var KiCAD = new function()
 		if(st !== null) r.push(a.substr(st));
 		return r;
 	}
+    function ConnDraw(Type)
+    {
+    	ctx.fillStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
+        if(Type > 0 || this.Sel || !this._der || this._der.length === 0 || this._der.length > 2)
+        {
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            var p = this;
+            if(p.x === undefined) p = this.pos();
+            ctx.arc(p.x, p.y, 1, 0, 2 * Math.PI, false);
+            //ctx.fillStyle = '#000000';
+            ctx.fill();
+            //ctx.stroke();
+         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
+    };
+	
 	function Component(d)
 	{
-		var Fields = [];
+		this.fields = [];
 		var M = null; // Матрица поворота
 		var CmpName, Name;
-		var x = 0.0, y = 0.0;
+		this.x = 0.0;
+		this.y = 0.0;
 		var Def = null;
-		for(var t in d)
+		if(d.constructor === Object)
+		{
+			Def = d;
+			M = [1, 0, 0, 1];
+			for(var x in d.F) 
+				this.fields[x] = {
+						t: d.F[x].n, x: 0, y: x * 10, hp: "",
+						s: 10, v: false, h:false 
+					};
+			
+		} else
+		if(d.constructor === Array) for(var t in d)
 		{
 			var l = d[t];
 			var f = split(l); //l.split(' ');
@@ -45,9 +73,7 @@ var KiCAD = new function()
 				Name = f[2]; 
 				break;
 			case 'F': 
-				var i = parseInt(f[1]);
-				//if(Def) i = 
-				Fields[i] = 
+				this.fields[parseInt(f[1])] = 
 				{
 					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]), hp: f[8],
 					s: Km * parseInt(f[6]), v: f[3] == "V", h:parseInt(f[7]) == 1 
@@ -56,33 +82,32 @@ var KiCAD = new function()
 			case '\t': 
 				if(f.length == 3)
 				{
-					x = parseInt(f[1]) * Km;
-					y = parseInt(f[2]) * Km;
+					this.x = parseInt(f[1]) * Km;
+					this.y = parseInt(f[2]) * Km;
 				}
 				else
 					M = [parseFloat(f[0]), parseFloat(f[1]), -parseFloat(f[2]), -parseFloat(f[3])];
 				break;
 			}
 		}
-		for(var t in Fields)
+		for(var t in this.fields)
 		{
-			Fields[t].x -= x;
-			Fields[t].y -= y;			
+			this.fields[t].x -= this.x;
+			this.fields[t].y -= this.y;			
 		}
 		var Pins = {};
+		var th = this;
 		function GetPinPos(n)
 		{
 			var p = Def.pin[n];
-			return {x:x + M[0] * p.x + M[1] * p.y, y:y - M[3] * p.y - M[2] * p.x};			
+			return {x:th.x + M[0] * p.x + M[1] * p.y, y:th.y - M[3] * p.y - M[2] * p.x};			
 		}
-		var th = this;
 	    this.MoveBy = function(dx, dy)
 	    {
 	        if(!th.Moved)
 	        {
-	            x += dx;
-	            y += dy;
-	            //for(var t in Fields) {Fields[t].x += dx; Fields[t].y += dy;}
+	            th.x += dx;
+	            th.y += dy;
 	            th.Moved = true;
 	        }
 	    };
@@ -92,6 +117,7 @@ var KiCAD = new function()
 			pos:function(){return GetPinPos(this.p);},
 			MoveBy:this.MoveBy,
             GetId:function(){ return '' + Items.indexOf(th) + '.' + this.p;},
+            Draw:ConnDraw,
 			_enode:null // Электрический узел
 		};
 		this.GetPinPts = function(pts) // Вернуть текущие координаты всех точек в виде KiCAD
@@ -106,7 +132,13 @@ var KiCAD = new function()
 		this.Hit = function(X, Y)
 		{
 			if(!Def) return null;
-			X -= x; Y -= y;
+			for(var t in Pins)
+			{
+				var p = GetPinPos(t);
+				p.x -= X; p.y -= Y;
+				if(Math.abs(p.x) < Main.adm && Math.abs(p.y) < Main.adm) return Pins[t];
+			}
+			X -= this.x; Y -= this.y;
     		var d = M[0] * M[3] - M[1] * M[2];
     		var A = X * d * M[3] + Y * -d * M[1];
     		var B = X * -d * M[2] + Y * d * M[0];
@@ -116,6 +148,7 @@ var KiCAD = new function()
 		this.RHit = function(l, t, r, b)
 		{
 			if(!Def) return false;
+			var x = this.x, y = this.y;
 			var a = Def.l * M[0] + Def.t * M[1] + x;
 			if(a < l || a > r) return false; 
 			a = Def.r * M[0] + Def.b * M[1] + x;
@@ -135,15 +168,15 @@ var KiCAD = new function()
 
 	    	if(Def) 
 	    	{
-	    		ctx.transform(M[0], M[1], M[2], M[3], x, y);
+	    		ctx.transform(M[0], M[1], M[2], M[3], this.x, this.y);
 	    		Def.D();
 	    		//var d = M[0] * M[3] - M[1] * M[2];
 	    		//ctx.transform(d * M[3], -d * M[1], -d * M[2], d * M[0], 0, 0);
 	            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
 	    	}
-	    	for(var t in Fields)
+	    	for(var t in this.fields)
 	    	{
-	    		var f = Fields[t];
+	    		var f = this.fields[t];
 	    		if(!f.t || f.h) continue;
 	    		ctx.font = f.s.toString() + "px monospace";
 	    		ctx.textBaseline = "middle";// top, bottom
@@ -152,8 +185,8 @@ var KiCAD = new function()
 	    		else if(f.hp == 'L') ctx.textAlign =  "left";
 	    		else if(f.hp == 'R') ctx.textAlign =  "right";
 	    		
-	    		var fx = x + f.x * M[0] + f.y * M[1];
-	    		var fy = y - f.x * M[2] - f.y * M[3];
+	    		var fx = this.x + f.x * M[0] + f.y * M[1];
+	    		var fy = this.y - f.x * M[2] - f.y * M[3];
 	    		if(f.v ^ (M[0] === 0.0)) 
 	    		{
 	    			//ctx.rotate(-Math.PI * 0.5);
@@ -162,31 +195,19 @@ var KiCAD = new function()
 		            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
 	    		}
 	    		else ctx.fillText(f.t, fx, fy);
+	    		for(var x in Pins) if(MouseObject !== Pins[x]) Pins[x].Draw(0);
 	    	}
 	    };
 		this.GetInfo = function(){return {
 			CmpName: CmpName,
 			Name:Name,
 			Def:Def,
-			Fields:Fields,
+			Fields:this.fields,
 			Pins:Pins
 		};};
 	    this.GetPSel = function() {return this.Sel;};
 	    this.Sel = false;
 	}	
-    function ConnDraw(Type)
-    {
-    	ctx.fillStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
-        if(Type > 0 || this.Sel || this._der.length === 0 || this._der.length > 2)
-        {
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 1, 0, 2 * Math.PI, false);
-            //ctx.fillStyle = '#000000';
-            ctx.fill();
-            //ctx.stroke();
-         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
-    };
 	function loadSch(e)
 	{
 		var data = e.target.result;
@@ -418,7 +439,7 @@ var KiCAD = new function()
 	this.OnCreate = function(e)
 	{
 		var m = Lib[e.target.innerText];
-		var comp = new Component(d);
+		var comp = new Component(m);
 		Items.push(comp);		
 		
 	};
