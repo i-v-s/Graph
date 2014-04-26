@@ -4,7 +4,7 @@ var CDebug =
 {
 	Dump:function()
 	{
-		for(var i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i]._sel)
 		{
 			console.log(Items[i]);
 
@@ -13,14 +13,18 @@ var CDebug =
 	},
 	JSON:function()
 	{
-		for(var i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i]._sel)
 		{
 			console.log("" + i + ": " + DB.ItemToJSON(Items[i]));
 		}
 	},
+	globJSON:function()
+	{
+		console.log(DB.GetJSON());
+	},
 	der:function()
 	{
-		for(var i in Items) if(Items[i].Sel)
+		for(var i in Items) if(Items[i]._sel)
 		{
 			console.log("" + i + " .der: ");
 			for(d in Items[i]._der)
@@ -46,7 +50,7 @@ var CDebug =
 	},
 	list:function()
 	{
-		for(var x in Items) if(Items[x].Sel)
+		for(var x in Items) if(Items[x]._sel)
 		{
 			var i = Items[x];
 			var X = i.x + i.w + 20;
@@ -76,7 +80,7 @@ var CDebug =
 	},
 	run:function()
 	{
-		for(var x in Items) if(Items[x].Sel && Items[x].text)
+		for(var x in Items) if(Items[x]._sel && Items[x].text)
 		{
 			var text = Items[x].text.join("\n");
 			eval(text);
@@ -88,6 +92,7 @@ var CDebug =
     		debug:{label: "Отладка",
     			out:{label: "В консоль", click: this.Dump},
     			json:{label: "В JSON", click: this.JSON},
+    			gjson:{label: "Всё в JSON", click: this.globJSON},
     			der:{label: "_der", click: this.der},
     			glob:{label: "Глобальные объекты", click: this.glob},
     			list:{label: "Поля объекта", click: this.list},

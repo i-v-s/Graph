@@ -22,6 +22,11 @@ function PushDer(o, d) // Добавить к объекту o зависимы�
     else o._der = [d];
 }
 
+var workspace = // Рабочее пространство со всеми сохраняемыми данными
+{
+    sheets:{} // Листы
+}
+
 var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
@@ -80,8 +85,8 @@ var Main = {
         for(var x in Items)
         {
             var f = Items[x];
-            if(f === MouseObject) {(f.Sel ? Selected : Touched).push(f); md = false; continue;}
-            if(f.Sel) {Selected.push(f); continue;}
+            if(f === MouseObject) {(f._sel ? Selected : Touched).push(f); md = false; continue;}
+            if(f._sel) {Selected.push(f); continue;}
             if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) {Touched.push(f); continue;}
             
             try {f.Draw(0);} 
@@ -119,7 +124,7 @@ var Main = {
         for(var x = 0, y = 0, e = Items.length; x < e; x++)
         {
             var i = Items[x];
-            if((i.GetPSel && !i.GetPSel()) || !i.Sel) Items[y++] = i;
+            if((i.GetPSel && !i.GetPSel()) || !i._sel) Items[y++] = i;
             else
             {
                 if(i.del) i.del();
@@ -162,13 +167,13 @@ var Main = {
             {
                 if(MouseObject)
                 {
-                    if(MouseObject.OnSel) MouseObject.OnSel(!MouseObject.Sel);
-                    MouseObject.Sel = !MouseObject.Sel;
+                    if(MouseObject.OnSel) MouseObject.OnSel(!MouseObject._sel);
+                    MouseObject._sel = !MouseObject._sel;
                 }
                 else for(var x = 0; x < Items.length; x++)
                 {
-                    if(Items[x].OnSel && Items[x].Sel) Items[x].OnSel(false);
-                    Items[x].Sel = false;
+                    if(Items[x].OnSel && Items[x]._sel) Items[x].OnSel(false);
+                    Items[x]._sel = false;
                 }
             } 
             else
@@ -180,8 +185,8 @@ var Main = {
 
                 for(var x = 0; x < Items.length; x++) if(Items[x].RHit && Items[x].RHit(left, top, right, bottom))
                 {
-                    if(Items[x].OnSel && !Items[x].Sel) Items[x].OnSel(true);
-                    Items[x].Sel = true;
+                    if(Items[x].OnSel && !Items[x]._sel) Items[x].OnSel(true);
+                    Items[x]._sel = true;
                 }
             }
         }
@@ -197,16 +202,16 @@ var Main = {
         Main.MX = mx;
         Main.MY = my;
         var x;
-        if(!MouseObject.Sel)
+        if(!MouseObject._sel)
         {
-            for(var x = 0; x < Items.length; x++) Items[x].Sel = false;
-            MouseObject.Sel = true;
+            for(var x = 0; x < Items.length; x++) Items[x]._sel = false;
+            MouseObject._sel = true;
         }
-        for(var x = 0, e = Items.length; x < e; x++) if(Items[x].Sel && Items[x].MoveBy) { Items[x].MoveBy(dx, dy); Items[x].Moved = true;}
-        if(!MouseObject.Moved && MouseObject.MoveBy)
-            MouseObject.MoveBy(dx, dy);
-        for(var x = 0; x < Items.length; x++) Items[x].Moved = false;
-        MouseObject.Moved = false;
+        for(var x = 0, e = Items.length; x < e; x++) if(Items[x]._sel && Items[x].moveBy) { Items[x].moveBy(dx, dy); Items[x]._mov = true;}
+        if(!MouseObject._mov && MouseObject.moveBy)
+            MouseObject.moveBy(dx, dy);
+        for(var x = 0; x < Items.length; x++) Items[x]._mov = false;
+        MouseObject._mov = false;
         Main.NeedRedraw = true;
     },
     OnSelMove: function(x, y) // Перемещение рамки выделения
@@ -281,7 +286,7 @@ var Main = {
     },
     OnProps: function()
     {
-        for(var x in Items) if(Items[x].Sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
+        for(var x in Items) if(Items[x]._sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
     },
     Init: function()
     {

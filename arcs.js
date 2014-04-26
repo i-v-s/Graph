@@ -9,7 +9,7 @@ function Arc(p1, p2, A)
     {
         o: this,
         pos: function() {return {x:this.o.cx, y:this.o.cy};},
-        MoveBy: function(x, y)
+        moveBy: function(x, y)
         {
             var A = this.o.p1.pos();
             var B = this.o.p2.pos();
@@ -24,9 +24,9 @@ function Arc(p1, p2, A)
         GetId: function(){ return '' + Main.GetId(this.o) + ".0";},
         Draw: function(Type)
         {
-            ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
+            ctx.strokeStyle = this._sel ? "#FF0000" : "#000000";
             var p = this.pos();
-            if(Type > 0 || this.Sel) ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
+            if(Type > 0 || this._sel) ctx.strokeRect(p.x - 2, p.y - 2, 5, 5);
         }
     };
     if(p1) this.Update();
@@ -55,13 +55,13 @@ Arc.prototype =
     },
     Draw: function(Type)
     {
-        ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
         ctx.beginPath();
         this.Update();
         ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2);
         ctx.stroke();
-        if(this.Sel || Type > 0) this._P.Draw(1);
+        if(this._sel || Type > 0) this._P.Draw(1);
     },
     Hit: function(x, y)
     {
@@ -90,13 +90,13 @@ Arc.prototype =
         if(P === this.p2) return {x: (p.y - this.cy) / this.R, y: (this.cx - p.x) / this.R};
         return null;
     },
-    MoveBy: function(dx, dy)
+    moveBy: function(dx, dy)
     {
-        if(!this.Moved)
+        if(!this._mov)
         {
-            this.p1.MoveBy(dx, dy);
-            this.p2.MoveBy(dx, dy);
-            this.Moved = true;
+            this.p1.moveBy(dx, dy);
+            this.p2.moveBy(dx, dy);
+            this._mov = true;
         }
     }
 };

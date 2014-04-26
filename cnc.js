@@ -101,7 +101,7 @@ function GPath()
 	this.rea = true; // Округлять внешние углы?
 	this.Draw = function(Type)
 	{
-        ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         var shift = this.sh;
         if(!shift) shift = CGPath.shift;
         ctx.lineWidth = 2 * Math.abs(shift);
@@ -162,8 +162,8 @@ function GPath()
         if(!shift) shift = CGPath.shift;
         var p = p0;//this.s[0].p.pos();
         var v = this.s[1].g.vec(this.s[0].p);
-		if(this.Sel) ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
-		else ctx.fillStyle = Type ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.5)";//this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+		if(this._sel) ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
+		else ctx.fillStyle = Type ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.5)";//this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(p.x - shift * v.y, p.y + shift * v.x);
@@ -323,7 +323,7 @@ var CGPath =
 	{
 		var s = [];
 		for(var x in Items)
-			if(Items[x].Sel && (Items[x] instanceof Line || Items[x] instanceof Arc) && Items[x].p1 !== Items[x].p2) s.push(Items[x]);
+			if(Items[x]._sel && (Items[x] instanceof Line || Items[x] instanceof Arc) && Items[x].p1 !== Items[x].p2) s.push(Items[x]);
 		if(s.length == 0) {alert("Не выделено ни одной линии или дуги."); return;};
 
 
@@ -368,17 +368,17 @@ var CGPath =
 	},
 	Inverse: function()
 	{
-		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].inv = !Items[x].inv;
+		for(var x in Items) if(Items[x]._sel && Items[x] instanceof GPath) Items[x].inv = !Items[x].inv;
 		Main.Redraw();
 	},
 	chRound: function()
 	{
-		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].rea = !Items[x].rea;
+		for(var x in Items) if(Items[x]._sel && Items[x] instanceof GPath) Items[x].rea = !Items[x].rea;
 		Main.Redraw();
 	},
 	Reverse: function()
 	{
-		for(var x in Items) if(Items[x].Sel && Items[x] instanceof GPath) Items[x].Reverse();
+		for(var x in Items) if(Items[x]._sel && Items[x] instanceof GPath) Items[x].Reverse();
 		Main.Redraw();
 	},
 	MainClear: null,

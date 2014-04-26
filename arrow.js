@@ -27,7 +27,7 @@ function Arrow(a)
     this.Draw = function(Type)
     {
         if(this.ps.length < 2) return;
-        ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
+        ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.beginPath();
         ctx.lineWidth = 2;
         var p = this.ps[0].pos();
@@ -66,13 +66,13 @@ function Arrow(a)
             ctx.fillText(this.label, p.x, p.y);
         }
     };
-    this.MoveBy = function(dx, dy)
+    this.moveBy = function(dx, dy)
     {
-        if(!this.Moved)
+        if(!this._mov)
         {
             for(var x = 0, e = this.ps.length; x < e; x++)
-                this.ps[x].MoveBy(dx, dy);
-            this.Moved = true;
+                this.ps[x].moveBy(dx, dy);
+            this._mov = true;
         }
     };
     this.Hit = function(x, y)
@@ -89,7 +89,7 @@ function Arrow(a)
                 if(Y + ctx.measureText(this.label).width > y) return this._lp =
                 {
                     o: this,
-                    MoveBy: function(dx, dy) {this.o.x += dx; this.o.y += dy;},
+                    moveBy: function(dx, dy) {this.o.x += dx; this.o.y += dy;},
                     Draw: function(t) 
                     {
                         var p = this.o.ps[0].pos();
@@ -121,9 +121,9 @@ function Arrow(a)
     };
     this.GetPSel = function() 
     {
-        if(this.Sel) return true;
+        if(this._sel) return true;
         for(var t = 0, e = this.ps.length; t < e;t++)
-            if(this.ps[t].Sel) return true;
+            if(this.ps[t]._sel) return true;
         return  false;
     };
     this.OnDblClick = function()
@@ -140,8 +140,8 @@ function Arrow(a)
             }
         }, this);        
     };
-    this.Sel = false;
-    this.Moved = false;
+    this._sel = false;
+    this._mov = false;
 }
 
 var CArrow =

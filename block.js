@@ -14,43 +14,43 @@ function Block(r)//x, y, w, h, Text)
     this._P = [
         {
             pos:function(){return {x:this.o.x, y:this.o.y};},
-            MoveBy:function(x, y){this.o.x += x; this.o.y += y; this.o.w -= x; this.o.h -= y;}
+            moveBy:function(x, y){this.o.x += x; this.o.y += y; this.o.w -= x; this.o.h -= y;}
         },
         {
             pos:function(){return {x:this.o.x + this.o.w, y:this.o.y};},
-            MoveBy:function(x, y){this.o.w += x; this.o.y += y; this.o.h -= y;}
+            moveBy:function(x, y){this.o.w += x; this.o.y += y; this.o.h -= y;}
         },
         {
             pos:function(){return {x:this.o.x, y:this.o.y + this.o.h};},
-            MoveBy:function(x, y){this.o.x += x; this.o.h += y; this.o.w -= x;}
+            moveBy:function(x, y){this.o.x += x; this.o.h += y; this.o.w -= x;}
         },
         {
             pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + this.o.h};},
-            MoveBy:function(x, y){this.o.w += x; this.o.h += y;}
+            moveBy:function(x, y){this.o.w += x; this.o.h += y;}
         },
         {
             pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y};},
-            MoveBy:function(x, y){this.o.y += y; this.o.h -= y;}
+            moveBy:function(x, y){this.o.y += y; this.o.h -= y;}
         },
         {
             pos:function(){return {x:this.o.x + (this.o.w / 2), y:this.o.y + this.o.h};},
-            MoveBy:function(x, y){this.o.h += y;}
+            moveBy:function(x, y){this.o.h += y;}
         },
         {
             pos:function(){return {x:this.o.x, y:this.o.y + (this.o.h / 2)};},
-            MoveBy:function(x, y){this.o.x += x; this.o.w -= x;}
+            moveBy:function(x, y){this.o.x += x; this.o.w -= x;}
         },
         {
             pos:function(){return {x:this.o.x + this.o.w, y:this.o.y + (this.o.h / 2)};},
-            MoveBy:function(x, y){this.o.w += x;}
+            moveBy:function(x, y){this.o.w += x;}
         }
     ];
     this.exps = [];
     var PtDraw = function(Type)
     {
-        ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
+        ctx.strokeStyle = this._sel ? "#FF0000" : "#000000";
         var p = this.pos();
-        if(Type > 0 || this.Sel)
+        if(Type > 0 || this._sel)
         {
             ctx.lineWidth = 1;
             ctx.strokeRect(p.x - 2, p.y - 2, 4, 4);
@@ -67,12 +67,12 @@ function Block(r)//x, y, w, h, Text)
 
     if(this.text) this.text = this.text.split("\n");
     this.Child = function(c) {return this._P[c];};
-    this.MoveBy = function(dx, dy)
+    this.moveBy = function(dx, dy)
     {
-        if(!this.Moved)
+        if(!this._mov)
         {
             this.x += dx; this.y += dy;
-            for(var x = this._P.length - 1; x >= 0; x--) this._P[x].Moved = true;
+            for(var x = this._P.length - 1; x >= 0; x--) this._P[x]._mov = true;
         };
     };
     this.GetTextLayout = function()
@@ -92,7 +92,7 @@ function Block(r)//x, y, w, h, Text)
         //var x = this._P[0].x, y = this._P[0].y;
         ctx.lineWidth = 1;
         ctx.strokeStyle = "#000";
-        ctx.fillStyle = this.Sel ? "#FFE0E0" :/*(Type > 0 ? "#E0E0E0":*/ "#FFFFFF";//);// = Type ? "": ;
+        ctx.fillStyle = this._sel ? "#FFE0E0" :/*(Type > 0 ? "#E0E0E0":*/ "#FFFFFF";//);// = Type ? "": ;
         if(this.type && this.type === "if")
         {
             ctx.beginPath();
@@ -120,7 +120,7 @@ function Block(r)//x, y, w, h, Text)
             for(x = 0, e = this.text.length; x < e; x++, b += l.dy)
                 ctx.fillText(this.text[x], a, b);
         }
-        if(this.Sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].Draw(1);
+        if(this._sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].Draw(1);
         var y = 0;
         for(var x in this.exps)
         {
@@ -130,7 +130,7 @@ function Block(r)//x, y, w, h, Text)
         }
         this.exps.length = y;
     };
-    this.OnLoad = function(Sel)
+    this.OnLoad = function(_sel)
     {
         if(this.x && this.y && this.w && this.h) return true;
         return false;

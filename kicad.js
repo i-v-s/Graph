@@ -4,7 +4,7 @@ var KiCAD = new function()
 {
 	var Km = 0.05;
 	var defw = 0.5;
-	var Lib = {};
+	if(!workspace.componentLib) workspace.componentLib = {};
 	function split(a)
 	{
 		var r = [];
@@ -28,22 +28,21 @@ var KiCAD = new function()
 	}
     function ConnDraw(Type)
     {
-    	ctx.fillStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
-        if(Type > 0 || this.Sel || !this._der || this._der.length === 0 || this._der.length > 2)
+    	ctx.fillStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
+        if(Type > 0 || this._sel || !this._der || this._der.length === 0 || this._der.length > 2)
         {
             ctx.lineWidth = 1;
             ctx.beginPath();
             var p = this;
             if(p.x === undefined) p = this.pos();
             ctx.arc(p.x, p.y, 1, 0, 2 * Math.PI, false);
-            //ctx.fillStyle = '#000000';
             ctx.fill();
-            //ctx.stroke();
-         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
+         }
     };
 	
 	function Component(d)
 	{
+		var Lib = workspace.componentLib;
 		this.fields = [];
 		var M = null; // Матрица поворота
 		var CmpName, Name;
@@ -102,20 +101,20 @@ var KiCAD = new function()
 			var p = Def.pin[n];
 			return {x:th.x + M[0] * p.x + M[1] * p.y, y:th.y - M[3] * p.y - M[2] * p.x};			
 		}
-	    this.MoveBy = function(dx, dy)
+	    this.moveBy = function(dx, dy)
 	    {
-	        if(!th.Moved)
+	        if(!th._mov)
 	        {
 	            th.x += dx;
 	            th.y += dy;
-	            th.Moved = true;
+	            th._mov = true;
 	        }
 	    };
 		if(Def)for(var t in Def.pin) Pins[t] = 
 		{
 			p:t, 
 			pos:function(){return GetPinPos(this.p);},
-			MoveBy:this.MoveBy,
+			moveBy:this.moveBy,
             GetId:function(){ return '' + Items.indexOf(th) + '.' + this.p;},
             Draw:ConnDraw,
 			_enode:null // Электрический узел
@@ -162,7 +161,7 @@ var KiCAD = new function()
 		};
 	    this.Draw = function(Type)
 	    {
-	    	var color = (Type > 0 || this.Sel) ? "#F00000" : "#800000";
+	    	var color = (Type > 0 || this._sel) ? "#F00000" : "#800000";
 	    	ctx.fillStyle = color;
 	    	ctx.strokeStyle = color;
 
@@ -205,8 +204,8 @@ var KiCAD = new function()
 			Fields:this.fields,
 			Pins:Pins
 		};};
-	    this.GetPSel = function() {return this.Sel;};
-	    this.Sel = false;
+	    this.GetPSel = function() {return this._sel;};
+	    this._sel = false;
 	}	
 	function loadSch(e)
 	{
@@ -281,9 +280,14 @@ var KiCAD = new function()
 		pts = null;	
 		Main.Redraw();
 	};
+	function def2js(def)
+	{
+
+
+	}
 	function loadLib(e)
 	{
-		var obj;
+		var Lib = workspace.componentLib, obj;
 		function SetB(x, y) {if(x > obj.r) obj.r = x; if(y > obj.b) obj.b = y; if(x < obj.l) obj.l = x; if(y < obj.t) obj.t = y;};
 		var data = e.target.result;
 		var sep = '\n';

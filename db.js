@@ -36,7 +36,7 @@ var DB =
                 return vr;
             }
             if(key == "_") return value;
-            if(key == "Moved" || key == "Sel" || key.charAt(0) === '_') return undefined;
+            if(key.charAt(0) === '_') return undefined;
             if(value && typeof value == "object")
             {
                 if(value instanceof Array)
@@ -50,13 +50,24 @@ var DB =
     },
     GetJSON: function()
     {
-        var a = [];
-        for(var x in Items)
+        workspace.sheets["лист 1"] = Items;
+        var r = [];
+        for(var w in workspace)
         {
-            var i = Items[x];
-            a[x] = DB.ItemToJSON(Items[x]);
-        };
-        return("[" + a.join(',\n') + "]");
+            if(w === "sheets")
+            {
+                var a = [];
+                for(var x in Items)
+                {
+                    var i = Items[x];
+                    a.push(DB.ItemToJSON(Items[x]));
+                }
+                r.push("sheets:{sheet:[\n" + a.join(',\n') + "\n]}");
+            }
+            else
+                r.push(w + ":" + JSON.stringify(workspace[w]));
+        }
+        return("{" + r.join(',\n') + "}");
     },
     LoadJSON: function(Text) 
     {

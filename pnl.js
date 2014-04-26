@@ -5,8 +5,8 @@ function Point(x, y)
     this.x = x;
     this.y = y;
     this._der = [];
-    this.Sel = false;
-    this.Moved = false;
+    this._sel = false;
+    this._mov = false;
 }
 
 Point.prototype = 
@@ -15,20 +15,20 @@ Point.prototype =
     pos: function() {return {x:this.x, y:this.y};},
     Draw: function(Type)
     {
-        ctx.strokeStyle = this.Sel ? "#FF0000" : "#000000";
-        if(Type > 0 || this.Sel || !this._der.length)
+        ctx.strokeStyle = this._sel ? "#FF0000" : "#000000";
+        if(Type > 0 || this._sel || !this._der.length)
         {
             ctx.lineWidth = 1;
             ctx.strokeRect(this.x - 2, this.y - 2, 4, 4);
         } //else ctx.strokeRect(this.x - 1, this.y - 1, 3, 3);
     },
-    MoveBy: function(dx, dy)
+    moveBy: function(dx, dy)
     {
-        if(!this.Moved)
+        if(!this._mov)
         {
             this.x += dx;
             this.y += dy;
-            this.Moved = true;
+            this._mov = true;
             if(this.Owner) this.Owner.OnPtMoveBy(this, dx, dy);
         }
     },
@@ -58,7 +58,7 @@ Point.prototype =
             }
         }, this);
     },
-    GetPSel: function() {return this.Sel;}
+    GetPSel: function() {return this._sel;}
 };
 
 function Line(p1, p2)
@@ -67,8 +67,8 @@ function Line(p1, p2)
     this.p2 = p2;
     if(typeof p1 === "object" ) PushDer(p1, this);
     if(typeof p2 === "object" ) PushDer(p2, this);
-    this.Sel = false;
-    this.Moved = false;
+    this._sel = false;
+    this._mov = false;
 }
 
 
@@ -87,7 +87,7 @@ Line.prototype =
     Draw: function(Type)
     {
         var color = this.color ? this.color : Main.Color;
-        ctx.strokeStyle = this.Sel ? "#FF0000" :(Type > 0 ? "#808080": color);
+        ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": color);
         ctx.lineWidth = this.width ? this.width : 0.5;
         ctx.beginPath();
         var p = this.p1.pos();
@@ -96,13 +96,13 @@ Line.prototype =
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
     },
-    MoveBy: function(dx, dy)
+    moveBy: function(dx, dy)
     {
-        if(!this.Moved)
+        if(!this._mov)
         {
-            this.p1.MoveBy(dx, dy);
-            this.p2.MoveBy(dx, dy);
-            this.Moved = true;
+            this.p1.moveBy(dx, dy);
+            this.p2.moveBy(dx, dy);
+            this._mov = true;
         }
     },
     Hit: function(x, y)
@@ -159,7 +159,7 @@ Line.prototype =
         if(p === this.p1) return {x: x, y: y};
         if(p === this.p2) return {x: -x, y: -y};
     },
-    GetPSel: function() {return this.Sel || this.p1.Sel || this.p2.Sel;}
+    GetPSel: function() {return this._sel || this.p1._sel || this.p2._sel;}
 };
 
 var CLine =
