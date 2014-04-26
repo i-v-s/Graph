@@ -3,7 +3,7 @@ $user = $_GET["user"];
 if($user)
 	$query = "SELECT name FROM Files WHERE (user = '$user')";
 else
-	$query = "SELECT user, name FROM Files";
+	$query = "SELECT name FROM Files";
 //echo "query = ",$query,"<BR>";
 
 include 'g-conn.php';
@@ -15,8 +15,8 @@ while($row = mysqli_fetch_array($result))
 {
 	if($zpt) echo ",";
 	echo "{";
-	if(!$user)
-		echo "\"user\":\"", $row['user'], "\",";
+	//if(!$user)
+	//	echo "\"user\":\"", $row['user'], "\",";
 	echo "\"name\":\"", $row['name'], "\"}";
 	$zpt = true;
 }
