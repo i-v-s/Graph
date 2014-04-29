@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<title>Graph editor</title>
 	<link rel="stylesheet" href="graph.css" media="screen">
+	<link rel="stylesheet" href="icons.css" media="screen">
     <link id="CSS" rel="stylesheet" href="lite.css" media="screen">
 	<!--<link rel="stylesheet" href="../dijit/themes/claro/claro.css" media="screen">-->
     <script type="text/javascript">
@@ -21,7 +22,7 @@
     <canvas id='canvas' oncontextmenu="Main.Redraw()">Обновите браузер</canvas>
 <!-- Главное меню -->
     <menu type="toolbar" class="hmenu" id="mainmenu">
-        <li> &#2384; </li>
+        <li id="test"> &#2384;</li> 
         <li id="menufile"> Проект </li>
         <li id="menuedit"> Правка </li>
         <li id="menuview"> Вид 
@@ -37,6 +38,14 @@
         <li id="menucreate"> Создать </li>
         <li id="menucnc"> ЧПУ </li>
     </menu>
+<!-- Панель инструментов -->
+	<div class="vmenu" id="toolbar">
+		<div id="icon-hand"></div>
+		<div id="icon-select"></div>
+		<div id="icon-move"></div>
+		<div id="icon-cancel" style="display:none"></div>
+	
+	</div>
 <!-- Серый экран -->
     <div id='blocker' hidden="true"></div>
 <!-- Диалоги -->    
@@ -90,6 +99,7 @@
 <!-- Скрипты -->
 <script src="main.js"></script>
 <script src="menu.js"></script>
+<script src="toolbar.js"></script>
 <script src="navi.js"></script>
 <script src="grid.js"></script>
 <script src="pnl.js"></script>

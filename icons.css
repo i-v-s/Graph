@@ -1,0 +1,42 @@
+
+#icon-hand {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -0px;
+}
+
+#icon-move {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -32px;
+}
+
+#icon-del {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -64px;
+}
+
+#icon-cancel {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -96px;
+}
+
+#icon-cut {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -128px;
+}
+
+#icon-select {
+  width: 32px; height: 32px;
+  background-repeat: no-repeat;
+  background-image: url('lite.png');
+  background-position: left -160px;
+}

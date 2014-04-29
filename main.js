@@ -25,13 +25,13 @@ function PushDer(o, d) // Добавить к объекту o зависимы�
 var workspace = // Рабочее пространство со всеми сохраняемыми данными
 {
     sheets:{} // Листы
-}
+};
 
 var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
-    adm:1, // Допуск при выборе
+    adm:3, // Допуск при выборе
     NeedRedraw: false,
     PointAlign:true,
     MX: 0, MY: 0,
@@ -47,12 +47,12 @@ var Main = {
     	{
     	case "lite.css":
     	default:
-    		Grid.Style = "#808080";
+    		if(Grid) Grid.Style = "#808080";
             Main.Color = "#000";
     		Main.Back = "#FFF";
     		break;
     	case "matrix.css":
-    		Grid.Style = "#2A8106";
+    		if(Grid) Grid.Style = "#2A8106";
             Main.Color = "#76E215";
     		Main.Back = "#FFF";
     		break;
@@ -120,8 +120,8 @@ var Main = {
     },
     Delete: function()
     {
-        var x, y;
-        for(var x = 0, y = 0, e = Items.length; x < e; x++)
+        var x, y, e;
+        for(x = 0, y = 0, e = Items.length; x < e; x++)
         {
             var i = Items[x];
             if((i.GetPSel && !i.GetPSel()) || !i._sel) Items[y++] = i;
@@ -195,24 +195,27 @@ var Main = {
         Main.Pop();
         Main.NeedRedraw = true;
     },
-    OnObjMove: function(mx, my) // Перемещение объектов с левой кнопкой
+    OnObjOnlyMove: function(mx, my) // Перемещение объектов с левой кнопкой
     {
         var dx = mx - Main.MX;
         var dy = my - Main.MY;
         Main.MX = mx;
         Main.MY = my;
-        var x;
+        for(var x = 0, e = Items.length; x < e; x++) if(Items[x]._sel && Items[x].moveBy) { Items[x].moveBy(dx, dy); Items[x]._mov = true;}
+        if(MouseObject && !MouseObject._mov && MouseObject.moveBy)
+            MouseObject.moveBy(dx, dy);
+        for(var x = 0; x < Items.length; x++) Items[x]._mov = false;
+        if(MouseObject) MouseObject._mov = false;
+        Main.NeedRedraw = true;
+    },
+    OnObjMove: function(mx, my)
+    {
         if(!MouseObject._sel)
         {
             for(var x = 0; x < Items.length; x++) Items[x]._sel = false;
             MouseObject._sel = true;
         }
-        for(var x = 0, e = Items.length; x < e; x++) if(Items[x]._sel && Items[x].moveBy) { Items[x].moveBy(dx, dy); Items[x]._mov = true;}
-        if(!MouseObject._mov && MouseObject.moveBy)
-            MouseObject.moveBy(dx, dy);
-        for(var x = 0; x < Items.length; x++) Items[x]._mov = false;
-        MouseObject._mov = false;
-        Main.NeedRedraw = true;
+    	Main.OnObjOnlyMove(mx, my);
     },
     OnSelMove: function(x, y) // Перемещение рамки выделения
     {
@@ -239,11 +242,24 @@ var Main = {
         }
         return r;
     },
-    Goto:function(state)
+    /*showState: function(state) 
+    {
+    	var e = document.getElementById("test");
+    	var t = "";
+    	ck:
+    	for(var y in Stack) 
+    	{
+    		for(var x in States) if(States[x] === Stack[y]) {t += x + "/"; continue ck;}
+    		t += "?/";
+    	}
+    	for(var x in States) if(States[x] === state) {e.innerHTML = t + x;return;}; e.innerHTML = t + "?";
+    },*/
+    setState:function(state)
     {
         if(typeof state === "string") state = States[state];
         var NewState = {}; // Новое состояние - комбинация предущего и требуемого
-        for(var x in State) if(State.hasOwnProperty(x)) NewState[x] = State[x];
+        var pst = Stack[Stack.length - 1];
+        for(var x in pst) if(pst.hasOwnProperty(x) && x[0] != '_') NewState[x] = pst[x];
         for(var x in state) if(state.hasOwnProperty(x)) NewState[x] = state[x];
         if(state.leftdown && !state.leftup) NewState.leftup = undefined;
         else if(state.leftup && !state.leftdown) NewState.leftdown = undefined;
@@ -251,16 +267,25 @@ var Main = {
         else if(state.rightup && !state.rightdown) NewState.rightdown = undefined;
 
         State = NewState;
+        //Main.showState(state);        
+        if(State._enter) State._enter();
+    },
+    Goto:function(state)
+    {
+    	if(State._leave) State._leave();
+    	Main.setState(state);
     },
     Call:function(state)
     {
         Stack.push(State);
-        Main.Goto(state);
+        Main.setState(state);
     },
     Pop:function()
     {
+    	if(State._leave) State._leave();
         if(Stack.length == 0) throw "Main.Pop() stack overrun!";
         State = Stack.pop();
+        //Main.showState(State);
     },
     GetMousePos: function(evt)
     {
@@ -354,11 +379,30 @@ var States =
     {
         redraw: Main.Redraw,
         move:Main.OnFreeMove,
-        leftdown: function(x, y) { Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");},
-        dblclick:function(x, y) {if(MouseObject && MouseObject.OnDblClick) MouseObject.OnDblClick(x, y);}
+        leftdown: function(x, y) {Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");},
+        dblclick:function(x, y) {if(MouseObject && MouseObject.OnDblClick) MouseObject.OnDblClick(x, y);},
+        select:function() {Main.Call("select");},
+        onlymove:function() {Main.Call("onlymove");}        
+    },
+    select:
+    {
+    	_enter:function() {CToolbar.select.check(true);},
+        leftdown: function(x, y) {Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call("selmove");},
+    	select: Main.Pop,
+        onlymove:function() {Main.Goto("onlymove");},        
+    	_leave:function() {CToolbar.select.check(false);},
+    },
+    onlymove:
+    {
+    	_enter:function() {CToolbar.move.check(true);},
+        leftdown: function(x, y) {Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call("objonlymove");},
+    	onlymove: Main.Pop,
+        select:function() {Main.Goto("select");},
+    	_leave: function() {CToolbar.move.check(false);}
     },
     selmove:{move:Main.OnSelMove, leftup:Main.OnLeftUp},
-    objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp}
+    objmove:{move:Main.OnObjMove, leftup:Main.OnLeftUp},
+    objonlymove:{move:Main.OnObjOnlyMove, leftup:Main.Pop}
 };
 var State = States.free;
 

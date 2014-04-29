@@ -53,8 +53,8 @@
 			a = y - (Def.r * M[2] + Def.b * M[3]);
 			if(a < t || a > b) return false; 
 			return true;
-		};
-	    this.Draw = function(Type)
+		},
+	    Draw: function(Type)
 	    {
 	    	var color = (Type > 0 || this._sel) ? "#F00000" : "#800000";
 	    	ctx.fillStyle = color;
@@ -90,9 +90,9 @@
 	    		}
 	    		else ctx.fillText(f.t, fx, fy);
 	    		for(var x in Pins) if(MouseObject !== Pins[x]) Pins[x].Draw(0);
-	    	}
-	    };
-	}
+	    	};
+	    }
+	};
 	Component.prototype = compBase;
 
 

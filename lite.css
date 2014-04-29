@@ -9,7 +9,7 @@ body {
 
 /************ Цвета и тени меню *************************/
 
-.hmenu, .hmenu li ul, .dialog, .combobox ul, .group
+.hmenu, .hmenu li ul, .dialog, .combobox ul, .group, .vmenu
 {
     cursor: pointer;
     color: #222;/*#79FF00;*/
@@ -23,7 +23,7 @@ body {
 
 }
 
-.hmenu li:hover
+.hmenu li:hover, .vmenu div:hover
 {
     background: rgba(160, 231, 255, 0.6); /* Цвет фона меню выбранного */
     /*box-shadow: 0px 0px 25px #FFF;*/
@@ -33,6 +33,11 @@ body {
 .hmenu li.msep
 {
     background: rgba(200, 200, 200, 1); /* Цвет фона меню выбранного */ 
+}
+
+div.checked, div.checked:hover
+{
+    background: rgba(64, 195, 240, 0.6); /* Цвет фона меню выбранного */ 
 }
 
 #blocker
@@ -51,7 +56,25 @@ body {
     margin: 5px;
 }
 
-/************** Параметры меню ********************/
+/************** Параметры вертикального меню ********************/
+
+.vmenu {
+    position: absolute;
+    list-style-type: none;
+	z-index: 10;
+    display: block;
+	top: 60px;
+    padding: 2px;
+    border-radius: 15px;
+}
+
+.vmenu div {
+    margin: 5px;
+    padding: 0px;
+    border-radius: 10px;
+}
+
+/************** Параметры горизонтального меню ********************/
 
 .hmenu { /* Горизонтальное меню */
     position: absolute;

@@ -17,8 +17,10 @@ var Navi =
         var delta = e.wheelDelta || -e.detail;
         var OScale = Main.Scale;
         if(delta == 0) return;
-        if(delta > 0) Main.Scale *= 1.2;
-        else Main.Scale /= 1.2;
+        var m = 1.2;
+        if(delta < 0) m = 1 / m;
+        Main.Scale *= m;
+        Main.adm /= m;
         OScale -= Main.Scale;
         Main.OffsetX += mp.x * OScale;
         Main.OffsetY += mp.y * OScale;
@@ -37,8 +39,23 @@ var Navi =
             Main.Call(States.navi);
         },
 
-        States.navi = { move: Navi.OnMove, rightup: Main.Pop};
-        if (canvas.addEventListener) {
+        States.navi = {move: Navi.OnMove, rightup: Main.Pop, leftup:Main.Pop};
+        if(CToolbar)
+        {
+        	States.free.hand = function() {Main.Call("hand");};
+        	States.select.hand = function() {Main.Goto("hand");};
+        	States.onlymove.hand = function() {Main.Goto("hand");};
+        	States.hand = 
+        	{
+        	    _enter:function() {CToolbar.hand.check(true);},
+        		leftdown:States.free.rightdown,
+        		hand: Main.Pop,
+        	    _leave:function() {CToolbar.hand.check(false);},
+                select:function() {Main.Goto("select");},
+                onlymove:function() {Main.Goto("onlymove");}                	    
+        	};
+        }
+        if(canvas.addEventListener) {
             // IE9, Chrome, Safari, Opera
             canvas.addEventListener("mousewheel", Navi.OnMouseWheel, false);
             // Firefox

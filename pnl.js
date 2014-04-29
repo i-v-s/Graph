@@ -172,7 +172,11 @@ var CLine =
         CLine.MainRedraw();
         CLine.Obj.Draw(1);
     },
-    OnCreate: function() { Main.Call(States.preline);},
+    OnCreate: function() 
+    { 
+    	Main.Call(States.preline);
+    	if(CToolbar) CToolbar.cancel.show(true);
+    },
     OnInit:function()
     {
         Main.Ctors["Point"] = Point;
@@ -188,6 +192,7 @@ var CLine =
                 CLine.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
                 CLine.Obj = new Line(point, CLine.Pt); // Создаём линию
                 Main.Goto(States.nxline);
+                
             },
             rightup: Main.Pop
         };
@@ -212,7 +217,8 @@ var CLine =
                 Items.push(CLine.Obj); // Отправляем линию. Теперь вторая точка используется как первая для новой линии.
                 CLine.Pt = new Point(Main.MX, Main.MY); // Создаём вторую точку
                 CLine.Obj = new Line(point, CLine.Pt);
-            }
+            },
+            rightup: Main.Pop
         };
         CMenu.Add({create:{_: {label: "Линию", click: this.OnCreate}}});
     }
