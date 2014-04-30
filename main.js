@@ -31,7 +31,7 @@ var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
-    adm:3, // Допуск при выборе
+    adm:1, // Допуск при выборе
     NeedRedraw: false,
     PointAlign:true,
     MX: 0, MY: 0,
@@ -287,7 +287,7 @@ var Main = {
         State = Stack.pop();
         //Main.showState(State);
     },
-    GetMousePos: function(evt)
+    GetMousePos: function(px, py)
     {
         var box = canvas.getBoundingClientRect();
         var body = document.body;
@@ -298,13 +298,13 @@ var Main = {
         var clientLeft = docElem.clientLeft || body.clientLeft || 0;
         var top  = box.top +  scrollTop - clientTop;
         var left = box.left + scrollLeft - clientLeft;
-        return {x:(evt.pageX - left - Main.OffsetX) / Main.Scale, y:(evt.pageY - top - Main.OffsetY) / Main.Scale};
+        return {x:(px - left - Main.OffsetX) / Main.Scale, y:(py - top - Main.OffsetY) / Main.Scale};
     },
-    OnMouse: function(evt, method)
+    OnMouse: function(px, py, method)
     {
         if(method)
         {
-            var mp = Main.GetMousePos(evt);
+            var mp = Main.GetMousePos(px, py);
             method(mp.x, mp.y);
             if(Main.NeedRedraw) {Main.NeedRedraw = false; State.redraw();}
         }
@@ -329,26 +329,51 @@ var Main = {
             ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
             Main.Redraw();
         };
+        
+        var onclick = function(evt)
+        {
+        	console.log("click");
+        	if(Main.MouseDown !== null) return;
+        	Main.MouseDown = 0;
+        	Main.OnMouse(evt.pageX, evt.pageY, State.leftdown);
+        	Main.OnMouse(evt.pageX, evt.pageY, State.leftup);        	
+        	Main.MouseDown = null;
+        };
+          
+        canvas.addEventListener("click", onclick);
+
         canvas.onmousedown = function(evt)
         {
-            var b = evt.button;
-            Main.MouseDown = b;
-            switch(b)
+        	canvas.removeEventListener("click", onclick);
+        	(canvas.onmousedown = function(evt)
             {
-                case 0: Main.OnMouse(evt, State.leftdown); break;//if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
-                case 2: Main.OnMouse(evt, State.rightdown);break;//if(Main.OnRightDown) Main.OnRightDown(x, y); break;
-            }
+                var b = evt.button;
+                Main.MouseDown = b;
+                switch(b)
+                {
+                    case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftdown); break;//if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
+                    case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightdown);break;//if(Main.OnRightDown) Main.OnRightDown(x, y); break;
+                }
+            })(evt);
         };
+        canvas.addEventListener("touchstart", function(evt)
+        {
+        	Main.MouseDown = 0;
+        	Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.leftdown);
+        });
         canvas.onmouseup = function(evt)
         {
             switch(Main.MouseDown)
             {
-                case 0: Main.OnMouse(evt, State.leftup); break;//if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
-                case 2: Main.OnMouse(evt, State.rightup); break;//if(Main.OnRightUp) Main.OnRightUp(x, y); break;
+                case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftup); break;//if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
+                case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightup); break;//if(Main.OnRightUp) Main.OnRightUp(x, y); break;
             }
             Main.MouseDown = null;
         };
-        canvas.onmousemove = function(evt) {Main.OnMouse(evt, State.move);};
+        canvas.addEventListener("touchend", function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.leftup);});
+        
+        canvas.onmousemove = function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.move);};
+        canvas.addEventListener("touchmove", canvas.onmousemove);
         canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
         {

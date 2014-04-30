@@ -11,14 +11,14 @@ var Navi =
     },
     OnMouseWheel: function(evt)
     {
-        var mp = Main.GetMousePos(evt);
+        var mp = Main.GetMousePos(evt.pageX, evt.pageY);
         var e = /*window.event ||*/ evt; // old IE support
         e.preventDefault();
         var delta = e.wheelDelta || -e.detail;
         var OScale = Main.Scale;
         if(delta == 0) return;
         var m = 1.2;
-        if(delta < 0) m = 1 / m;
+        if(delta < 0) m = 1.0 / m;  	
         Main.Scale *= m;
         Main.adm /= m;
         OScale -= Main.Scale;
