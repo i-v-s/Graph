@@ -368,9 +368,12 @@ var Main = {
         });
         
         canvas.onmousemove = function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.move);};
+        var time = 0;
         canvas.addEventListener("touchmove", function(evt)
         {
+        	if(+new Date() < time) return;
             Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.move);
+            time = +new Date() + 100;
         });
         canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
