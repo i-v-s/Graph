@@ -31,7 +31,7 @@ var Main = {
     Scale: 1.0,
     OffsetX: 0.0,
     OffsetY: 0.0,
-    adm:1, // Допуск при выборе
+    adm:3, // Допуск при выборе
     NeedRedraw: false,
     PointAlign:true,
     MX: 0, MY: 0,
@@ -346,8 +346,10 @@ var Main = {
             canvas.onmouseup = undefined;
             canvas.onmousemove = undefined;
             //console.log("touchstart");
+            var x = evt.touches[0].pageX, y = evt.touches[0].pageY;
+            Main.OnMouse(x, y, State.move);
         	Main.MouseDown = 0;
-        	Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.leftdown);
+        	Main.OnMouse(x, y, State.leftdown);
         });
         canvas.onmouseup = function(evt)
         {
