@@ -65,7 +65,6 @@ var Main = {
     },
     Redraw: function()
     {
-        //Main.OnCSS();
         Main.Clear();
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
@@ -330,50 +329,47 @@ var Main = {
             Main.Redraw();
         };
         
-        var onclick = function(evt)
-        {
-        	console.log("click");
-        	if(Main.MouseDown !== null) return;
-        	Main.MouseDown = 0;
-        	Main.OnMouse(evt.pageX, evt.pageY, State.leftdown);
-        	Main.OnMouse(evt.pageX, evt.pageY, State.leftup);        	
-        	Main.MouseDown = null;
-        };
-          
-        canvas.addEventListener("click", onclick);
-
         canvas.onmousedown = function(evt)
         {
-        	canvas.removeEventListener("click", onclick);
-        	(canvas.onmousedown = function(evt)
+            //console.log("mousedown");
+            var b = evt.button;
+            Main.MouseDown = b;
+            switch(b)
             {
-                var b = evt.button;
-                Main.MouseDown = b;
-                switch(b)
-                {
-                    case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftdown); break;//if(Main.OnLeftDown) Main.OnLeftDown(x, y); break;
-                    case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightdown);break;//if(Main.OnRightDown) Main.OnRightDown(x, y); break;
-                }
-            })(evt);
+                case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftdown); break;
+                case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightdown);break;
+            }
         };
         canvas.addEventListener("touchstart", function(evt)
         {
+            canvas.onmousedown = undefined;
+            canvas.onmouseup = undefined;
+            canvas.onmousemove = undefined;
+            //console.log("touchstart");
         	Main.MouseDown = 0;
         	Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.leftdown);
         });
         canvas.onmouseup = function(evt)
         {
+            //console.log("mouseup");
             switch(Main.MouseDown)
             {
-                case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftup); break;//if(Main.OnLeftUp) Main.OnLeftUp(x, y); break;
-                case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightup); break;//if(Main.OnRightUp) Main.OnRightUp(x, y); break;
+                case 0: Main.OnMouse(evt.pageX, evt.pageY, State.leftup); break;
+                case 2: Main.OnMouse(evt.pageX, evt.pageY, State.rightup); break;
             }
             Main.MouseDown = null;
         };
-        canvas.addEventListener("touchend", function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.leftup);});
+        canvas.addEventListener("touchend", function(evt) 
+        {
+            //console.log("touchend");
+            Main.OnMouse(evt.changedTouches[0].pageX, evt.changedTouches[0].pageY, State.leftup);
+        });
         
         canvas.onmousemove = function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.move);};
-        canvas.addEventListener("touchmove", canvas.onmousemove);
+        canvas.addEventListener("touchmove", function(evt)
+        {
+            Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.move);
+        });
         canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
         {
