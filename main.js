@@ -88,20 +88,20 @@ var Main = {
             if(f._sel) {Selected.push(f); continue;}
             if(SelRect && f.RHit && f.RHit(left, top, right, bottom)) {Touched.push(f); continue;}
             
-            try {f.Draw(0);} 
+            try {f.draw(0);} 
             catch(e) {if(Items[x]) err.push("#" + x + " " + Items[x].constructor.name); Items[x] = null;}
         }
         for(var x in Selected)
         {
-            try {Selected[x].Draw(0);} 
+            try {Selected[x].draw(0);} 
             catch(e) {if(Selected[x]) err.push("#" + x + " " + Selected[x].constructor.name); /*Items[x] = null;*/}
         }
         for(var x in Touched)
         {
-            try {Touched[x].Draw(1);} 
+            try {Touched[x].draw(1);} 
             catch(e) {if(Touched[x]) err.push("#" + x + " " + Touched[x].constructor.name); /*Items[x] = null;*/}
         }        
-        if(md && MouseObject) MouseObject.Draw(1);
+        if(md && MouseObject) MouseObject.draw(1);
         ctx.strokeStyle = "#8080FF";
         if(SelRect) SelRect.Stroke();
         if(err.length > 0)

@@ -22,7 +22,7 @@ function Arc(p1, p2, A)
             this.o.a = 2 * Math.atan2(ABd2, t);
         },
         GetId: function(){ return '' + Main.GetId(this.o) + ".0";},
-        Draw: function(Type)
+        draw: function(Type)
         {
             ctx.strokeStyle = this._sel ? "#FF0000" : "#000000";
             var p = this.pos();
@@ -53,7 +53,7 @@ Arc.prototype =
         this.a1 = Math.atan2(-ry, -rx);
         this.a2 = Math.atan2(p2.y - this.cy, p2.x - this.cx);
     },
-    Draw: function(Type)
+    draw: function(Type)
     {
         ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         ctx.lineWidth = 1;
@@ -61,7 +61,7 @@ Arc.prototype =
         this.Update();
         ctx.arc(this.cx, this.cy, this.R, this.a1, this.a2);
         ctx.stroke();
-        if(this._sel || Type > 0) this._P.Draw(1);
+        if(this._sel || Type > 0) this._P.draw(1);
     },
     Hit: function(x, y)
     {
@@ -109,7 +109,7 @@ var CArc =
     Redraw:function()
     {
         CArc.MainRedraw();
-        CArc.Obj.Draw(1);
+        CArc.Obj.draw(1);
     },
     OnCreate: function() { Main.Call(States.prearc);},
     OnInit:function()

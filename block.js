@@ -61,7 +61,7 @@ function Block(r)//x, y, w, h, Text)
     {
         this._P[x].o = this;
         this._P[x].x = x;
-        this._P[x].Draw = PtDraw;
+        this._P[x].draw = PtDraw;
         this._P[x].GetId = GetId;
     }
 
@@ -87,7 +87,7 @@ function Block(r)//x, y, w, h, Text)
             dy: step
         };
     };
-    this.Draw = function(Type)
+    this.draw = function(Type)
     {
         //var x = this._P[0].x, y = this._P[0].y;
         ctx.lineWidth = 1;
@@ -120,13 +120,13 @@ function Block(r)//x, y, w, h, Text)
             for(x = 0, e = this.text.length; x < e; x++, b += l.dy)
                 ctx.fillText(this.text[x], a, b);
         }
-        if(this._sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].Draw(1);
+        if(this._sel || Type > 0) for(var x = this._P.length; x--; ) this._P[x].draw(1);
         var y = 0;
         for(var x in this.exps)
         {
             var e = this.exps[x];
             if(e === MouseObject) this.exps[y++] = e;
-            else if(e._der && e._der.length > 0) { e.Draw(0); this.exps[y++] = e;}
+            else if(e._der && e._der.length > 0) { e.draw(0); this.exps[y++] = e;}
         }
         this.exps.length = y;
     };
@@ -171,7 +171,7 @@ function Block(r)//x, y, w, h, Text)
                     x:minX,
                     l:maxX - minX + 1,
                     y:Y,
-                    Draw: function(Type)
+                    draw: function(Type)
                     {
                         var l = this.o.GetTextLayout();
                         var x = l.x + this.x * l.dx;
@@ -264,7 +264,7 @@ var CBlock =
             redraw:function()
             {
                 CBlock.MainRedraw();
-                CBlock.Obj.Draw(1);
+                CBlock.Obj.draw(1);
             },
             move: function(x, y)
             {

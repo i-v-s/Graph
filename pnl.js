@@ -13,7 +13,7 @@ Point.prototype =
 {
     serialize: function() {return this.x.toString() + "," + this.y;},
     pos: function() {return {x:this.x, y:this.y};},
-    Draw: function(Type)
+    draw: function(Type)
     {
         ctx.strokeStyle = this._sel ? "#FF0000" : "#000000";
         if(Type > 0 || this._sel || !this._der.length)
@@ -84,7 +84,7 @@ Line.prototype =
         this.p2._der.push(this);
         return  true;
     },
-    Draw: function(Type)
+    draw: function(Type)
     {
         var color = this.color ? this.color : Main.Color;
         ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": color);
@@ -170,7 +170,7 @@ var CLine =
     Redraw:function()
     {
         CLine.MainRedraw();
-        CLine.Obj.Draw(1);
+        CLine.Obj.draw(1);
     },
     OnCreate: function() 
     { 

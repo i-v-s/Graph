@@ -6,7 +6,7 @@ var Grid = {
     MAM: null,
     Step:10,
     Style:"#808080",
-    Draw: function()
+    draw: function()
     {
         Grid.MainClear();
         var w = canvas.width, h = canvas.height;
@@ -73,7 +73,7 @@ var Grid = {
     }
 };
 
-Main.Clear = Grid.Draw;
+Main.Clear = Grid.draw;
 Grid.MAM = Main.OnAlignedMove;
 Main.OnAlignedMove = Grid.OnAlignedMove;
 States.free.redraw = Grid.Redraw;

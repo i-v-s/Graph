@@ -99,7 +99,7 @@ function GPath()
 	this._p = null; // Массив точек пути {G, p}
 	this.SP = {x:0, y:0};
 	this.rea = true; // Округлять внешние углы?
-	this.Draw = function(Type)
+	this.draw = function(Type)
 	{
         ctx.strokeStyle = "rgba(100, 100, 100, 0.5)";//this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
         var shift = this.sh;
@@ -239,7 +239,7 @@ function GPath()
 					LastY = Y;
 				}
 			};
-			this.Draw("GCode");
+			this.draw("GCode");
 		} catch(e)
 		{
 			ctx = old_ctx;

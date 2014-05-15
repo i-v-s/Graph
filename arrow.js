@@ -24,7 +24,7 @@ function Arrow(a)
         }
         return true;
     };
-    this.Draw = function(Type)
+    this.draw = function(Type)
     {
         if(this.ps.length < 2) return;
         ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
@@ -90,7 +90,7 @@ function Arrow(a)
                 {
                     o: this,
                     moveBy: function(dx, dy) {this.o.x += dx; this.o.y += dy;},
-                    Draw: function(t) 
+                    draw: function(t) 
                     {
                         var p = this.o.ps[0].pos();
                         if(typeof this.o.x  !== "number" || typeof this.o.y !== "number") {this.o.y = 0; this.o.x = 0;}
@@ -173,7 +173,7 @@ var CArrow =
             redraw: function()
             {
                 CArrow.MainRedraw();
-                CArrow.Obj.Draw(1);
+                CArrow.Obj.draw(1);
             },
             move: function(x, y)
             {
