@@ -4,7 +4,7 @@ var KiCAD = new function()
 {
 	var Km = 0.05;
 	var defw = 0.5;
-	if(!workspace.componentLib) workspace.componentLib = {};
+	if(!workspace.partLib) workspace.partLib = {};
 	function split(a)
 	{
 		var r = [];
@@ -42,25 +42,12 @@ var KiCAD = new function()
 	
 	function Component(d)
 	{
-		var Lib = workspace.componentLib;
-		this.fields = [];
-		var M = null; // Матрица поворота
+		var Lib = workspace.partLib;
+		var res = null;//new schematic.Part(0, 0);
+		var fields = [];
 		var CmpName, Name;
-		this.x = 0.0;
-		this.y = 0.0;
 		var Def = null;
-		if(d.constructor === Object)
-		{
-			Def = d;
-			M = [1, 0, 0, 1];
-			for(var x in d.F) 
-				this.fields[x] = {
-						t: d.F[x].n, x: 0, y: x * 10, hp: "",
-						s: 10, v: false, h:false 
-					};
-			
-		} else
-		if(d.constructor === Array) for(var t in d)
+		for(var t in d)
 		{
 			var l = d[t];
 			var f = split(l); //l.split(' ');
@@ -68,11 +55,11 @@ var KiCAD = new function()
 			{
 			case 'L': 
 				CmpName = f[1].toUpperCase();
-				if(Lib[CmpName]) Def = Lib[CmpName];  
-				Name = f[2]; 
+				res = new Lib[CmpName]();  
+				Name = f[2];
 				break;
 			case 'F': 
-				this.fields[parseInt(f[1])] = 
+				fields[parseInt(f[1])] = 
 				{
 					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]), hp: f[8],
 					s: Km * parseInt(f[6]), v: f[3] == "V", h:parseInt(f[7]) == 1 
@@ -81,131 +68,32 @@ var KiCAD = new function()
 			case '\t': 
 				if(f.length == 3)
 				{
-					this.x = parseInt(f[1]) * Km;
-					this.y = parseInt(f[2]) * Km;
+					res.x = parseInt(f[1]) * Km;
+					res.y = parseInt(f[2]) * Km;
 				}
 				else
-					M = [parseFloat(f[0]), parseFloat(f[1]), -parseFloat(f[2]), -parseFloat(f[3])];
+					res.M = [parseFloat(f[0]), parseFloat(f[1]), -parseFloat(f[2]), -parseFloat(f[3])];
 				break;
 			}
 		}
-		for(var t in this.fields)
+		for(var t in fields)
 		{
-			this.fields[t].x -= this.x;
-			this.fields[t].y -= this.y;			
+			fields[t].x -= res.x;
+			fields[t].y -= res.y;			
 		}
-		var Pins = {};
-		var th = this;
-		function GetPinPos(n)
-		{
-			var p = Def.pin[n];
-			return {x:th.x + M[0] * p.x + M[1] * p.y, y:th.y - M[3] * p.y - M[2] * p.x};			
-		}
-	    this.moveBy = function(dx, dy)
-	    {
-	        if(!th._mov)
-	        {
-	            th.x += dx;
-	            th.y += dy;
-	            th._mov = true;
-	        }
-	    };
-		if(Def)for(var t in Def.pin) Pins[t] = 
-		{
-			p:t, 
-			pos:function(){return GetPinPos(this.p);},
-			moveBy:this.moveBy,
-            GetId:function(){ return '' + Items.indexOf(th) + '.' + this.p;},
-            Draw:ConnDraw,
-			_enode:null // Электрический узел
-		};
-		this.GetPinPts = function(pts) // Вернуть текущие координаты всех точек в виде KiCAD
-		{
-			if(Def) for(var t in Def.pin)
-			{
-				var p = GetPinPos(t);
-				var n = (p.x / Km).toString() + " " + (p.y / Km).toString();
-				pts[n] = Pins[t]; 
-			}
-		};
-		this.Hit = function(X, Y)
-		{
-			if(!Def) return null;
-			for(var t in Pins)
-			{
-				var p = GetPinPos(t);
-				p.x -= X; p.y -= Y;
-				if(Math.abs(p.x) < Main.adm && Math.abs(p.y) < Main.adm) return Pins[t];
-			}
-			X -= this.x; Y -= this.y;
-    		var d = M[0] * M[3] - M[1] * M[2];
-    		var A = X * d * M[3] + Y * -d * M[1];
-    		var B = X * -d * M[2] + Y * d * M[0];
-    		if(A > Def.l && A < Def.r && B > Def.t && B < Def.b) return this;
-			return null;
-		};
-		this.RHit = function(l, t, r, b)
-		{
-			if(!Def) return false;
-			var x = this.x, y = this.y;
-			var a = Def.l * M[0] + Def.t * M[1] + x;
-			if(a < l || a > r) return false; 
-			a = Def.r * M[0] + Def.b * M[1] + x;
-			if(a < l || a > r) return false; 
-
-			var a = y - (Def.l * M[2] + Def.t * M[3]);
-			if(a < t || a > b) return false; 
-			a = y - (Def.r * M[2] + Def.b * M[3]);
-			if(a < t || a > b) return false; 
-			return true;
-		};
-	    this.Draw = function(Type)
-	    {
-	    	var color = (Type > 0 || this._sel) ? "#F00000" : "#800000";
-	    	ctx.fillStyle = color;
-	    	ctx.strokeStyle = color;
-
-	    	if(Def) 
-	    	{
-	    		ctx.transform(M[0], M[1], M[2], M[3], this.x, this.y);
-	    		Def.D();
-	    		//var d = M[0] * M[3] - M[1] * M[2];
-	    		//ctx.transform(d * M[3], -d * M[1], -d * M[2], d * M[0], 0, 0);
-	            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
-	    	}
-	    	for(var t in this.fields)
-	    	{
-	    		var f = this.fields[t];
-	    		if(!f.t || f.h) continue;
-	    		ctx.font = f.s.toString() + "px monospace";
-	    		ctx.textBaseline = "middle";// top, bottom
-	    		
-	    		if(f.hp == 'C')	ctx.textAlign =  "center";
-	    		else if(f.hp == 'L') ctx.textAlign =  "left";
-	    		else if(f.hp == 'R') ctx.textAlign =  "right";
-	    		
-	    		var fx = this.x + f.x * M[0] + f.y * M[1];
-	    		var fy = this.y - f.x * M[2] - f.y * M[3];
-	    		if(f.v ^ (M[0] === 0.0)) 
-	    		{
-	    			//ctx.rotate(-Math.PI * 0.5);
-		    		ctx.transform(0, -1.0, 1.0, 0, fx, fy);
-	    			ctx.fillText(f.t, 0, 0);
-		            ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
-	    		}
-	    		else ctx.fillText(f.t, fx, fy);
-	    		for(var x in Pins) if(MouseObject !== Pins[x]) Pins[x].Draw(0);
-	    	}
-	    };
-		this.GetInfo = function(){return {
+		if(fields[0]) res.name = fields[0]; 
+		if(fields[1]) res.val = fields[1]; 
+		if(fields[2]) res.foot = fields[2]; 
+		//var Pins = {};
+		//var th = this;
+		/*res.GetInfo = function(){return {
 			CmpName: CmpName,
 			Name:Name,
 			Def:Def,
 			Fields:this.fields,
 			Pins:Pins
-		};};
-	    this.GetPSel = function() {return this._sel;};
-	    this._sel = false;
+		};};*/
+		return res;
 	}	
 	function loadSch(e)
 	{
@@ -224,12 +112,22 @@ var KiCAD = new function()
 			}
 			return pts[pn];
 		}
+		function GetPinPts(c, pts) // Вернуть текущие координаты всех точек в виде KiCAD
+		{
+			for(var t in c.p)
+			{
+				var p = c.p[t].pos();
+				var n = (p.x / Km).toString() + " " + (p.y / Km).toString();
+				pts[n] = c.p[t]; 
+			}
+		};
+		
 		for(var x in data) if(data[x] == "$Comp")
 		{
 			var d = [];
 			for(x++; data[x] != "$EndComp"; x++) d.push(data[x]);
-			var comp = new Component(d);
-			comp.GetPinPts(pts);
+			var comp = Component(d);
+			GetPinPts(comp, pts);
 			Items.push(comp);
 		}
         var Lines = [];
@@ -287,40 +185,42 @@ var KiCAD = new function()
 	}
 	function loadLib(e)
 	{
-		var Lib = workspace.componentLib, obj;
-		function SetB(x, y) {if(x > obj.r) obj.r = x; if(y > obj.b) obj.b = y; if(x < obj.l) obj.l = x; if(y < obj.t) obj.t = y;};
+		var Lib = workspace.partLib, obj, br, s;
+		function SetB(x, y) {if(x > br.r) br.r = x; if(y > br.b) br.b = y; if(x < br.l) br.l = x; if(y < br.t) br.t = y;};
+		function loadField(s)
+		{
+			return {t:s[1]};
+		}
 		var data = e.target.result;
-		var sep = '\n';
-		if(data.search("\r\n") !== -1) sep = "\r\n";
-		data = data.split(sep);
-
-		var menu = {label:"Компонент"};//{label: "Импорт", click: KiCAD.OnImport}
+		data = data.split((data.search("\r\n") !== -1) ? "\r\n" : "\n");
 		
 		for(var x = 0, l = data.length; x < l; x++)
 		{
 			var d = data[x];
 			if(d == "" || d[0] == "#") continue;
-			var s = split(d);
+			s = split(d);
 			if(s[0] === "DEF")
 			{
 				var Name = s[1].toUpperCase();
 				if(Name == "~GND") Name = "GND";
-				obj = Lib[Name] = {F:[], N:[Name], pin:{}, l:0,r:0,t:0,b:0}; // F:поля, N:имена, lrtb:ограничивающий прямоугольник
-				menu[Name] = {label:Name, click: KiCAD.OnCreate};
+				obj = Lib[Name] = new schematic.PartDef(Name); // F:поля, N:имена, lrtb:ограничивающий прямоугольник
+				schematic.addToLib(Name, obj);
+				br = obj.br;
+				//menu[Name] = {label:Name, click: KiCAD.OnCreate};
 			}
-			else if(s[0] === "ALIAS")
+			else if(s[0] === "ALIAS") for(var y = 1, ll = s.length; y < ll; y++)
 			{
-				for(var y = 1, ll = s.length; y < ll; y++)
-				{
-					Lib[s[y]] = obj;
-					obj.N.push(s[y]);
-				}
+				Lib[s[y]] = Lib[Name];
+				obj.names.push(s[y]);
 			}
 			else if(s[0][0] == 'F')
 			{
-				obj.F[s[0].substr(1)] = 
+				var f = loadField(s);
+				switch(s[0].substr(1)) 
 				{
-					n: s[1]
+				case 0: obj.defName = f; break;
+				case 1: obj.defVal = f; break;
+				case 2: obj.defFoot = f; break;
 				};
 			}
 			else
@@ -354,10 +254,17 @@ var KiCAD = new function()
 						Draw.push("ctx.stroke();");
 							
 						break;
-					case 'X': // Контакт X имя номер x y длина направление ШрифтИмени ШрифтНомера
+					case 'X': // Контакт: X имя номер x y длина направление ШрифтИмени ШрифтНомера 1 1 ElType GraphStyle
 						var X = parseInt(s[3]) * Km;
 						var Y = -parseInt(s[4]) * Km;
-						obj.pin[s[2]] = {x:X, y:Y};
+						var pin = {
+							x:X, y:Y, 
+							o:s[6], // направление D U L R
+							n:s[1], // имя
+							et:s[11], // электрический тип
+							gs:s[12] // графический вид 
+						};
+						obj.pins[s[2]] = pin;
 						var L = parseInt(s[5]) * Km;
 						if(!L) break;//L = Km * 40;
 						Draw.push("ctx.beginPath(); ctx.lineWidth = " + defw.toString());
@@ -372,14 +279,14 @@ var KiCAD = new function()
 						}
 						Draw.push("ctx.lineTo(" + X.toString() + "," + Y.toString() + ");");
 						Draw.push("ctx.stroke();");
-						if(s[1] != "~")
+						/*if(s[1] != "~")
 						{
 							if(s[2] !== "" && s[2] !== s[1])
 							{
 								Draw.push("ctx.textBaseline = 'bottom';");
 								Draw.push("ctx.fillText('" + s[2] + "'," + Xn.toString() + "," + Yn.toString() + ");");
 							}
-						}
+						}*/
 						break;
 					case 'C': // Окружность C x y R
 						var X = parseInt(s[1]) * Km;
@@ -422,7 +329,7 @@ var KiCAD = new function()
 			}
 			
 		}
-		CMenu.Add({create:{kicad:menu}});
+		//CMenu.Add({create:{kicad:menu}});
 	};
 	function processFiles(evt) 
 	{
