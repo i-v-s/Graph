@@ -46,7 +46,6 @@ var KiCAD = new function()
 		var res = null;//new schematic.Part(0, 0);
 		var fields = [];
 		var CmpName, Name;
-		var Def = null;
 		for(var t in d)
 		{
 			var l = d[t];
@@ -59,11 +58,10 @@ var KiCAD = new function()
 				Name = f[2];
 				break;
 			case 'F': 
-				fields[parseInt(f[1])] = 
-				{
+				fields[parseInt(f[1])] = new schematic.Field(res, {
 					t: f[2], x: Km * parseInt(f[4]), y: Km * parseInt(f[5]), hp: f[8],
 					s: Km * parseInt(f[6]), v: f[3] == "V", h:parseInt(f[7]) == 1 
-				}; 
+				}); 
 				break;
 			case '\t': 
 				if(f.length == 3)

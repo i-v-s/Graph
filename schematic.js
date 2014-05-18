@@ -91,10 +91,11 @@ var schematic = new function()
         }
 	};
 	this.Pin = Pin;
-	function Field(o, text)
+	function Field(o, value)
 	{
 		this.o = o;
-		this.t = text;
+		if(typeof value === "string") this.t = text;
+		else for(var x in value) this[x] = value[x];
 	}
 	Field.prototype =
 	{
@@ -109,14 +110,14 @@ var schematic = new function()
 			var x = this.x, y = this.y, M = this.o.M;
 			var fx = this.o.x + x * M[0] + y * M[1];
 			var fy = this.o.y - x * M[2] - y * M[3];
-			if(f.v ^ (M[0] === 0.0)) 
+			if(this.v ^ (M[0] === 0.0)) 
 			{
 				//ctx.rotate(-Math.PI * 0.5);
 				ctx.transform(0, -1.0, 1.0, 0, fx, fy);
-				ctx.fillText(f.t, 0, 0);
+				ctx.fillText(this.t, 0, 0);
 				ctx.setTransform(Main.Scale, 0, 0, Main.Scale, Main.OffsetX, Main.OffsetY);
 			}
-			else ctx.fillText(f.t, fx, fy);			
+			else ctx.fillText(this.t, fx, fy);			
 		}
 	};
 	this.Field = Field;
