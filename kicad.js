@@ -42,20 +42,19 @@ var KiCAD = new function()
 	
 	function Component(d)
 	{
-		var Lib = workspace.partLib;
-		var res = null;//new schematic.Part(0, 0);
+		var res = null;
 		var fields = [];
-		var CmpName, Name;
+		var CmpName;
 		for(var t in d)
 		{
 			var l = d[t];
-			var f = split(l); //l.split(' ');
+			var f = split(l);
 			switch(l[0])
 			{
 			case 'L': 
 				CmpName = f[1].toUpperCase();
 				res = new Main.Ctors["Part_" + CmpName]();  
-				Name = f[2];
+				//Name = f[2];
 				break;
 			case 'F': 
 				fields[parseInt(f[1])] = new schematic.Field(res, {
@@ -82,15 +81,6 @@ var KiCAD = new function()
 		if(fields[0]) res.name = fields[0]; 
 		if(fields[1]) res.val = fields[1]; 
 		if(fields[2]) res.foot = fields[2]; 
-		//var Pins = {};
-		//var th = this;
-		/*res.GetInfo = function(){return {
-			CmpName: CmpName,
-			Name:Name,
-			Def:Def,
-			Fields:this.fields,
-			Pins:Pins
-		};};*/
 		return res;
 	}	
 	function loadSch(e)
@@ -112,11 +102,11 @@ var KiCAD = new function()
 		}
 		function GetPinPts(c, pts) // Вернуть текущие координаты всех точек в виде KiCAD
 		{
-			for(var t in c.p)
+			for(var t in c._p)
 			{
-				var p = c.p[t].pos();
+				var p = c._p[t].pos();
 				var n = (p.x / Km).toString() + " " + (p.y / Km).toString();
-				pts[n] = c.p[t]; 
+				pts[n] = c._p[t]; 
 			}
 		};
 		
@@ -176,11 +166,6 @@ var KiCAD = new function()
 		pts = null;	
 		Main.Redraw();
 	};
-	function def2js(def)
-	{
-
-
-	}
 	function loadLib(e)
 	{
 		var Lib = workspace.partLib, obj, br, s;
@@ -211,7 +196,6 @@ var KiCAD = new function()
 				obj = Lib[Name] = new schematic.PartDef(Name); // F:поля, N:имена, lrtb:ограничивающий прямоугольник
 				schematic.addToLib(Name, obj);
 				br = obj.br;
-				//menu[Name] = {label:Name, click: KiCAD.OnCreate};
 			}
 			else if(s[0] === "ALIAS") for(var y = 1, ll = s.length; y < ll; y++)
 			{
@@ -347,7 +331,6 @@ var KiCAD = new function()
 			}
 			
 		}
-		//CMenu.Add({create:{kicad:menu}});
 	};
 	function processFiles(evt) 
 	{
@@ -375,7 +358,7 @@ var KiCAD = new function()
 	this.OnImport = function()
 	{
 		var imp = document.getElementById("import");
-		imp.onchange = processFiles;// "KiCAD.processFiles(this.files)";
+		imp.onchange = processFiles;
 		imp.click();	
 	};
 }();

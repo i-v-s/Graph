@@ -108,7 +108,7 @@ function NetLoader()
             }
 			if(!Model) {Errors.push("Не найдена модель для компонента '" + info.name + "', тип " + item.names[0]); continue;}
 			// Нашли модель, создаём устройство
-			var pins = item.p;
+			var pins = item._p;
 			var mpins = Model.nodes;
 			var dev = {i:info.name, m:ModelName, n:[], b:null, f:{v:info.val}};
 			for(var t in mpins) // Проходим по узлам модели
@@ -282,7 +282,7 @@ function NetLoader()
 			var oC = 1.0 / parseFloat(fields.v);
 			this.f = function(dX, X)
 			{
-				dX[o] = I * oC;// Ток???
+				dX[o] = 0;//I * oC;// Ток???
 			};
 		},
 		nodes: {1:null, 2:null}, // Два узла
