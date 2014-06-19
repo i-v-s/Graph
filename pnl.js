@@ -74,24 +74,8 @@ function Line(p1, p2)
 
 Line.prototype = 
 {
-	_: ["Line", "p1", "p2"],
-	/*toJSON: function()
-	{
-		var r = {_:"Line"};
-		for(var x in this) if(this.hasOwnProperty(x) && x.charAt(0) !== '_') r[x] = this[x];
-		r.p1 = Main.GetId(this.p1);
-		r.p2 = Main.GetId(this.p2);
-		return r;
-	},
-    OnLoad: function()
-    { 
-        this.p1 = Main.ById(this.p1);
-        this.p2 = Main.ById(this.p2);
-        if(!(this.p1 && this.p2)) return false;
-        this.p1._der.push(this);
-        this.p2._der.push(this);
-        return  true;
-    },*/
+	ctor: "Line",
+	dep:["p1", "p2"],
     draw: function(Type)
     {
         var color = this.color ? this.color : Main.Color;

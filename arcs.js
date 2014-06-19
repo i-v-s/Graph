@@ -34,11 +34,12 @@ function Arc(p1, p2, A)
 
 Arc.prototype = 
 {
-	_:["Arc", "p1", "p2"],
+	ctor: "Arc", 
+	dep: ["p1", "p2"],
     serialize: function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2) + ',' + (this.a * 180 / Math.PI);},
     toJSON: function(key){return {p1:Main.GetId(this.p1), p2:Main.GetId(this.p2), a: this.a * 180 / Math.PI, _:"Arc"};},
     OnLoad: function() {/*this.p1 = Main.ById(this.p1); this.p2 = Main.ById(this.p2);*/ this.a *=  Math.PI / 180; return this.p1 && this.p2;},
-    Child: function(c) {return this._P;},
+    child: function(c) {return this._P;},
     Update: function()
     {
         var p1 = this.p1.pos();

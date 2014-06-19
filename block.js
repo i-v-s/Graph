@@ -59,7 +59,7 @@ function Block(r)//x, y, w, h, Text)
     }
 
     if(this.text) this.text = this.text.split("\n");
-    this.Child = function(c) {return this._P[c];};
+    this.child = function(c) {return this._P[c];};
     this.OnLoad = function(_sel)
     {
         if(this.x && this.y && this.w && this.h) return true;

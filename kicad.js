@@ -54,7 +54,7 @@ var KiCAD = new function()
 			{
 			case 'L': 
 				CmpName = f[1].toUpperCase();
-				res = new Lib[CmpName]();  
+				res = new Main.Ctors["Part_" + CmpName]();  
 				Name = f[2];
 				break;
 			case 'F': 

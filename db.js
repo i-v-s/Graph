@@ -54,15 +54,15 @@ var DB =
         return JSON.stringify(workspace, function(key, value)
         {
         	if(key !== "_" && key.charAt(0) === '_') return undefined;
-        	if(typeof value === "object" && value._ instanceof Array)
+        	if(typeof value === "object" && value.ctor)
         	{
-       			var r = {_:value._[0]};
+       			var r = {_:value.ctor};
        			for(var x in value) if(value.hasOwnProperty(x) && typeof value[x] !== "function") 
        				r[x] = value[x];
-       			var _ = value._;
-       			for(var x = 1, e = _.length; x < e; x++)
+       			var dep = value.dep;
+       			for(var x in dep)
        			{
-       				var p = _[x];
+       				var p = dep[x];
        				if(r[p] instanceof Array)
        				{
        					var s = r[p], d = [];
@@ -80,7 +80,7 @@ var DB =
     {
         var errors = [];
         Items = [];
-        function rv(k, v)
+        /*function rv(k, v)
         {
         	if(typeof v === "object" && typeof v._ === "string")
         	{
@@ -89,12 +89,69 @@ var DB =
         		return r;
         	}
         	return v;
-        }
-        try{workspace = JSON.parse(Text, rv);} catch(e)
+        }*/
+        ////////// Парсим JSON ////
+        try{workspace = JSON.parse(Text);} catch(e) 
         {
             errors.push("JSON parse error: " + e.message);
             return;
         }
+        ////////// Пересоздаём /////
+        function recreate(v, par)
+        {
+        	function link(v, rn)
+        	{
+        		var r = null;
+        		if(typeof rn === "number") r = par[rn];
+        		else if(typeof rn === "string")
+    			{
+        	        var a = rn.split('.');
+        	        for(var x in a)
+        	        {
+        	            if(x == 0) r = par[a[x]];
+        	            else r = r.child(a[x]);
+        	            if(!r) throw "Unrecognized id '" + rn + "'";
+        	        }
+    			}
+        		if(r._der) r._der.push(v);
+        		else r._der = [v];
+        		return r;
+        	}
+        	if(typeof v === "object" && typeof v._ === "string")
+        	{
+        		var r = new Main.Ctors[v._]; // Пересоздаём
+        		for(var x in v) if(x !== "_")
+        		{
+        			var t = v[x];
+        			if(typeof t === "object") t = recreate(t, v);
+        			r[x] = t ? t : v[x];
+        		}
+        		
+        		
+        		if(r.dep) for(var x in r.dep) // Линкуем
+        		{
+        			var d = r.dep[x];
+        			if(r[d] instanceof Array) for(var y in r[d])
+        				r[d][y] = link(r, r[d][y]);
+        			else r[d] = link(r, r[d]);
+        		}
+        		
+        		if(r.onLoad) r.onLoad(); // Уведомляем
+        		return r;        		
+        	}
+        	else
+        		for(var x in v) if(v[x] && typeof v[x] === "object") 
+        		{
+        			var t = recreate(v[x], v); 
+        			if(t) v[x] = t;
+        		}
+        	return null;
+        }
+        recreate(workspace);
+        
+        
+        
+        
         Items = workspace.sheets["лист 1"];
         /*for(var i in Items) try
         {
@@ -118,10 +175,10 @@ var DB =
         for(var i in Items) if(Items[i]) try 
         {
         	var r = Items[i];
-    		var _ = r._;
-    		if(_) for(var x = 1, e = _.length; x < e; x++)
+    		var dep = r.dep;
+    		if(dep) for(var x in dep)
     		{
-    			var p = _[x];
+    			var p = dep[x];
     			if(r[p] instanceof Array) for(var y in r[p]) r[p][y] = toObj(r, r[p][y]);
     			else r[p] = toObj(r, r[p]);
     		}

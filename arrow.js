@@ -3,34 +3,14 @@
 function Arrow(a)
 {
     this.ps = a;
-    /*this.Serialize = function()
-    {
-        var r = "[";
-        for(var x = 0, e = this.ps.length; x < e;)
-        {
-            r += Items.indexOf(this.ps[x]);
-            if(++x < e) r += ",";
-        }
-        return r + "]";
-    };
-    this.OnLoad = function()
-    {
-        if(!this.ps || this.ps.length < 2) return false;
-        for(var x in this.ps)
-        {
-            var v = Main.ById(this.ps[x]);
-            if(!v) return false;
-            this.ps[x] = v;
-        }
-        return true;
-    };*/
     this._sel = false;
     this._mov = false;
 }
 
 Arrow.prototype = 
 {
-	_:["Arrow", "ps"],
+	ctor: "Arrow", 
+	dep: ["ps"],
     draw: function(Type)
     {
         if(this.ps.length < 2) return;

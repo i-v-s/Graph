@@ -13,10 +13,10 @@ var schematic = new function()
 	};
 	this.PartDef.prototype = // Методы всех деталей
 	{
-		//_:"Part",
+		//ctor:"Part",
 		toJSON: function()
 		{
-			var r = {};
+			var r = {_:this.M ? "Part_" + this.names[0] : "PartDef"};
 			for(var x in this) if(this.hasOwnProperty(x))
 			{
 				if(typeof this[x] === "function") r[x] = this[x].toString();
@@ -24,7 +24,38 @@ var schematic = new function()
 			}
 			return r;
 		},
-		moveBy: function(dx, dy) { this.x += dx; this.y += dy; this._mov = true;},
+		onLoad: function()
+		{
+			if(this.M)
+			{
+				if(this.name) this.name._o = this;
+				if(this.foot) this.foot._o = this;
+				if(this.val) this.val._o = this;
+				return;
+			}
+			function Part()
+			{
+				this.x = 0; 
+				this.y = 0;
+				this.M = [1, 0, 0, 1];
+				if(this.defName) 
+				{
+					this.name = new Field(this, this.defName);
+					this.name.t += "?";
+				}
+				if(this.defVal) this.val = new Field(this, this.defVal);
+				if(this.defFoot) this.foot = new Field(this, this.defFoot);
+				var p = {}; 
+				for(var x in this.pins) p[x] = new Pin(this, this.pins[x]);
+				this._p = p; 			
+			};
+			for(var x in this)
+				if(typeof this[x] === "string" && this[x].substr(0, 8) === "function")
+					this[x] = eval("(" + this[x] + ")");
+			Part.prototype = this;
+			Main.Ctors["Part_" + this.names[0]] = Part; 
+		},
+		moveBy: function(dx, dy) { if(!this._mov) {this.x += dx; this.y += dy; this._mov = true;}},
 		draw: function(Type)
 		{
 			var color = (Type > 0 || this._sel) ? "#F00000" : "#800000";
@@ -90,8 +121,10 @@ var schematic = new function()
 		onMsg: function(msg)
 		{
 			if(msg.val) this.val.t = msg.val;
-		}
+		},
+		child: function(c) {return this._p[c];}
 	};
+	Main.Ctors["PartDef"] = this.PartDef;
 	//////////// Контакт ///////////////////////////////
 	function Pin(o, p) 
 	{
@@ -106,7 +139,12 @@ var schematic = new function()
 			return {x: this.o.x + M[0] * x + M[1] * y, y: this.o.y + M[3] * y + M[2] * x};
 		},
 		moveBy:function(x, y){this.o.moveBy(x, y);},
-        GetId:function(){ return '' + Items.indexOf(this.o) + '.' + this.p;},
+        GetId:function()
+        { 
+        	var p = this.o._p, i = "?";
+        	for(var x in p) if(p[x] === this) {i = x; break;}
+        	return '' + Items.indexOf(this.o) + '.' + i;
+        },
         draw: function(Type)
         {
         	ctx.fillStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": Main.Color);
@@ -118,7 +156,6 @@ var schematic = new function()
                 ctx.arc(p.x, p.y, 1, 0, 2 * Math.PI, false);
                 ctx.fill();
             }
-            
         }
 	};
 	///////////////// Поле /////////////////////////////
@@ -126,10 +163,11 @@ var schematic = new function()
 	{
 		if(typeof value === "string") this.t = text;
 		else for(var x in value) this[x] = value[x];
-		this.o = o;
+		this._o = o;
 	}
 	(this.Field = Field).prototype =
 	{
+		ctor:"Field",
 		ta:{C:"center", L:"left", R:"right"},
 		draw: function(Type)
 		{
@@ -138,9 +176,9 @@ var schematic = new function()
 			ctx.textBaseline = "middle";// top, bottom
 		
 			ctx.textAlign = this.ta[this.hp];
-			var x = this.x, y = this.y, M = this.o.M;
-			var fx = this.o.x + x * M[0] + y * M[1];
-			var fy = this.o.y - x * M[2] - y * M[3];
+			var x = this.x, y = this.y, M = this._o.M;
+			var fx = this._o.x + x * M[0] + y * M[1];
+			var fy = this._o.y - x * M[2] - y * M[3];
 			if(this.v ^ (M[0] === 0.0)) 
 			{
 				//ctx.rotate(-Math.PI * 0.5);
@@ -151,6 +189,8 @@ var schematic = new function()
 			else ctx.fillText(this.t, fx, fy);			
 		}
 	};
+	Main.Ctors["Field"] = this.Field;
+	
 	////////////// Создание экземпляров детали /////////////////////
 	if(!workspace.partLib)
 	{
@@ -159,7 +199,7 @@ var schematic = new function()
 		for(var x in w) workspace[x] = w[x];
 	}
 	var lib = workspace.partLib;
-	var ctors = {};
+	//var ctors = {};
 	
 	this.addToLib = function(name, obj)
 	{
@@ -180,21 +220,18 @@ var schematic = new function()
 			this._p = p; 			
 		};
 		Part.prototype = obj;
-		lib[name] = obj;//obj;
-		ctors[name] = Part;
+		lib[name] = obj;
+		Main.Ctors["Part_" + name] = Part;
 		var menu = {label:"Компонент"};
 		menu[name] = {label:name, click: this.onCreate};
 		CMenu.Add({create:{kicad:menu}});
 	};
-
 	
 	this.onCreate = function(e)
 	{
-		var m = ctors[e.target.innerText];
+		var m = Main.Ctors["Part_" + e.target.innerText];
 		Items.push(new m());		
-		
 	};
-	
 }();
 
 (function ()

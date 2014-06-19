@@ -241,7 +241,7 @@ var Main = {
         for(var x in a)
         {
             if(x == 0) r = Items[a[x]];
-            else r = r.Child(a[x]);
+            else r = r.child(a[x]);
             if(!r) throw "Unrecognized id '" + id + "'";
         }
         return r;
