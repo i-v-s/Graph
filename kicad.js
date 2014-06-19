@@ -189,8 +189,8 @@ var KiCAD = new function()
 				
 				if(Lib[Name]) // Такой компонент в библиотеке уже есть 
 				{
-					do {s = data[++x].substr(0, 4);} while(s !== "DEF " && x < l);
-					x--;
+					x++;
+					do {s = data[x++];} while(s !== "ENDDEF" && x < l);
 					continue;
 				}
 				obj = Lib[Name] = new schematic.PartDef(Name); // F:поля, N:имена, lrtb:ограничивающий прямоугольник
