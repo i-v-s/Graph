@@ -3,7 +3,14 @@
 
 var schematic = new function()
 {
-	var partDef = // Методы деталей
+	/////////////// Описание детали //////////////////////////
+	this.PartDef = function PartDef(name) 
+	{
+		this.pins = {}; // Описания контактов
+		this.br = {l:0, r:0, t:0, b:0}; // Ограничивающий прямоугольник
+		this.names = [name]; // Наименования детали
+	};
+	this.PartDef.prototype = // Методы всех деталей
 	{
 		moveBy: function(dx, dy) { this.x += dx; this.y += dy; this._mov = true;},
 		draw: function(Type)
@@ -60,14 +67,26 @@ var schematic = new function()
 			a = y - (br.r * M[2] + br.b * M[3]);
 			if(a < t || a > b) return false; 
 			return true;
-		}		
+		},
+		partInfo: function()
+		{
+			return {
+				name:this.name.t,
+				val:this.val.t
+			};
+		},
+		onMsg: function(msg)
+		{
+			if(msg.val) this.val.t = msg.val;
+		}
 	};
-	function Pin(o, p)
+	//////////// Контакт ///////////////////////////////
+	function Pin(o, p) 
 	{
 		this.o = o;
 		this.p = p;
-	}
-	Pin.prototype = 
+	};
+	(this.Pin = Pin).prototype = // Методы всех контактов
 	{
 		pos:function()
 		{
@@ -90,14 +109,14 @@ var schematic = new function()
             
         }
 	};
-	this.Pin = Pin;
+	///////////////// Поле /////////////////////////////
 	function Field(o, value)
 	{
-		this.o = o;
 		if(typeof value === "string") this.t = text;
 		else for(var x in value) this[x] = value[x];
+		this.o = o;
 	}
-	Field.prototype =
+	(this.Field = Field).prototype =
 	{
 		ta:{C:"center", L:"left", R:"right"},
 		draw: function(Type)
@@ -120,15 +139,10 @@ var schematic = new function()
 			else ctx.fillText(this.t, fx, fy);			
 		}
 	};
-	this.Field = Field;
+	////////////// Создание экземпляров детали /////////////////////
 	if(!workspace.partLib) workspace.partLib = {};
 	var lib = workspace.partLib;
-	this.onCreate = function(e)
-	{
-		var m = lib[e.target.innerText];
-		Items.push(new m());		
-		
-	};
+	
 	this.addToLib = function(name, obj)
 	{
 		function Part()
@@ -136,9 +150,13 @@ var schematic = new function()
 			this.x = 0; 
 			this.y = 0;
 			this.M = [1, 0, 0, 1];
-			if(this.defName) this.name = this.defName + "?";
-			if(this.defVal) this.val = this.defVal;
-			if(this.defFoot) this.foot = this.defFoot;
+			if(this.defName) 
+			{
+				this.name = new Field(this, this.defName);
+				this.name.t += "?";
+			}
+			if(this.defVal) this.val = new Field(this, this.defVal);
+			if(this.defFoot) this.foot = new Field(this, this.defFoot);
 			var p = {}; 
 			for(var x in this.pins) p[x] = new Pin(this, this.pins[x]);
 			this.p = p; 			
@@ -149,17 +167,15 @@ var schematic = new function()
 		menu[name] = {label:name, click: this.onCreate};
 		CMenu.Add({create:{kicad:menu}});
 	};
+
 	
-	function PartDef(name)
+	this.onCreate = function(e)
 	{
-		//this.name = {t:"R1"};
-		//this.comp = {t:"R"};
-		this.pins = {};
-		this.br = {l:0, r:0, t:0, b:0};
-		this.names = [name];
-	}
-	PartDef.prototype = partDef;
-	this.PartDef = PartDef;
+		var m = lib[e.target.innerText];
+		Items.push(new m());		
+		
+	};
+	
 }();
 
 (function ()
@@ -167,6 +183,19 @@ var schematic = new function()
 	var LED = new schematic.PartDef("LED");
 	LED.br = {l:-2.5, r: 6.25, t: -2.5, b: 4}; // bounding rect
 	LED.pins = {1:{x:-10, y: 0}, 2:{x: 10, y: 0}}; // pins
+	LED.model = { // Резистор
+		ctor: function(fields, nodes, brs)
+		{
+			var y = 1.0 / 30.0;
+			var br = brs[0];
+			this.addY = function()
+			{
+				br.y += y;
+			};
+		},
+		nodes: {1:null, 2:null},
+		branches: [{p:1, q: 2}]
+	};
 	LED.D = function() 
 	{
 		ctx.beginPath(); ctx.lineWidth = 0.5;

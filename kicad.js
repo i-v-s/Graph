@@ -185,9 +185,9 @@ var KiCAD = new function()
 	{
 		var Lib = workspace.partLib, obj, br, s;
 		function SetB(x, y) {if(x > br.r) br.r = x; if(y > br.b) br.b = y; if(x < br.l) br.l = x; if(y < br.t) br.t = y;};
-		function loadField(s)
+		function loadField(o, s)
 		{
-			return {t:s[1]};
+			return new schematic.Field(o, {t:s[1], s: Km * parseInt(s[4]), x: Km * parseInt(s[2]), y: Km * parseInt(s[3])});
 		}
 		var data = e.target.result;
 		data = data.split((data.search("\r\n") !== -1) ? "\r\n" : "\n");
@@ -213,12 +213,12 @@ var KiCAD = new function()
 			}
 			else if(s[0][0] == 'F')
 			{
-				var f = loadField(s);
+				var f = loadField(obj, s);
 				switch(s[0].substr(1)) 
 				{
-				case 0: obj.defName = f; break;
-				case 1: obj.defVal = f; break;
-				case 2: obj.defFoot = f; break;
+				case '0': obj.defName = f; break;
+				case '1': obj.defVal = f; break;
+				case '2': obj.defFoot = f; break;
 				};
 			}
 			else

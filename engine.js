@@ -394,10 +394,10 @@ function Network(Devices, Nodes, Branches)
 					}
 				}
 			}
-			/*if(!OptimalNode)
+			if(!OptimalNode)
 			{
 				//ATLTRACE("\nНе найден узел с надёжной диагональю. Осталось исключить %d. Текущий: %d", (CNode *)(&Base->SData) - (CNode *)Node, Node->Original - Nodes);
-				this->Base = (CNode *)((char *)Node - ((char *)&Nodes->SData - (char *)Nodes));
+				/*Base = (CNode *)((char *)Node - ((char *)&Nodes->SData - (char *)Nodes));
 				for(CNode * b = this->Base; b < Base; b++)
 				{
 					var t = b.Original;
@@ -413,10 +413,10 @@ function Network(Devices, Nodes, Branches)
 					{
 						if(CNode * jNode = lu->Node)
 						{
-							if(jNode->Type == CNode::MISSED)
+							if(jNode.Type == "MISSED")
 							{
-								iNode->Type = CNode::MISSED;
-								iNode->pY = 0;
+								iNode.Type = "MISSED";
+								iNode.pY = null;
 							}
 						}
 						else 
@@ -425,15 +425,15 @@ function Network(Devices, Nodes, Branches)
 							iNode = Node->Original;
 						}
 					}
-				}
+				}*/
 				break;
 				/*ATLTRACE("\nНе найден узел с надёжной диагональю. Осталось исключить %d. Текущий: %d", (CNode *)(&Base->SData) - (CNode *)Node, Node->Original - Nodes);
 				DeleteList(YList);
 				YList = 0;
 				LU.Reset();
 				pLU.Reset();
-				return false;* /
-			}*/
+				return false;*/
+			}
 			// Ставим оптимальный узел на текущую позицию
 			var Old = Node.Original;
 			if(Old !== OptimalNode)
@@ -566,14 +566,14 @@ function Network(Devices, Nodes, Branches)
             if(!Nodes[n].T && Math.abs(I[n] - Nodes[n].I) > 1E-6) 
                 console.log("В узле " + n + " не совпадают задающие токи. Задано " + Nodes[n].I + ", получено " + I[n]);
     };
-    this.GetResult = function()
+    this.getResult = function()
     {
     	var Result = [];
     	for(var d in Devices)
     	{
     		var dev = Devices[d];
-    		if(!dev.Get) continue;
-    		Result[d] = dev.Get();
+    		if(!dev.get) continue;
+    		Result[d] = dev.get();
     	}
     	return Result;
     };
@@ -637,7 +637,7 @@ function Euler(Devices, Net, cb)
 			{
 				if(+new Date() >= d)
 				{
-					cb(Net.GetResult());
+					cb(Net.getResult());
 					d = +new Date() + 100;
 				}
 				c = 0;
@@ -680,6 +680,6 @@ self.addEventListener("message", function(e)
 		var int = new Euler(data.Devices, Net, self.postMessage);
 		int.Run();
 		break;
-	}
+	};
 
 }, false);
