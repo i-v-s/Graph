@@ -3,6 +3,7 @@
 
 var schematic = new function()
 {
+	this.models = {};
 	/////////////// Описание детали //////////////////////////
 	this.PartDef = function PartDef(name) 
 	{
@@ -183,21 +184,43 @@ var schematic = new function()
 	var LED = new schematic.PartDef("LED");
 	LED.br = {l:-2.5, r: 6.25, t: -2.5, b: 4}; // bounding rect
 	LED.pins = {1:{x:-10, y: 0}, 2:{x: 10, y: 0}}; // pins
-	LED.model = { // Резистор
+	schematic.models.LED = {
 		ctor: function(fields, nodes, brs)
 		{
 			var y = 1.0 / 30.0;
 			var br = brs[0];
+			var n1 = nodes[1], n2 = nodes[2];
 			this.addY = function()
 			{
 				br.y += y;
+			};
+			this.get = function()
+			{
+				return {I:(n1.V - n2.V) * y};
 			};
 		},
 		nodes: {1:null, 2:null},
 		branches: [{p:1, q: 2}]
 	};
+	LED.onMsg = function(msg)
+	{
+		var I = msg.I;
+		if(I < 0.001) I = 0.0;
+		if(I > 0.100) I = 0.1;
+		this.I = (I * 10);
+	};
+
 	LED.D = function() 
 	{
+		if(this.I)
+		{
+			var fs = ctx.fillStyle; 
+			ctx.fillStyle = "rgba(240, 136, 05, " + this.I + ")";
+			ctx.beginPath();
+			ctx.arc(0, 0, 8, 0, 2 * Math.PI, false);
+			ctx.fill();
+			ctx.fillStyle = fs; 
+		}
 		ctx.beginPath(); ctx.lineWidth = 0.5;
 		ctx.moveTo(2.5,-2.5);
 		ctx.lineTo(2.5,2.5);

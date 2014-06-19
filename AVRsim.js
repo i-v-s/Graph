@@ -1,3 +1,4 @@
+"use strict";
 function AVR(Model)
 {
 	var RAM = [], ROM, Data = [];
@@ -13,8 +14,8 @@ function AVR(Model)
 			ROM = new Array(1024);
 		}
 		C = 0, N = 0, Z = 0, I = 0, S = 0, V = 0, T = 0, H = 0;
-		var codetab = document.getElementById("code");
-		codetab.innerHTML = "";
+		//var codetab = document.getElementById("code");
+		//codetab.innerHTML = "";
 	}
 	Free();
 	function Ins(Name, Code, Flag, Func)
@@ -256,12 +257,12 @@ function AVR(Model)
 		}
 		return result;
 	};
-	var ths = this;
 	var Run;
 	var LastPC = 0;
-	BuildRun = function()
+	this.run = null;
+	this.buildRun = function()
 	{
-		var Text = "Run = function(){var t; main: while(1) switch(PC){\n";
+		var Text = "function(stop){var t; main: while(Ctr < stop) switch(PC){\n";
 		Text += "default: return 0;\n"; // Отсутствует метка
 		Data[0].l = true;
 		for(var x in Data)
@@ -271,10 +272,10 @@ function AVR(Model)
 			if(Data[x].e) Text += Data[x].e + "\n";
 		}
 		Text += "PC = 0x" + LastPC.toString(16) + "; return 2;}}"; // end of code
-		eval(Text);
+		this.run = eval("(" + Text + ")");// new Function("stop", Text);
 		return Text;
 	};
-	var codetab = document.getElementById("code");
+	/*var codetab = document.getElementById("code");
 	this.oncodeclick = function(a)
 	{
 		var i = a.target.innerHTML;
@@ -305,8 +306,8 @@ function AVR(Model)
 		tr.appendChild(cd);
 		tr.appendChild(as);
 		return tr;		
-	};
-	this.Build = function() // Строим JS функцию из массива ROM
+	};*/
+	this.build = function() // Строим JS функцию из массива ROM
 	{
 		LastPC = 0;
 		Data = [];
@@ -326,7 +327,7 @@ function AVR(Model)
 				if(typeof op.E === "function") exp = op.E(Code); // вызывая функцию
 				else 
 				{ // или из строки.
-					var b, r, R, i, d;
+					var b, r, R, i, d, p;
 					for(var j in set) switch(j)
 					{
 					case 'b': b = GetVal(Code, set.b); continue;
@@ -384,11 +385,11 @@ function AVR(Model)
 			}
 			if(PC != null) Stack.push(PC);
 		}
-		var Text = BuildRun();
+		var Text = this.buildRun();
 		for(var x in ROM) if(ROM[x] !== undefined)
 		{
 			var asm = CodeToAsm(x);
-			var d = AddToScreen(x, ROM[x], asm);
+			var d = null;//AddToScreen(x, ROM[x], asm);
 			if(Data[x]) Data[x].d = d;
 			//Text += "/*" + asm + "*/ ";
 		}
@@ -406,7 +407,7 @@ function AVR(Model)
 		
 	};
 	var RegTD = Array(32);
-	var PCinp = document.getElementById("pc");
+	/*var PCinp = document.getElementById("pc");
 	this.InitScreen = function()
 	{
 		var table = document.getElementById("reg");
@@ -439,13 +440,13 @@ function AVR(Model)
 		PCinp.value = PC.toString(16);
 		if(Data[PC] && Data[PC].d)Data[PC].d.className = "pc";
 		for(var x in RegTD) RegTD[x].value = RAM[x] ? RAM[x] : "0";
-	};
+	};*/
 	this.Reset = function()
 	{
 		if(PC && Data[PC] && Data[PC].d)Data[PC].d.className = "";
 		PC = 0;
 		for(var r in RAM) RAM[r] = 0;
-		this.UpdateScreen();
+		//this.UpdateScreen();
 	};
 	this.Step = function()
 	{
@@ -460,7 +461,7 @@ function AVR(Model)
 		Ctr++;
 		var exp = Data[PC++].e;
 		eval("do{" + exp + "}while(0);");
-		this.UpdateScreen();
+		//this.UpdateScreen();
 	};
 	this.OnRun = function()
 	{
@@ -469,11 +470,11 @@ function AVR(Model)
 		while(!(r = Run())) 
 			Rebuild();
 		if(r == 2) {alert("PC находится в недоступной зоне ROM:0x" + PC.toString(16)); PC = 0;};
-		this.UpdateScreen();		
+		//this.UpdateScreen();		
 	};
 }
 
-var hex = ":020000020000FC";
+/*var hex = ":020000020000FC";
 hex += ":0200000027C017";
 hex += ":10001A0000C0DF9A15B01D9217FCDF9843954E3742";
 hex += ":10002A0089F4DF98442746B9A0E6E199FECF4EBB92";
@@ -494,11 +495,11 @@ if(b.e && b.e.length)
 	for(var i in b.e)
 		console.log(b.e[i]);
 
-avr.InitScreen();
+//avr.InitScreen();
 avr.Reset();
-console.log("Completed");
+console.log("Completed");*/
 
-function processFiles(files) 
+/*function processFiles(files) 
 {
     var file = files[0];
     var reader = new FileReader();
@@ -514,5 +515,5 @@ function processFiles(files)
         avr.Reset();
     };
     reader.readAsText(file);
-}
+}*/
 

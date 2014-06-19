@@ -2,7 +2,7 @@
 
 function NetLoader()
 {
-	var Models = {}; // Математические модели
+	var Models = schematic.models; // Математические модели
 	var Errors = [];
 	function Dump(Devices, Nodes, Branches)
 	{
@@ -22,7 +22,8 @@ function NetLoader()
 			else r += " p:" + b.p; 
 			if(b.q === null) r += " q:GND";
 			else r += " q:" + b.q;
-			r += " y = " + b.y;
+			if(typeof b.y === "number") r += " y = " + b.y;
+			if(typeof b.V === "number") r += " V = " + b.V;
 			console.log(r);
 		}
 		for(var t in Devices)
@@ -195,9 +196,11 @@ function NetLoader()
 			DevMap[x].onMsg(e.data[x]);
 		Main.Redraw();
 	}
-	this.Run = function()
+	var worker = null;
+	this.run = function()
 	{
-		var worker;
+		if(worker) worker.terminate();
+		worker = null;
 		try {
 			worker = new Worker("engine.js");
 		} catch(e) {alert("Не удалось создать объект Worker. " + e.message); return;}
@@ -214,6 +217,11 @@ function NetLoader()
 		data.cmd = "start";
 		worker.addEventListener('message', onMessage);
 		worker.postMessage(data);
+	};
+	this.stop = function()
+	{
+		if(worker) worker.terminate();	
+		worker = null;
 	};
 	Models.GND = { // Земля
 		nodes: {1:{T:2, V:0.0}}
@@ -266,6 +274,21 @@ function NetLoader()
 		nodes: {1:null, 2:null}, // Два узла, ветвей нет
 	    sc: 1 // число переменных состояния
 	};
+	Models.C = { // Конденсатор
+		ctor: function(fields, nodes, brs, X0, o)
+		{
+			X0[o] = 0.0;
+			var n1 = nodes[1], n2 = nodes[2];
+			var oC = 1.0 / parseFloat(fields.v);
+			this.f = function(dX, X)
+			{
+				dX[o] = I * oC;// Ток???
+			};
+		},
+		nodes: {1:null, 2:null}, // Два узла
+		branches: [{p:1, q: 2, V: 0}],		
+		sc: 1
+	};
 }
 
 var Loader = new NetLoader();
@@ -273,6 +296,7 @@ var Loader = new NetLoader();
 CMenu.Add({
     net:{label:"Электроника",
     	//run: {label: "Пуск", click: Net.Solve},
-		runw: {label: "Пуск Worker", click: Loader.Run}
+		runw: {label: "Пуск Worker", click: Loader.run},
+		stopw: {label: "Завершить Worker", click: Loader.stop}
     		}});
 

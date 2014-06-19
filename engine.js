@@ -34,11 +34,19 @@
 	2. V = Y^(-1) * I			(решение системы уравнений узловых потенциалов) 
 	3. X, V, t => dX			(используются методы устройств f())
 	
-Функция съёма данных для визуализации Result(X, t):
+Функция съёма данных для визуализации get(X, t):
 
-	Шаги до 3 совпадают с f(X, t). Функция Result должны вызываться сразу после запуска f(X, t), где X и t
+	Шаги до 3 совпадают с f(X, t). Функция get должна вызываться сразу после запуска f(X, t), где X и t
 	соответствуют текущему состоянию. 
- 
+
+Методы устройств
+
+	addI(X, t): добавить задающие токи (или задать напряжения) в узлы, в соответствии с текущим состоянием устройства
+	addY(?): добавить проводимости в ветви
+	get(X, t): получить данные устройства, которые будут отправлены визуальному компоненту через onMsg
+	onStep(X, t): уведомление устройства о произведённом шаге интегрирования. 
+		Устройство может потребовать откатиться и изменить параметры
+
 Могут происходить события, в результате которых матрица проводимостей Y будет изменена
 */
 var Models = {};
@@ -100,6 +108,7 @@ function Network(Devices, Nodes, Branches)
 	xc = 0;
 	var dev_f = []; // Устройства с методом f
 	var dev_I = []; // Устройства с методом addI
+	var dev_s = []; // Устройства с методом onStep
 	for(var n in Devices)
 	{
 		var d = Devices[n];
@@ -115,6 +124,7 @@ function Network(Devices, Nodes, Branches)
 		nd.i = d.i;
 		if(nd.f) dev_f.push(nd);
 		if(nd.addI) dev_I.push(nd);
+		if(nd.onStep) dev_s.push(nd);
 		Devices[n] = nd; 
 	}
 	
@@ -566,16 +576,20 @@ function Network(Devices, Nodes, Branches)
             if(!Nodes[n].T && Math.abs(I[n] - Nodes[n].I) > 1E-6) 
                 console.log("В узле " + n + " не совпадают задающие токи. Задано " + Nodes[n].I + ", получено " + I[n]);
     };
-    this.getResult = function()
+    this.getResult = function(X, t)
     {
     	var Result = [];
     	for(var d in Devices)
     	{
     		var dev = Devices[d];
     		if(!dev.get) continue;
-    		Result[d] = dev.get();
+    		Result[d] = dev.get(X, t);
     	}
     	return Result;
+    };
+    this.onStep = function(X, t)
+    { // Уведомление от метода интегрирования об успешно завершённом шаге
+    	for(var d in dev_s) dev_s[d].onStep(X, t);
     };
 	this.f = function(dX, X, t) 
     {// Следует получить вектор производных dY из вектора Y и из вектора постоянных напряжений в узлах
@@ -637,12 +651,13 @@ function Euler(Devices, Net, cb)
 			{
 				if(+new Date() >= d)
 				{
-					cb(Net.getResult());
+					cb(Net.getResult(X, t));
 					d = +new Date() + 100;
 				}
 				c = 0;
 			}
 			for(var x in X) X[x] += dX[x] * h;
+			Net.onStep(X, t);
 		}
 	};
 }

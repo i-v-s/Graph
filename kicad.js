@@ -106,7 +106,7 @@ var KiCAD = new function()
 			if(!pts[pn])
 			{
 				Items.push(pts[pn] = new Point(parseInt(a) * Km, parseInt(b) * Km));
-				pts[pn].Draw = ConnDraw;
+				pts[pn].draw = ConnDraw;
 			}
 			return pts[pn];
 		}
@@ -201,6 +201,13 @@ var KiCAD = new function()
 			{
 				var Name = s[1].toUpperCase();
 				if(Name == "~GND") Name = "GND";
+				
+				if(Lib[Name]) // Такой компонент в библиотеке уже есть 
+				{
+					do {s = data[++x].substr(0, 4);} while(s !== "DEF " && x < l);
+					x--;
+					continue;
+				}
 				obj = Lib[Name] = new schematic.PartDef(Name); // F:поля, N:имена, lrtb:ограничивающий прямоугольник
 				schematic.addToLib(Name, obj);
 				br = obj.br;
@@ -294,6 +301,19 @@ var KiCAD = new function()
 						Draw.push("ctx.beginPath();");
 			            Draw.push("ctx.arc(" + X.toString() + "," + Y.toString() + ", " + R.toString() + ", 0, 2 * Math.PI, false);");
 						Draw.push("ctx.closePath(); ctx.stroke();");
+						break;
+					case 'A': // Дуга A x y R a1 a2 0 1 0 N x1 y1 x2 y2
+						var X = parseInt(s[1]) * Km;
+						var Y = -parseInt(s[2]) * Km;
+						var a2 = (-parseInt(s[4]) * Math.PI / 1800).toString();
+						var a1 = (-parseInt(s[5]) * Math.PI / 1800).toString();
+						//var x1 = parseInt(s[10]) * Km - X;
+						//var y1 = parseInt(s[11]) * Km - Y;
+						var R = parseInt(s[3]) * Km;//Math.sqrt(x1 * x1 + y1 * y1);
+						SetB(X + R, Y + R); SetB(X - R, Y - R);
+						Draw.push("ctx.beginPath();");
+			            Draw.push("ctx.arc(" + X.toString() + "," + Y.toString() + ", " + R.toString() + ", " + a1 + "," + a2 + ", false);");
+						Draw.push("ctx.stroke();");						
 						break;
 					case 'S': // Прямоугольник S X1 Y1 X2 Y2 0 1 0 F
 						var X = parseInt(s[1]) * Km;
