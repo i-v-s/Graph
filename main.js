@@ -41,6 +41,11 @@ var Main = {
     Back: "#FFF",
     font: '10px monospace',
     hitPriority: 100,
+    onLoads:[],
+    onLoad: function()
+    {
+    	for(var x in onLoads) onLoads[x]();    	
+    },
     OnCSS: function(f)
     {
     	switch(f)
@@ -308,9 +313,9 @@ var Main = {
             if(Main.NeedRedraw) {Main.NeedRedraw = false; State.redraw();}
         }
     },
-    OnProps: function()
+    onProps: function()
     {
-        for(var x in Items) if(Items[x]._sel && Items[x].OnDblClick) { Items[x].OnDblClick(); break;}
+        for(var x in Items) if(Items[x]._sel && Items[x].onDblClick) { Items[x].onDblClick(); break;}
     },
     Init: function()
     {
@@ -375,7 +380,7 @@ var Main = {
             Main.OnMouse(evt.touches[0].pageX, evt.touches[0].pageY, State.move);
             time = +new Date() + 100;
         });
-        canvas.ondblclick = function(evt) {Main.OnMouse(evt, State.dblclick);evt.preventDefault();};
+        canvas.ondblclick = function(evt) {Main.OnMouse(evt.pageX, evt.pageY, State.dblclick);evt.preventDefault();};
         canvas.onkeydown = function()
         {
             alert("kd");
@@ -387,7 +392,7 @@ var Main = {
                 file:{_: {label: "Новый", click: Main.DeleteAll}}, 
                 edit:{
                     _: {label: "Удалить", click: Main.Delete},
-                    _1:{label: "Свойства", click: Main.OnProps}
+                    _1:{label: "Свойства", click: Main.onProps}
                 }
             });
         }
@@ -406,7 +411,7 @@ var States =
         redraw: Main.Redraw,
         move:Main.OnFreeMove,
         leftdown: function(x, y) {Main.MX = x; Main.MY = y; SelRect = new SimpleRect(Main.MX, Main.MY, 0, 0);Main.Call(MouseObject ? "objmove" : "selmove");},
-        dblclick:function(x, y) {if(MouseObject && MouseObject.OnDblClick) MouseObject.OnDblClick(x, y);},
+        dblclick:function(x, y) {if(MouseObject && MouseObject.onDblClick) MouseObject.onDblClick(x, y);},
         select:function() {Main.Call("select");},
         onlymove:function() {Main.Call("onlymove");}        
     },

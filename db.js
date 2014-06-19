@@ -24,7 +24,7 @@ var DB =
     CurrentUser:null,
     Users:null,
     /////////// Работа с JSON /////////////////////////////////////////////////
-    ItemToJSON: function(i)
+    /*ItemToJSON: function(i)
     {
         return JSON.stringify(i, function(key, value)
         {
@@ -47,38 +47,56 @@ var DB =
             }
             return value;
         });
-    },
+    },*/
     GetJSON: function()
     {
         workspace.sheets["лист 1"] = Items;
-        var r = [];
-        for(var w in workspace)
+        return JSON.stringify(workspace, function(key, value)
         {
-            if(w === "sheets")
-            {
-                var a = [];
-                for(var x in Items)
-                {
-                    var i = Items[x];
-                    a.push(DB.ItemToJSON(Items[x]));
-                }
-                r.push("sheets:{sheet:[\n" + a.join(',\n') + "\n]}");
-            }
-            else
-                r.push(w + ":" + JSON.stringify(workspace[w]));
-        }
-        return("{" + r.join(',\n') + "}");
+        	if(key !== "_" && key.charAt(0) === '_') return undefined;
+        	if(typeof value === "object" && value._ instanceof Array)
+        	{
+       			var r = {_:value._[0]};
+       			for(var x in value) if(value.hasOwnProperty(x) && typeof value[x] !== "function") 
+       				r[x] = value[x];
+       			var _ = value._;
+       			for(var x = 1, e = _.length; x < e; x++)
+       			{
+       				var p = _[x];
+       				if(r[p] instanceof Array)
+       				{
+       					var s = r[p], d = [];
+       					for(var y in s) d[y] = Main.GetId(s[y]);
+       					r[p] = d;
+       				}
+       				else r[p] = Main.GetId(r[p]);
+       			}
+        		return r;       		
+        	}
+        	return value;
+        });
     },
     LoadJSON: function(Text) 
     {
         var errors = [];
         Items = [];
-        try{Items = JSON.parse(Text);} catch(e)
+        function rv(k, v)
+        {
+        	if(typeof v === "object" && typeof v._ === "string")
+        	{
+        		var r = new Main.Ctors[v._];
+        		for(var x in v) if(x !== "_") r[x] = v[x];
+        		return r;
+        	}
+        	return v;
+        }
+        try{workspace = JSON.parse(Text, rv);} catch(e)
         {
             errors.push("JSON parse error: " + e.message);
             return;
         }
-        for(var i in Items) try
+        Items = workspace.sheets["лист 1"];
+        /*for(var i in Items) try
         {
             var data = Items[i];           
             var item = new Main.Ctors[data._];
@@ -89,9 +107,25 @@ var DB =
         {
             errors.push("Error creating object " + i + " [class: '" + Items[i]._ + "', data: '" + JSON.stringify(Items[i]) +"']: "+ e.message);
             Items[i] = undefined;
+        }*/
+        function toObj(o, id)
+        {
+        	var r = Main.ById(id);
+        	if(!r._der) r._der = [o];
+        	else r._der.push(o);
+        	return r;
         }
         for(var i in Items) if(Items[i]) try 
         {
+        	var r = Items[i];
+    		var _ = r._;
+    		if(_) for(var x = 1, e = _.length; x < e; x++)
+    		{
+    			var p = _[x];
+    			if(r[p] instanceof Array) for(var y in r[p]) r[p][y] = toObj(r, r[p][y]);
+    			else r[p] = toObj(r, r[p]);
+    		}
+
             if(Items[i].OnLoad && !Items[i].OnLoad())
             {
                 errors.push("Error in object " + i + " [class: '" + Items[i].constructor.name + "', data: '" + JSON.stringify(Items[i]) +"']: OnLoad() failed");

@@ -13,6 +13,17 @@ var schematic = new function()
 	};
 	this.PartDef.prototype = // Методы всех деталей
 	{
+		//_:"Part",
+		toJSON: function()
+		{
+			var r = {};
+			for(var x in this) if(this.hasOwnProperty(x))
+			{
+				if(typeof this[x] === "function") r[x] = this[x].toString();
+				else r[x] = this[x];
+			}
+			return r;
+		},
 		moveBy: function(dx, dy) { this.x += dx; this.y += dy; this._mov = true;},
 		draw: function(Type)
 		{
@@ -30,7 +41,7 @@ var schematic = new function()
 			if(this.val) this.val.draw(0);
 			if(this.foot) this.foot.draw(0);
 			for(var t in this.fields) this.fields[t].draw(0);
-			var pins = this.p;
+			var pins = this._p;
 			for(var x in pins) if(MouseObject !== pins[x]) pins[x].draw(0);
 		},
 	    GetPSel: function() {return this._sel;},
@@ -44,7 +55,7 @@ var schematic = new function()
 				var p = pins[t];
 				var x = M[0] * p.x + M[1] * p.y - X;
 				var y = M[3] * p.y - M[2] * p.x - Y;
-				if(Math.abs(x) < Main.adm && Math.abs(y) < Main.adm) return this.p[t];
+				if(Math.abs(x) < Main.adm && Math.abs(y) < Main.adm) return this._p[t];
 			}
     		var d = M[0] * M[3] - M[1] * M[2];
     		var A = X * d * M[3] + Y * -d * M[1];
@@ -141,8 +152,14 @@ var schematic = new function()
 		}
 	};
 	////////////// Создание экземпляров детали /////////////////////
-	if(!workspace.partLib) workspace.partLib = {};
+	if(!workspace.partLib)
+	{
+		var w = workspace;
+		workspace = {partLib:{}};
+		for(var x in w) workspace[x] = w[x];
+	}
 	var lib = workspace.partLib;
+	var ctors = {};
 	
 	this.addToLib = function(name, obj)
 	{
@@ -160,10 +177,11 @@ var schematic = new function()
 			if(this.defFoot) this.foot = new Field(this, this.defFoot);
 			var p = {}; 
 			for(var x in this.pins) p[x] = new Pin(this, this.pins[x]);
-			this.p = p; 			
+			this._p = p; 			
 		};
 		Part.prototype = obj;
-		lib[name] = Part;//obj;
+		lib[name] = obj;//obj;
+		ctors[name] = Part;
 		var menu = {label:"Компонент"};
 		menu[name] = {label:name, click: this.onCreate};
 		CMenu.Add({create:{kicad:menu}});
@@ -172,7 +190,7 @@ var schematic = new function()
 	
 	this.onCreate = function(e)
 	{
-		var m = lib[e.target.innerText];
+		var m = ctors[e.target.innerText];
 		Items.push(new m());		
 		
 	};

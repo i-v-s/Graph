@@ -11,7 +11,7 @@ function Point(x, y)
 
 Point.prototype = 
 {
-    serialize: function() {return this.x.toString() + "," + this.y;},
+	toJSON:function(){return {_:"Point", x:this.x, y:this.y};},
     pos: function() {return {x:this.x, y:this.y};},
     draw: function(Type)
     {
@@ -74,7 +74,15 @@ function Line(p1, p2)
 
 Line.prototype = 
 {
-    serialize: function() { return Items.indexOf(this.p1).toString() + ',' + Items.indexOf(this.p2);},
+	_: ["Line", "p1", "p2"],
+	/*toJSON: function()
+	{
+		var r = {_:"Line"};
+		for(var x in this) if(this.hasOwnProperty(x) && x.charAt(0) !== '_') r[x] = this[x];
+		r.p1 = Main.GetId(this.p1);
+		r.p2 = Main.GetId(this.p2);
+		return r;
+	},
     OnLoad: function()
     { 
         this.p1 = Main.ById(this.p1);
@@ -83,7 +91,7 @@ Line.prototype =
         this.p1._der.push(this);
         this.p2._der.push(this);
         return  true;
-    },
+    },*/
     draw: function(Type)
     {
         var color = this.color ? this.color : Main.Color;

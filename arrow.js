@@ -3,7 +3,7 @@
 function Arrow(a)
 {
     this.ps = a;
-    this.Serialize = function()
+    /*this.Serialize = function()
     {
         var r = "[";
         for(var x = 0, e = this.ps.length; x < e;)
@@ -23,8 +23,15 @@ function Arrow(a)
             this.ps[x] = v;
         }
         return true;
-    };
-    this.draw = function(Type)
+    };*/
+    this._sel = false;
+    this._mov = false;
+}
+
+Arrow.prototype = 
+{
+	_:["Arrow", "ps"],
+    draw: function(Type)
     {
         if(this.ps.length < 2) return;
         ctx.strokeStyle = this._sel ? "#FF0000" :(Type > 0 ? "#808080": "#000000");
@@ -65,8 +72,8 @@ function Arrow(a)
             ctx.fillStyle = "#000000";
             ctx.fillText(this.label, p.x, p.y);
         }
-    };
-    this.moveBy = function(dx, dy)
+    },
+    moveBy: function(dx, dy)
     {
         if(!this._mov)
         {
@@ -74,8 +81,8 @@ function Arrow(a)
                 this.ps[x].moveBy(dx, dy);
             this._mov = true;
         }
-    };
-    this.Hit = function(x, y)
+    },
+    Hit: function(x, y)
     {
         var pr = 3;
         var p1 = this.ps[0].pos();
@@ -118,15 +125,15 @@ function Arrow(a)
             if(Math.abs(m) < pr) {Main.hitPriority = 1; return this;}
         }
         return null;
-    };
-    this.GetPSel = function() 
+    },
+    GetPSel: function() 
     {
         if(this._sel) return true;
         for(var t = 0, e = this.ps.length; t < e;t++)
             if(this.ps[t]._sel) return true;
         return  false;
-    };
-    this.OnDblClick = function()
+    },
+    onDblClick: function()
     {
         if(Dialogs) Dialogs.Create(
         {
@@ -139,10 +146,9 @@ function Arrow(a)
                 y:"Метка, Y",
             }
         }, this);        
-    };
-    this._sel = false;
-    this._mov = false;
-}
+    }
+		
+};
 
 var CArrow =
 {
