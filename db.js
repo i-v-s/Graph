@@ -279,7 +279,7 @@ var DB =
                 lastfiles:{label: "Последние"}
             }});
         }
-        DB.Users = DB.RemoteUsers();
+        if(location.protocol === "http:") DB.Users = DB.RemoteUsers();
         var options = document.getElementById("loaduser");
         options.length = 0;
         var e = document.createElement("option");
