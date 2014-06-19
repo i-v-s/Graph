@@ -233,11 +233,12 @@ function NetLoader()
 		ctor: function(fields, nodes, brs)
 		{
 			var y = 1.0 / parseFloat(fields.v);
-			var br = brs[0];
+			brs[0].y = y;
+			/*var br = brs[0];
 			this.addY = function()
 			{
 				br.y += y;
-			};
+			};*/
 		},
 		nodes: {1:null, 2:null},
 		branches: [{p:1, q: 2}]

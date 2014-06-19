@@ -245,9 +245,9 @@ var schematic = new function()
 			var y = 1.0 / 30.0;
 			var br = brs[0];
 			var n1 = nodes[1], n2 = nodes[2];
-			this.addY = function()
+			this.putY = function()
 			{
-				br.y += y;
+				br.y = y;
 			};
 			this.get = function()
 			{

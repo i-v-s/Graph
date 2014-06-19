@@ -24,12 +24,12 @@
 	где Y - матрица проводимостей,
 		V - вектор напряжений в узлах. Некоторые элементы V заданы постоянными, остальные неизвестны. 
 			Некоторые не могут быть вычислены.
-		I - вектор задающих токов в узлах 
+		I - вектор задающих (втекающих) токов в узлах 
 
 Функция расчёта производных f(X, t):
 
 	Дано: X, t, Vc(некоторые напряжения заданы жёстко)
-	0. 							(при необходимости сформировать матрицу проводимостей Y, используя методы addY)
+	0. 							(при необходимости сформировать матрицу проводимостей Y, используя методы putY)
 	1. X => I, Vc               (используются методы устройств addI())
 	2. V = Y^(-1) * I			(решение системы уравнений узловых потенциалов) 
 	3. X, V, t => dX			(используются методы устройств f())
@@ -42,7 +42,7 @@
 Методы устройств
 
 	addI(X, t): добавить задающие токи (или задать напряжения) в узлы, в соответствии с текущим состоянием устройства
-	addY(?): добавить проводимости в ветви
+	putY(?): добавить проводимости в ветви
 	get(X, t): получить данные устройства, которые будут отправлены визуальному компоненту через onMsg
 	onStep(X, t): уведомление устройства о произведённом шаге интегрирования. 
 		Устройство может потребовать откатиться и изменить параметры
@@ -82,7 +82,6 @@ function Network(Devices, Nodes, Branches)
 	for(var n in Nodes) Nodes[n] = {
 		V:Nodes[n].V,
 		I:0,
-		y:0,
 		T:Nodes[n].T,
 		bc:0,
 		YList:null,
@@ -134,21 +133,19 @@ function Network(Devices, Nodes, Branches)
 	function PrepareYList()
 	{
 		// Инициализируем проводимости
-		for(var n in Nodes) Nodes[n].y = 0.0;
-		for(var b in Branches) Branches[b].y = 0.0;
-		for(var d in Devices) if(Devices[d].addY) Devices[d].addY();
+		//for(var b in Branches) Branches[b].y = 0.0;
+		for(var d in Devices) if(Devices[d].putY) Devices[d].putY();
 		
 		Y = null;
 		var Size = Nodes.length + Branches.length * 2;
 		YList = Array(Size + 1);
-		var y = 0; //YList;
+		var y = 0;
 		for(var n in Nodes) if(!Nodes[n].T) // Заполняем Y из узлов
 		{
 			var N = Nodes[n];
-			N.YList = YList[y] = {Node: N, y: N.y};
+			N.YList = YList[y++] = {Node: N, y: 0.0, Next: null};
 			N.bc = 0;
 			N.Mark = 0;
-			y++;
 		}
 		else
 			Nodes[n].YList = null;
@@ -156,15 +153,15 @@ function Network(Devices, Nodes, Branches)
 		//UsualNodeCount = (int)(y - YList) - 1;
 		
 		//! Метод создания проводимости между узлами
-		/*CYList * */ function AddBranch(N, AdjacentNode)
+		function AddBranch(N, AdjacentNode)
 		{
 			var Last = N.YList;
-			if(AdjacentNode === null) return n;
-			for(var List = Last; List; List = List.Next) 
-				if(List.Node === AdjacentNode)
-					return List;
-				else
-					Last = List;
+			if(AdjacentNode === null) return n; // ???
+			for(var List = Last; List; List = List.Next)
+			{
+				if(List.Node === AdjacentNode) return List;
+				Last = List;
+			}
 			N.bc++;		
 			var d = {Next: null, Node: AdjacentNode, y: 0, Sources: 0};
 			Last.Next = d;
@@ -174,12 +171,21 @@ function Network(Devices, Nodes, Branches)
 
 		for(var B in Branches)  // Заполняем Y из ветвей
 		{
-			var b = Branches[B];
-            if(b.y === 0) continue;
-            var p = b.p, q = b.q;
+			var b = Branches[B], p = b.p, q = b.q;
+			/*if(typeof b.E === "number") // ЭДС, необходимо объединить списки
+			{
+				var ql = q.YList;
+				p.YList.y += ql.y;
+				q.YList = p.YList;
+				
+				
+				
+			}*/
+			
+            if(!b.y) continue;
 			if(p && p.YList)
 			{
-				AddBranch(p, q).y -= b.y;;
+				AddBranch(p, q).y -= b.y;
 				//l->AddBranch(b->pYpq);
                 p.YList.y += b.y;
 			}
@@ -190,6 +196,12 @@ function Network(Devices, Nodes, Branches)
                 q.YList.y += b.y; // Диагональ
 			}
 		}
+		
+		for(var B in Branches)  // Обработка заданных разностей потенциалов
+		{
+			
+		}
+		
         FreeY = YList[y];
 		if(y < Size)
 		{
@@ -526,7 +538,7 @@ function Network(Devices, Nodes, Branches)
 			{
 				var v = YList[t][k];
 				if(k == "Node") for(n in Nodes) if(Nodes[n] === v) v = "Nodes[" + n + "]";
-				if(k == "Next") for(y in YList) if(YList[y] === v) v = "YList[" + y + "]";
+				if(k == "Next") for(n in YList) if(YList[n] === v) v = "YList[" + n + "]";
 				r += " " + k + ": " + v; 
 			}
 			console.log(r);
@@ -549,10 +561,10 @@ function Network(Devices, Nodes, Branches)
     {
 		// Инициализируем проводимости
 		for(var n in Nodes) {Nodes[n].y = 0.0; Nodes[n].I = 0;}
-		for(var b in Branches) Branches[b].y = 0.0;
+		//for(var b in Branches) Branches[b].y = 0.0;
 		for(var d in Devices)
         {
-            if(Devices[d].addY) Devices[d].addY();
+            if(Devices[d].putY) Devices[d].putY();
             if(Devices[d].addI) Devices[d].addI(X, t);
         }
         // Проверяем уравнение Y * V = I
